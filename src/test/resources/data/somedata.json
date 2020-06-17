@@ -1,0 +1,25 @@
+[
+  {
+    "navn": "Donald",
+    "alder": 42,
+    "adresse": {
+      "adresselinjer": [
+        "Andeveien 1",
+        "Andegrenda"
+      ],
+      "postnummer": "3158",
+      "poststed": "Andebu"
+    }
+  },
+  {
+    "navn": "Langbein",
+    "alder": 13,
+    "adresse": {
+      "adresselinjer": [
+        "Langelia 2"
+      ],
+      "postnummer": "3158",
+      "poststed": "Andebu"
+    }
+  }
+]
