@@ -6,7 +6,7 @@
 
 ## Curl examples
 
-# Pseudonymize JSON file
+### Pseudonymize JSON file
 
 curl -X POST 'http://localhost:8080/depseudonymize/file' \
 --form 'data=@src/test/resources/data/15k.json' \
