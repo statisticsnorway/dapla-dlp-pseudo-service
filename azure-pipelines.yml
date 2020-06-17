@@ -95,7 +95,7 @@ jobs:
           secureFile: 'gcr-key.json'
       
       - bash: |
-          regex="refs/tags/([0-9a-z]*)"
+          regex="refs/tags/(.*)"
           [[ $(Build.SourceBranch) =~ $regex ]]
           TAG="${BASH_REMATCH[1]}"
           echo "Tagging image eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$(Build.SourceVersion) with $TAG"
