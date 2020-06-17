@@ -8,6 +8,7 @@ trigger:
 
 jobs:
   - job: testAndBuild
+    condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
     container: maven:3-jdk-14
     pool:
       vmImage: 'ubuntu-latest'
@@ -47,3 +48,18 @@ jobs:
            goals: 'verify test'
            options: '-P ssb-bip --batch-mode'
            mavenOptions: '$(MAVEN_OPTS)'
+
+      #Docker login
+      - task: Docker@2
+        displayName: 'Docker login'
+        inputs:
+          command: 'login'
+          containerRegistry: 'gcrServiceConnection'
+
+      #Docker build and push
+      - task: Docker@2
+        inputs:
+          containerRegistry: 'gcrServiceConnection'
+          repository: 'eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
+          command: 'buildAndPush'
+          tags: '$(Build.SourceVersion)'
