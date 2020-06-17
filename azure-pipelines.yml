@@ -33,7 +33,7 @@ jobs:
           mavenServiceConnections: 'mvnSsbBipPublic, mvnSsbBipReleases, mvnSsbBipSnapshots'
 
       #Download java 14
-      - bash: "curl https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz --output /builds/openjdk-14.0.1_linux-x64_bin.tar.gz"
+      - bash: "curl https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz --create-dirs --output /builds/openjdk-14.0.1_linux-x64_bin.tar.gz"
       
       #Install java 14
       - task: JavaToolInstaller@0
