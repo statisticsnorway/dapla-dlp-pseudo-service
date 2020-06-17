@@ -73,6 +73,6 @@ jobs:
       - task: Docker@2
         inputs:
           containerRegistry: 'gcrServiceConnection'
-          repository: 'eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
+          repository: 'prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
           command: 'buildAndPush'
           tags: '$(Build.SourceVersion)'
