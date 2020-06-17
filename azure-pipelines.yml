@@ -44,7 +44,7 @@ jobs:
           jdkArchitectureOption: 'x64'
           jdkSourceOption: 'LocalDirectory'
           jdkFile: "$(HOME)/openjdk-14.0.1_linux-x64_bin.tar.gz"
-          jdkDestinationDirectory: "/builds/binaries/externals"
+          jdkDestinationDirectory: "$(HOME)/builds/binaries/externals"
 
       #Build
       - task: Maven@3
