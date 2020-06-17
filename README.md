@@ -8,6 +8,7 @@
 
 ### Pseudonymize JSON file
 
+```sh
 curl -X POST 'http://localhost:8080/depseudonymize/file' \
 --form 'data=@src/test/resources/data/15k.json' \
 --form 'request={
@@ -21,7 +22,7 @@ curl -X POST 'http://localhost:8080/depseudonymize/file' \
     ]
   }
 }'
-
+```
 
 ### Depseudonymize JSON file, output CSV
 
