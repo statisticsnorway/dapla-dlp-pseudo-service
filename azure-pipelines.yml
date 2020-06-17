@@ -6,11 +6,13 @@ trigger:
     include:
       - '*'
 
+pool:
+  vmImage: 'ubuntu-latest'
+
 jobs:
   - job: testAndBuild
+    displayName: 'Run tests and build artifacts'
     condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
-    pool:
-      vmImage: 'ubuntu-latest'
     variables:
       MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
       MAVEN_OPTS: '-Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)' 
@@ -36,7 +38,8 @@ jobs:
       - bash: |
           echo "Downloading java 14 from https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz"
           curl https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz --output $HOME/openjdk-14.0.1_linux-x64_bin.tar.gz          
-      
+        displayName: 'Download java 14'
+
       #Install java 14
       - task: JavaToolInstaller@0
         displayName: 'Install Java 14'
@@ -78,3 +81,25 @@ jobs:
           repository: 'prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
           command: 'buildAndPush'
           tags: '$(Build.SourceVersion)'
+
+  - job: promoteToProduction
+    displayName: 'Tag image to promote to production'
+    condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/')
+    steps:
+      
+      # Download GCR credentials
+      - task: DownloadSecureFile@1
+        name: gcrJsonKey
+        displayName: 'Download GCR credentials'
+        inputs:
+          secureFile: 'gcr-key.json'
+      
+      - bash: |
+          regex="refs/tags/([0-9a-z]*)"
+          [[ $(Build.SourceBranch) =~ $regex ]]
+          TAG="${BASH_REMATCH[1]}"
+          echo "Tagging image eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$(Build.SourceVersion) with $TAG"
+          cat $(gcrJsonKey.secureFilePath) | docker login -u _json_key --password-stdin https://eu.gcr.io
+          docker pull eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$(Build.SourceVersion)
+          docker tag eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$(Build.SourceVersion) eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$TAG
+          docker push eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$TAG
