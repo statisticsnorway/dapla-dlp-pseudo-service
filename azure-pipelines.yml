@@ -28,17 +28,18 @@ jobs:
 
       #Authenticate with maven
       - task: MavenAuthenticate@0
-        displayName: 'Authenticate'
+        displayName: 'Authenticate with maven'
         inputs:
           mavenServiceConnections: 'mvnSsbBipPublic, mvnSsbBipReleases, mvnSsbBipSnapshots'
 
       #Download java 14
       - bash: |
-          curl https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz --output $HOME/openjdk-14.0.1_linux-x64_bin.tar.gz
-          echo $HOME
+          echo "Downloading java 14 from https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz"
+          curl https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz --output $HOME/openjdk-14.0.1_linux-x64_bin.tar.gz          
       
       #Install java 14
       - task: JavaToolInstaller@0
+        displayName: 'Install Java 14'
         inputs:
           versionSpec: '14'
           jdkArchitectureOption: 'x64'
@@ -71,6 +72,7 @@ jobs:
 
       #Docker build and push
       - task: Docker@2
+        displayName: 'Build and push Docker image'
         inputs:
           containerRegistry: 'gcrServiceConnection'
           repository: 'prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
