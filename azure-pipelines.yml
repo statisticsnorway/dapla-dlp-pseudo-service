@@ -9,7 +9,6 @@ trigger:
 jobs:
   - job: testAndBuild
     condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
-    container: maven:3-jdk-14
     pool:
       vmImage: 'ubuntu-latest'
     variables:
@@ -32,6 +31,16 @@ jobs:
         displayName: 'Authenticate'
         inputs:
           mavenServiceConnections: 'mvnSsbBipPublic, mvnSsbBipReleases, mvnSsbBipSnapshots'
+
+      #Download java 14
+      #- bash: 'curl https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz --output /tmp/openjdk-14.0.1_linux-x64_bin.tar.gz'
+      
+      #Install java 14
+      - task: JavaToolInstaller@0
+        inputs:
+          versionSpec: '14'
+          jdkArchitectureOption: 'x64'
+          jdkSourceOption: 'PreInstalled'
 
       #Build
       - task: Maven@3
