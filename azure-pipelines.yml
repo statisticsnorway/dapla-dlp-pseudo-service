@@ -83,7 +83,7 @@ jobs:
           tags: '$(Build.SourceVersion)'
 
   - job: promoteToProduction
-    displayName: 'Tag image to promote to production'
+    displayName: 'Tag production image'
     condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/')
     steps:
       
@@ -103,3 +103,4 @@ jobs:
           docker pull eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$(Build.SourceVersion)
           docker tag eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$(Build.SourceVersion) eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$TAG
           docker push eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$TAG
+        displayName: 'Tag production image'
