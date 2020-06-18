@@ -58,6 +58,11 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>io.micronaut</groupId>
+      <artifactId>micronaut-management</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>javax.annotation</groupId>
       <artifactId>javax.annotation-api</artifactId>
       <scope>compile</scope>
@@ -71,6 +76,11 @@
       <groupId>no.ssb.avro.convert.core</groupId>
       <artifactId>avro-buddy-core</artifactId>
       <version>0.0.6</version>
+    </dependency>
+    <dependency>
+      <groupId>no.ssb.dapla.readiness</groupId>
+      <artifactId>dapla-readiness</artifactId>
+      <version>1.0.0</version>
     </dependency>
 
     <!--
