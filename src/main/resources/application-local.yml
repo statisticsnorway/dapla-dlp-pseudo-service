@@ -1,0 +1,14 @@
+micronaut:
+  application:
+    name: pseudo-service
+  server:
+    thread-selection: AUTO
+    max-request-size: 2gb
+    multipart:
+      max-file-size: 2gb
+
+pseudo.secrets:
+  repo:
+    secret1:
+      content: C5sn7B4YtwcilAwuVx6NuAsMWLusOSA/ldia40ZugDI=
+      type: AES256
