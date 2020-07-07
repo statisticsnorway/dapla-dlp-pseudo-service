@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Singleton
 public class MapToSecretConverter implements TypeConverter<Map, Secret> {
+
     @Override
     public Optional<Secret> convert(Map propertyMap, Class<Secret> targetType, ConversionContext context) {
         Optional<String> content = ConversionService.SHARED.convert(propertyMap.get("content"), String.class);
@@ -19,4 +20,5 @@ public class MapToSecretConverter implements TypeConverter<Map, Secret> {
           ? Optional.of(new Secret(content.get(), type.orElse(null)))
           : Optional.empty();
     }
+
 }

@@ -10,8 +10,8 @@ import java.util.List;
 
 public class CsvRecordMapSerializer implements RecordMapSerializer<String> {
 
-    private static char SEPARATOR = ';';
-    private static Joiner JOINER = Joiner.on(SEPARATOR).useForNull("null");
+    private static final char SEPARATOR = ';';
+    private static final Joiner JOINER = Joiner.on(SEPARATOR).useForNull("null");
 
     // FIXME: This implementation is a bit so-so - deducing header stuff from only the first record.
     @Override

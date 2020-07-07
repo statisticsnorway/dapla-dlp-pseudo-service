@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
  */
 public class MoreCollectors {
 
+    private MoreCollectors() {}
+
     /**
      * In contrast to {@link Collectors#toMap(Function, Function)} the result map
      * may have null values.

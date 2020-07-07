@@ -1,21 +1,20 @@
 package no.ssb.dlp.pseudo.service;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.io.Files;
 import io.micronaut.http.MediaType;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dlp.pseudo.service.mediatype.FileTypes;
 import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
 import no.ssb.dlp.pseudo.service.util.HumanReadableBytes;
-import no.ssb.dlp.pseudo.service.mediatype.FileTypes;
 import no.ssb.dlp.pseudo.service.util.ZipFiles;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,15 +37,15 @@ public class PseudoFileSource {
 
     public PseudoFileSource(File file, MediaType sourceMediaType) {
         try {
-            providedMediaType = FileTypes.determineFileType(file).orElse(null);
+            providedMediaType = FileTypes.probeContentType(file).orElse(null);
             allFiles = decompress(file, providedMediaType);
             Multimap<MediaType, File> filesByMediaType = filesByMediaType(allFiles);
-            mediaType = (sourceMediaType == null) ? deduceMediaType(filesByMediaType) : sourceMediaType;
+            mediaType = Optional.ofNullable(sourceMediaType).orElse(deduceMediaType(filesByMediaType));
             sourceFiles = filesByMediaType.get(mediaType);
             if (sourceFiles.isEmpty()) {
                 throw new PseudoException("No files of type " + mediaType + " found");
             }
-            inputStream = concatenateFiles(sourceFiles);
+            inputStream = inputStreamOf(sourceFiles);
         }
         catch (IOException e) {
             throw new PseudoException("Error initializing PseudoFileStream from file " + file, e);
@@ -90,11 +89,9 @@ public class PseudoFileSource {
      * Cleanup action that can be invoked when PseudoFileSource has been processed to
      * explicitly delete the source files.
      */
-    public void cleanup() {
+    public void cleanup() throws IOException {
         for (File f : allFiles) {
-            if (f.exists()) {
-                Preconditions.checkState(f.delete(), "Unable to delete file " + f.getName() + " during cleanup");
-            }
+            Files.deleteIfExists(f.toPath());
         }
     }
 
@@ -110,7 +107,7 @@ public class PseudoFileSource {
             for (File f : files) {
                 sb.append("- " + f.getName() + " ( " + HumanReadableBytes.fromBin(f.length()) + ")\n");
             }
-            log.info(files.size() == 0 ? "No files in archive..." : "Files in archive:\n" + sb.toString());
+            log.info(files.isEmpty() ? "No files in archive..." : "Files in archive:\n" + sb.toString());
             return files;
         }
 
@@ -123,39 +120,39 @@ public class PseudoFileSource {
     private static Multimap<MediaType, File> filesByMediaType(Collection<File> files) {
         return files.stream()
           .filter(f -> {
-              Optional<MediaType> fileType = FileTypes.determineFileType(f);
+              Optional<MediaType> fileType = FileTypes.probeContentType(f);
               if (! fileType.isPresent()) {
                   log.info("Unable to deduce file type, ignoring file: {}", f.getName());
               }
               return fileType.isPresent();
           })
           .collect(Multimaps.toMultimap(
-            f -> FileTypes.determineFileType(f).get(),
+            f -> FileTypes.probeContentType(f).get(),
             Function.identity(),
             ArrayListMultimap::create
           ));
     }
 
     private static MediaType deduceMediaType(Multimap<MediaType, File> filesByMediaType) {
-        if (filesByMediaType.keySet().size() == 0) {
+        if (filesByMediaType.keySet().isEmpty()) {
             throw new PseudoException("No files with supported file types found.");
         }
         else if (filesByMediaType.keySet().size() > 1) {
             throw new PseudoException("Multiple file types encountered. Make sure to use the same file types on all files.");
         }
         else {
-            return filesByMediaType.keySet().stream().findFirst().get();
+            return filesByMediaType.keySet().stream().findFirst().orElseThrow();
         }
     }
 
-    private static InputStream concatenateFiles(Collection<File> files) {
+    private static InputStream inputStreamOf(Collection<File> files) {
         return new SequenceInputStream(
           Collections.enumeration(files.stream()
             .map(f -> {
                 try {
-                    return Files.asByteSource(f).openBufferedStream();
+                    return com.google.common.io.Files.asByteSource(f).openBufferedStream();
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new PseudoException("Error concatenating file input streams", e);
                 }
             })
             .collect(Collectors.toList()))

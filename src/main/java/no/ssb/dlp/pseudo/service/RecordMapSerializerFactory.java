@@ -7,6 +7,8 @@ import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
 
 public class RecordMapSerializerFactory {
 
+    private RecordMapSerializerFactory() {}
+
     public static RecordMapSerializer<String> newFromMediaType(MediaType mediaType) {
         if (MediaType.APPLICATION_JSON_TYPE.equals(mediaType)) {
             return new JsonRecordMapSerializer();

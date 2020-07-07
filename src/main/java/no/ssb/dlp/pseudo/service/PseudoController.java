@@ -22,6 +22,7 @@ import no.ssb.dlp.pseudo.service.util.Json;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -72,12 +73,17 @@ public class PseudoController {
             return HttpResponse.serverError(Flowable.error(e));
         }
         finally {
-            if (fileSource != null) {
-                fileSource.cleanup();
+            try {
+                if (fileSource != null) {
+                    fileSource.cleanup();
+                }
+                if (tempFile != null) {
+                    Files.deleteIfExists(tempFile.toPath());
+                }
             }
-            if (tempFile != null) {
-                tempFile.delete();
-            };
+            catch (IOException e) {
+                log.warn("Error cleaning up", e);
+            }
         }
     }
 
@@ -108,7 +114,7 @@ public class PseudoController {
         log.debug("Receive file - stored temporarily at " + tempFile.getAbsolutePath());
         return Single.fromPublisher(data.transferTo(tempFile))
           .map(success -> {
-              if (success) {
+              if (Boolean.TRUE.equals(success)) {
                   return tempFile;
               }
               else {

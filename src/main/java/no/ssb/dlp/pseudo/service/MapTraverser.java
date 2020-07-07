@@ -23,7 +23,7 @@ public class MapTraverser {
             Map<String, Object> map = (Map<String, Object>) node;
             return map.entrySet().stream()
                 .collect(MoreCollectors.toMapWithNullValues(
-                  e -> e.getKey(),
+                  Map.Entry::getKey,
                   e -> {
                       String nextPath = PATH_JOINER.join(path, e.getKey());
                       return isTraversable(e.getValue())
@@ -53,7 +53,9 @@ public class MapTraverser {
     static Object processValue(Object value, String path, ValueInterceptor interceptor) {
         String newValue = interceptor.apply(new FieldDescriptor(path), (value == null) ? null : String.valueOf(value));
         if (newValue != null) {
-            return FromString.convert(newValue, value.getClass());
+            return (value == null)
+              ? newValue
+              : FromString.convert(newValue, value.getClass());
         }
 
         return value;

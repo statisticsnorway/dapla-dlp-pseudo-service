@@ -1,6 +1,5 @@
 package no.ssb.dlp.pseudo.service.util;
 
-import com.google.common.base.Preconditions;
 import lombok.experimental.UtilityClass;
 
 import java.io.File;
@@ -28,24 +27,25 @@ public class ZipFiles {
     private static List<File> unzip(File zippedFile, Path destPath, boolean deleteZippedFile) throws IOException  {
         List<File> results = new ArrayList<>();
         byte[] buffer = new byte[1024];
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(zippedFile));
-        ZipEntry zipEntry = zis.getNextEntry();
-        while (zipEntry != null) {
-            File newFile = newFile(destPath, zipEntry);
-            FileOutputStream fos = new FileOutputStream(newFile);
-            int len;
-            while ((len = zis.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zippedFile))) {
+
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                File newFile = newFile(destPath, zipEntry);
+                try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, len);
+                    }
+                }
+                results.add(newFile);
+                zipEntry = zis.getNextEntry();
             }
-            fos.close();
-            results.add(newFile);
-            zipEntry = zis.getNextEntry();
+            zis.closeEntry();
         }
-        zis.closeEntry();
-        zis.close();
 
         if (deleteZippedFile) {
-            Preconditions.checkState(zippedFile.delete(), "Failed to delete archive file after decompression: " + zippedFile);
+            Files.deleteIfExists(zippedFile.toPath());
         }
 
         return results;

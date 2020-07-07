@@ -11,7 +11,7 @@ import java.util.Optional;
 @UtilityClass
 public class FileTypes {
 
-    public static Optional<MediaType> determineFileType(File file) {
+    public static Optional<MediaType> probeContentType(File file) {
         try {
             String contentType = Files.probeContentType(file.toPath());
             return contentType == null

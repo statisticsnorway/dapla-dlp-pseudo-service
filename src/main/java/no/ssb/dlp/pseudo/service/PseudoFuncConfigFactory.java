@@ -9,7 +9,6 @@ import no.ssb.dapla.dlp.pseudo.func.PseudoFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.fpe.Alphabets;
 import no.ssb.dapla.dlp.pseudo.func.fpe.FpeFunc;
 import no.ssb.dapla.dlp.pseudo.func.fpe.FpeFuncConfig;
-import no.ssb.dlp.pseudo.service.PseudoException;
 
 import java.util.Collections;
 import java.util.HashMap;

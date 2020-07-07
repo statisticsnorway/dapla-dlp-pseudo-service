@@ -12,21 +12,21 @@ class FileTypesTest {
 
     @Test
     public void zipFile_determineFileType_shouldIdentifyFileType() {
-        Optional<MediaType> fileType = FileTypes.determineFileType(readFileFromClasspath( "data/single-json-file.zip"));
+        Optional<MediaType> fileType = FileTypes.probeContentType(readFileFromClasspath( "data/single-json-file.zip"));
         assertThat(fileType.isPresent()).isTrue();
         assertThat(MoreMediaTypes.APPLICATION_ZIP_TYPE).isEqualTo(fileType.get());
     }
 
     @Test
     public void jsonFile_determineFileType_shouldIdentifyFileType() {
-         Optional<MediaType> fileType = FileTypes.determineFileType(readFileFromClasspath("data/somedata.json"));
+         Optional<MediaType> fileType = FileTypes.probeContentType(readFileFromClasspath("data/somedata.json"));
         assertThat(fileType.isPresent()).isTrue();
         assertThat(MediaType.APPLICATION_JSON_TYPE).isEqualTo(fileType.get());
     }
 
     @Test
     public void csvFile_determineFileType_shouldIdentifyFileType() {
-        Optional<MediaType> fileType = FileTypes.determineFileType(readFileFromClasspath("data/somedata.csv"));
+        Optional<MediaType> fileType = FileTypes.probeContentType(readFileFromClasspath("data/somedata.csv"));
         assertThat(fileType.isPresent()).isTrue();
         assertThat(MoreMediaTypes.TEXT_CSV_TYPE).isEqualTo(fileType.get());
     }

@@ -7,6 +7,7 @@ import no.ssb.dlp.pseudo.service.secrets.PseudoSecrets;
 
 import javax.inject.Singleton;
 import java.util.Collection;
+import java.util.Optional;
 
 @Singleton
 @RequiredArgsConstructor
@@ -31,14 +32,11 @@ public class PseudonymizerFactory {
     }
 
     public StreamPseudonymizer newStreamPseudonymizer(Collection<PseudoFuncRule> rules, MediaType mediaType) {
-        if (MediaType.APPLICATION_JSON_TYPE.equals(mediaType)) {
+        mediaType = Optional.ofNullable(mediaType).orElse(MediaType.APPLICATION_JSON_TYPE);
+        if (MediaType.APPLICATION_JSON.equals(mediaType.toString())) {
             return newJsonStreamPseudonymizer(rules);
         }
-        else {
-            // default to json
-            return newJsonStreamPseudonymizer(rules);
-            // throw new IllegalArgumentException("No StreamPseudonymizer found for media type " + mediaType);
-        }
+        throw new IllegalArgumentException("No StreamPseudonymizer found for media type " + mediaType);
     }
 
 }

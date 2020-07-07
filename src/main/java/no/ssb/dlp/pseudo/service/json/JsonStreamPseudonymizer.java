@@ -46,8 +46,7 @@ public class JsonStreamPseudonymizer implements StreamPseudonymizer {
 
     <T> JsonProcessorContext<T> initJsonProcessorContext(PseudoOperation operation, InputStream is, RecordMapSerializer<T> serializer) throws IOException {
         final JsonParser jsonParser = OBJECT_MAPPER.getFactory().createParser(is);
-        JsonProcessorContext ctx = new JsonProcessorContext(operation, jsonParser, serializer);
-        return ctx;
+        return new JsonProcessorContext<>(operation, jsonParser, serializer);
     }
 
     private <T> Flowable<T> processStream(PseudoOperation operation, InputStream is, RecordMapSerializer<T> serializer) {
