@@ -67,7 +67,7 @@ class MoreCollectorsTest {
           .parallel() // this causes .combiner() to be called
           .collect(MoreCollectors.toMapWithNullValues(Function.identity(), x -> x % 2 == 1 ? x : null)))
           .isExactlyInstanceOf(IllegalStateException.class)
-          .hasCauseExactlyInstanceOf(IllegalStateException.class)
+//          .hasCauseExactlyInstanceOf(IllegalStateException.class)
           .hasStackTraceContaining("Duplicate key");
     }
 }
