@@ -35,6 +35,7 @@ public class PseudonymizerFactory {
             return newJsonStreamPseudonymizer(rules);
         }
         else {
+            // default to json
             return newJsonStreamPseudonymizer(rules);
             // throw new IllegalArgumentException("No StreamPseudonymizer found for media type " + mediaType);
         }
