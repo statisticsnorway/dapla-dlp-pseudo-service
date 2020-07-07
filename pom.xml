@@ -24,6 +24,13 @@
     <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
   </properties>
 
+  <scm>
+    <connection>scm:git:git://github.com/statisticsnorway/dapla-dlp-pseudo-service.git</connection>
+    <developerConnection>scm:git:git@github.com:statisticsnorway/dapla-dlp-pseudo-service.git</developerConnection>
+    <url>https://github.com/statisticsnorway/dapla-dlp-pseudo-service</url>
+    <tag>HEAD</tag>
+  </scm>
+
   <repositories>
     <repository>
       <id>jcenter.bintray.com</id>
@@ -82,20 +89,6 @@
       <artifactId>dapla-readiness</artifactId>
       <version>1.0.0</version>
     </dependency>
-
-    <!--
-    <dependency>
-      <groupId>no.ssb.rawdata.converter</groupId>
-      <artifactId>rawdata-converter-core</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>io.micronaut</groupId>
-          <artifactId>core</artifactId>
-        </exclusion>
-      </exclusions>
-      <version>0.1.17</version>
-    </dependency>
--->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
