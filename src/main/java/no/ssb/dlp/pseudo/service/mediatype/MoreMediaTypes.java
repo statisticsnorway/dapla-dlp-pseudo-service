@@ -1,4 +1,4 @@
-package no.ssb.dlp.pseudo.service;
+package no.ssb.dlp.pseudo.service.mediatype;
 
 import io.micronaut.http.MediaType;
 

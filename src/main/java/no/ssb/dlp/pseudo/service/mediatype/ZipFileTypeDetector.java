@@ -1,4 +1,4 @@
-package no.ssb.dlp.pseudo.service.util;
+package no.ssb.dlp.pseudo.service.mediatype;
 
 import java.io.IOException;
 import java.io.InputStream;

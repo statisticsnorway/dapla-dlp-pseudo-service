@@ -1,1 +1,1 @@
-no.ssb.dlp.pseudo.service.util.ZipFileTypeDetector
+no.ssb.dlp.pseudo.service.mediatype.TikaLiteFileTypeDetector

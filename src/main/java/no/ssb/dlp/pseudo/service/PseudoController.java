@@ -15,7 +15,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import no.ssb.dlp.pseudo.service.util.FileSizes;
+import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
+import no.ssb.dlp.pseudo.service.util.HumanReadableBytes;
 import no.ssb.dlp.pseudo.service.util.Json;
 
 import java.io.File;
@@ -60,7 +61,7 @@ public class PseudoController {
         try {
             tempFile = receiveFile(data).blockingGet();
             fileSource = new PseudoFileSource(tempFile);
-            log.info("Received file ({}, {})", fileSource.getProvidedMediaType(), FileSizes.humanReadableByteCountBin(tempFile.length()));
+            log.info("Received file ({}, {})", fileSource.getProvidedMediaType(), HumanReadableBytes.fromBin(tempFile.length()));
             log.info("{} {} files with content type {}", operation, fileSource.getFiles().size(), fileSource.getMediaType());
             log.info("Target content type: {}", targetContentType);
             StreamPseudonymizer pseudonymizer = pseudonymizerFactory.newStreamPseudonymizer(request.getPseudoConfig().getRules(), fileSource.getMediaType());

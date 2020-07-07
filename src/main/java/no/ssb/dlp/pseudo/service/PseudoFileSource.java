@@ -7,8 +7,9 @@ import com.google.common.collect.Multimaps;
 import com.google.common.io.Files;
 import io.micronaut.http.MediaType;
 import lombok.extern.slf4j.Slf4j;
-import no.ssb.dlp.pseudo.service.util.FileSizes;
-import no.ssb.dlp.pseudo.service.util.FileTypes;
+import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
+import no.ssb.dlp.pseudo.service.util.HumanReadableBytes;
+import no.ssb.dlp.pseudo.service.mediatype.FileTypes;
 import no.ssb.dlp.pseudo.service.util.ZipFiles;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -101,12 +103,12 @@ public class PseudoFileSource {
      */
     private static List<File> decompress(File file, MediaType mediaType) throws IOException {
         if (MoreMediaTypes.APPLICATION_ZIP_TYPE.equals(mediaType)) {
-            log.info("Decompressing zip file (size={})...", FileSizes.humanReadableByteCountBin(file.length()));
+            log.info("Decompressing zip file (size={})...", HumanReadableBytes.fromBin(file.length()));
             Path destPath = java.nio.file.Files.createTempDirectory("temp");
             List<File> files = ZipFiles.unzipAndDelete(file, destPath);
             StringBuilder sb = new StringBuilder();
             for (File f : files) {
-                sb.append("- " + f.getName() + " ( " + FileSizes.humanReadableByteCountBin(f.length()) + ")\n");
+                sb.append("- " + f.getName() + " ( " + HumanReadableBytes.fromBin(f.length()) + ")\n");
             }
             log.info(files.size() == 0 ? "No files in archive..." : "Files in archive:\n" + sb.toString());
             return files;
@@ -120,7 +122,13 @@ public class PseudoFileSource {
      */
     private static Multimap<MediaType, File> filesByMediaType(Collection<File> files) {
         return files.stream()
-          .filter(f -> FileTypes.determineFileType(f).isPresent())
+          .filter(f -> {
+              Optional<MediaType> fileType = FileTypes.determineFileType(f);
+              if (! fileType.isPresent()) {
+                  log.info("Unable to deduce file type, ignoring file: {}", f.getName());
+              }
+              return fileType.isPresent();
+          })
           .collect(Multimaps.toMultimap(
             f -> FileTypes.determineFileType(f).get(),
             Function.identity(),
@@ -133,7 +141,7 @@ public class PseudoFileSource {
             throw new PseudoException("No files with supported file types found.");
         }
         else if (filesByMediaType.keySet().size() > 1) {
-            throw new PseudoException("Multiple file types encountered. Make sure to use the same file types on all files in archive.");
+            throw new PseudoException("Multiple file types encountered. Make sure to use the same file types on all files.");
         }
         else {
             return filesByMediaType.keySet().stream().findFirst().get();

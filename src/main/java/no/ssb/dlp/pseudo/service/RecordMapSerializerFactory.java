@@ -3,6 +3,7 @@ package no.ssb.dlp.pseudo.service;
 import io.micronaut.http.MediaType;
 import no.ssb.dlp.pseudo.service.csv.CsvRecordMapSerializer;
 import no.ssb.dlp.pseudo.service.json.JsonRecordMapSerializer;
+import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
 
 public class RecordMapSerializerFactory {
 

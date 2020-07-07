@@ -28,9 +28,9 @@ import java.text.StringCharacterIterator;
  *  9223372036854775807:     9.2 EB    8.0 EiB   (Long.MAX_VALUE)
  */
 @UtilityClass
-public class FileSizes {
+public class HumanReadableBytes {
 
-    public static String humanReadableByteCountSI(long bytes) {
+    public static String fromSI(long bytes) {
         if (-1000 < bytes && bytes < 1000) {
             return bytes + " B";
         }
@@ -42,7 +42,7 @@ public class FileSizes {
         return String.format("%.1f %cB", bytes / 1000.0, ci.current());
     }
 
-    public static String humanReadableByteCountBin(long bytes) {
+    public static String fromBin(long bytes) {
         long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
         if (absB < 1024) {
             return bytes + " B";

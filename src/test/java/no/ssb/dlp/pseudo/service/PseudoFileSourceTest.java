@@ -1,6 +1,7 @@
 package no.ssb.dlp.pseudo.service;
 
 import io.micronaut.http.MediaType;
+import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

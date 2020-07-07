@@ -1,4 +1,4 @@
-package no.ssb.dlp.pseudo.service.util;
+package no.ssb.dlp.pseudo.service.mediatype;
 
 import io.micronaut.http.MediaType;
 import lombok.experimental.UtilityClass;
@@ -13,9 +13,6 @@ public class FileTypes {
 
     public static Optional<MediaType> determineFileType(File file) {
         try {
-            if (!file.exists()) {
-                throw new IOException("File not found: " + file);
-            }
             String contentType = Files.probeContentType(file.toPath());
             return contentType == null
               ? Optional.empty()
