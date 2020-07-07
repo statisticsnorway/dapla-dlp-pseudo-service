@@ -11,8 +11,9 @@ import java.util.List;
 public class CsvRecordMapSerializer implements RecordMapSerializer<String> {
 
     private static char SEPARATOR = ';';
+    private static Joiner JOINER = Joiner.on(SEPARATOR).useForNull("null");
 
-    // TODO: This implementation is a bit so-so - deducing header stuff from only the first record.
+    // FIXME: This implementation is a bit so-so - deducing header stuff from only the first record.
     @Override
     public String serialize(RecordMap record, int position) {
         boolean renderHeader = (position == 0);
@@ -24,7 +25,8 @@ public class CsvRecordMapSerializer implements RecordMapSerializer<String> {
             return null;
         });
 
-        return (renderHeader ? Joiner.on(SEPARATOR).join(headers) + System.lineSeparator() : "") +
-          Joiner.on(SEPARATOR).join(values) + System.lineSeparator();
+        return (renderHeader ?
+          JOINER.join(headers) + System.lineSeparator() : "") +
+          JOINER.join(values) + System.lineSeparator();
     }
 }
