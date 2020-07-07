@@ -3,6 +3,7 @@ package no.ssb.dlp.pseudo.service;
 import com.google.common.base.Joiner;
 import no.ssb.avro.convert.core.FieldDescriptor;
 import no.ssb.dapla.dlp.pseudo.func.util.FromString;
+import no.ssb.dlp.pseudo.service.util.MoreCollectors;
 
 import java.util.Collection;
 import java.util.Map;
@@ -21,17 +22,16 @@ public class MapTraverser {
         if (node instanceof Map) {
             Map<String, Object> map = (Map<String, Object>) node;
             return map.entrySet().stream()
-              .collect(Collectors.toMap(
-                e -> e.getKey(),
-                e -> {
-                    String nextPath = PATH_JOINER.join(path, e.getKey());
-                    return isTraversable(e.getValue())
-                      ? traverse(nextPath, e.getValue(), interceptor)
-                      : processValue(e.getValue(), nextPath, interceptor);
-                },
-                (e1, e2) -> e1,
-                RecordMap::new
-              ));
+                .collect(MoreCollectors.toMapWithNullValues(
+                  e -> e.getKey(),
+                  e -> {
+                      String nextPath = PATH_JOINER.join(path, e.getKey());
+                      return isTraversable(e.getValue())
+                        ? traverse(nextPath, e.getValue(), interceptor)
+                        : processValue(e.getValue(), nextPath, interceptor);
+                  },
+                  RecordMap::new
+                ));
         }
         else if (node instanceof Collection) {
             Collection<Object> collection = (Collection<Object>) node;
@@ -51,11 +51,9 @@ public class MapTraverser {
     }
 
     static Object processValue(Object value, String path, ValueInterceptor interceptor) {
-        if (value != null) {
-            String newValue = interceptor.apply(new FieldDescriptor(path), String.valueOf(value));
-            if (newValue != null) {
-                return FromString.convert(newValue, value.getClass());
-            }
+        String newValue = interceptor.apply(new FieldDescriptor(path), (value == null) ? null : String.valueOf(value));
+        if (newValue != null) {
+            return FromString.convert(newValue, value.getClass());
         }
 
         return value;

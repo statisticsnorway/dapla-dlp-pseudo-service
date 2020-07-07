@@ -19,7 +19,8 @@ class MapTraverserTest {
             "adresse": {
                 "adresselinjer": ["Bolleveien 1", "Bollerud"],
                 "postnummer": "0123",
-                "poststed": "Oslo"
+                "poststed": "Oslo",
+                "land": null
             }
         }
         """);
