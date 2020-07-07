@@ -46,10 +46,6 @@ public class JsonStreamPseudonymizer implements StreamPseudonymizer {
 
     <T> JsonProcessorContext<T> initJsonProcessorContext(PseudoOperation operation, InputStream is, RecordMapSerializer<T> serializer) throws IOException {
         final JsonParser jsonParser = OBJECT_MAPPER.getFactory().createParser(is);
-        if (jsonParser.nextToken() != JsonToken.START_ARRAY) {
-            throw new IllegalStateException("Expected content to be a json array");
-        }
-
         JsonProcessorContext ctx = new JsonProcessorContext(operation, jsonParser, serializer);
         return ctx;
     }
@@ -64,14 +60,20 @@ public class JsonStreamPseudonymizer implements StreamPseudonymizer {
 
     private <T> void processItem(JsonProcessorContext<T> ctx, Emitter<T> emitter) throws IOException {
         JsonParser jsonParser = ctx.getJsonParser();
-        if (jsonParser.nextToken() != JsonToken.END_ARRAY) {
+        JsonToken jsonToken = jsonParser.nextToken();
+        while (jsonToken == JsonToken.START_ARRAY || jsonToken == JsonToken.END_ARRAY) {
+            jsonToken = jsonParser.nextToken();
+        }
+
+        if (jsonToken != null) {
             int position = ctx.currentPosition.getAndIncrement();
             RecordMap record = OBJECT_MAPPER.readValue(jsonParser, RecordMap.class);
             RecordMap processedRecord = ctx.operation == PseudoOperation.PSEUDONYMIZE
               ? recordPseudonymizer.pseudonymize(record)
               : recordPseudonymizer.depseudonymize(record);
             emitter.onNext(ctx.getSerializer().serialize(processedRecord, position));
-        } else {
+        }
+        else {
             emitter.onComplete();
         }
     }

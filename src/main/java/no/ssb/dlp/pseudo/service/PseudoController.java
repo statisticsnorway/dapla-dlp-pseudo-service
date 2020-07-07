@@ -1,6 +1,5 @@
 package no.ssb.dlp.pseudo.service;
 
-import com.google.common.io.Files;
 import io.micronaut.http.HttpHeaders;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
@@ -16,11 +15,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dlp.pseudo.service.util.FileSizes;
 import no.ssb.dlp.pseudo.service.util.Json;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -53,27 +54,30 @@ public class PseudoController {
     }
 
     private HttpResponse<Flowable> processFile(PseudoRequest request, StreamingFileUpload data, HttpHeaders headers, PseudoOperation operation) {
-        MediaType sourceContentType = data.getContentType().orElseThrow(() -> new PseudoException("Unable to determine data content type"));
         MediaType targetContentType = targetContentType(headers.accept());
-        log.info("{} file with content-type {} ({} MB)", operation, sourceContentType, (data.getSize() / 1000000));
-        log.info("Target content type: {}", targetContentType);
         File tempFile = null;
+        PseudoFileSource fileSource = null;
         try {
             tempFile = receiveFile(data).blockingGet();
-            InputStream is = Files.asByteSource(tempFile).openBufferedStream();
-            StreamPseudonymizer pseudonymizer = pseudonymizerFactory.newStreamPseudonymizer(request.getPseudoConfig().getRules(), sourceContentType);
-            Flowable res = processStream(operation, is, targetContentType, pseudonymizer);
+            fileSource = new PseudoFileSource(tempFile);
+            log.info("Received file ({}, {})", fileSource.getProvidedMediaType(), FileSizes.humanReadableByteCountBin(tempFile.length()));
+            log.info("{} {} files with content type {}", operation, fileSource.getFiles().size(), fileSource.getMediaType());
+            log.info("Target content type: {}", targetContentType);
+            StreamPseudonymizer pseudonymizer = pseudonymizerFactory.newStreamPseudonymizer(request.getPseudoConfig().getRules(), fileSource.getMediaType());
+            Flowable res = processStream(operation, fileSource.getInputStream(), targetContentType, pseudonymizer);
             return HttpResponse.ok(res).contentType(targetContentType);
         }
         catch (IOException e) {
             return HttpResponse.serverError(Flowable.error(e));
         }
         finally {
+            if (fileSource != null) {
+                fileSource.cleanup();
+            }
             if (tempFile != null) {
                 tempFile.delete();
             };
         }
-
     }
 
     private Flowable processStream(PseudoOperation operation, InputStream is, MediaType targetContentType, StreamPseudonymizer pseudonymizer) {
@@ -98,7 +102,8 @@ public class PseudoController {
     }
 
     private Single<File> receiveFile(StreamingFileUpload data) throws IOException {
-        File tempFile = File.createTempFile(data.getFilename(), "temp");
+        Path tempDir = java.nio.file.Files.createTempDirectory("temp");
+        File tempFile = tempDir.resolve(data.getFilename()).toFile();
         log.debug("Receive file - stored temporarily at " + tempFile.getAbsolutePath());
         return Single.fromPublisher(data.transferTo(tempFile))
           .map(success -> {
