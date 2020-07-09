@@ -1,11 +1,15 @@
 package no.ssb.dlp.pseudo.service.csv;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import no.ssb.dlp.pseudo.service.RecordMap;
 import no.ssb.dlp.pseudo.service.util.Json;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CsvRecordMapSerializerTest {
 
@@ -58,5 +62,27 @@ class CsvRecordMapSerializerTest {
         assertThat(serialize(r)).isEqualTo("Foo;;          ;42;null;true\n");
     }
 
+    @Test
+    void recordMapWithMismatchValueCount_serialize_shouldThrowException() {
+        List<RecordMap> items = Json.toObject(new TypeReference<>() {}, """
+        [        
+            {
+                "someString": "Foo",
+                "someBoolean": true
+            },
+            {
+                "someString": "Bar"
+            }
+        ]
+        """);
+
+        assertThatThrownBy(() -> {
+              for (int i=0; i<items.size(); i++) {
+                  serializer.serialize(items.get(i), i);
+              }
+        })
+          .isInstanceOf(CsvRecordMapSerializer.CsvSerializationException.class)
+          .hasStackTraceContaining("CSV value to header mismatch for record at pos=1");
+    }
 
 }

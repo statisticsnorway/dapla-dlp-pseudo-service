@@ -1,7 +1,7 @@
 package no.ssb.dlp.pseudo.service.readiness;
 
-import io.micronaut.management.endpoint.annotation.Read;
 import io.micronaut.management.endpoint.annotation.Endpoint;
+import io.micronaut.management.endpoint.annotation.Read;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.readiness.Readiness;
 import no.ssb.dapla.readiness.ReadinessSample;

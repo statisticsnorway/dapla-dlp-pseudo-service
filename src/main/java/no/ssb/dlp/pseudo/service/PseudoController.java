@@ -15,9 +15,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dlp.pseudo.service.mediatype.CompressionEncryptionMethod;
 import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
 import no.ssb.dlp.pseudo.service.util.HumanReadableBytes;
 import no.ssb.dlp.pseudo.service.util.Json;
+import no.ssb.dlp.pseudo.service.util.Zips;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +27,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+
+import static no.ssb.dlp.pseudo.service.util.Zips.ZipOptions.zipOpts;
+
+// TODO: Rename to PseudoFileController?
 
 @RequiredArgsConstructor
 @Controller
@@ -41,8 +47,15 @@ public class PseudoController {
               StreamingFileUpload data,
               HttpHeaders headers) {
         PseudoRequest request = Json.toObject(PseudoRequest.class, requestString);
-        return processFile(request, data, headers, PseudoOperation.PSEUDONYMIZE);
-    }
+        try {
+            ProcessFileResult res = processFile(request, data, headers, PseudoOperation.PSEUDONYMIZE);
+            return HttpResponse.ok(res.getFlowable())
+              .contentType(res.getTargetContentType());
+        }
+        catch (Exception e) {
+            return HttpResponse.serverError(Flowable.error(e));
+        }
+   }
 
     @Post("/depseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -52,10 +65,17 @@ public class PseudoController {
       StreamingFileUpload data,
       HttpHeaders headers) {
         PseudoRequest request = Json.toObject(PseudoRequest.class, requestString);
-        return processFile(request, data, headers, PseudoOperation.DEPSEUDONYMIZE);
+        try {
+            ProcessFileResult res = processFile(request, data, headers, PseudoOperation.DEPSEUDONYMIZE);
+            return HttpResponse.ok(res.getFlowable())
+              .contentType(res.getTargetContentType());
+        }
+        catch (Exception e) {
+            return HttpResponse.serverError(Flowable.error(e));
+        }
     }
 
-    private HttpResponse<Flowable> processFile(PseudoRequest request, StreamingFileUpload data, HttpHeaders headers, PseudoOperation operation) {
+    private ProcessFileResult processFile(PseudoRequest request, StreamingFileUpload data, HttpHeaders headers, PseudoOperation operation) throws IOException {
         MediaType targetContentType = targetContentType(headers.accept());
         File tempFile = null;
         PseudoFileSource fileSource = null;
@@ -67,10 +87,19 @@ public class PseudoController {
             log.info("Target content type: {}", targetContentType);
             StreamPseudonymizer pseudonymizer = pseudonymizerFactory.newStreamPseudonymizer(request.getPseudoConfig().getRules(), fileSource.getMediaType());
             Flowable res = processStream(operation, fileSource.getInputStream(), targetContentType, pseudonymizer);
-            return HttpResponse.ok(res).contentType(targetContentType);
-        }
-        catch (IOException e) {
-            return HttpResponse.serverError(Flowable.error(e));
+            Compression compression = request.getCompression();
+            if (compression != null && compression.isZipCompressionEnabled()) {
+                log.info("Applying target compression: " + request.getCompression().getType());
+                String contentFilename = (operation + "-" + System.currentTimeMillis() + "." + targetContentType.getExtension()).toLowerCase();
+                Flowable res2 = Zips.zip(res, contentFilename, zipOpts()
+                    .password(compression.getPassword())
+                    .encryptionMethod(compression.getEncryption())
+                    .build()
+                ); // TODO: Validate that this works
+                return new ProcessFileResult(res2, targetContentType);
+            }
+
+            return new ProcessFileResult(res, targetContentType);
         }
         finally {
             try {
@@ -128,6 +157,11 @@ public class PseudoController {
         private DatasetId sourceDataset;
         private DatasetId targetDataset;
         private PseudoConfig pseudoConfig;
+        private Compression compression;
+
+        public boolean isCompressionEnabled() {
+            return compression != null && MoreMediaTypes.APPLICATION_ZIP_TYPE.equals(compression.getType());
+        }
     }
 
     @Data
@@ -145,5 +179,23 @@ public class PseudoController {
     static class DatasetId {
         private String path;
         private String version;
+    }
+
+    @Data
+    static class ProcessFileResult {
+        private final Flowable flowable;
+        private final MediaType targetContentType;
+    }
+
+    @Data
+    static class Compression {
+        private MediaType type;
+        private CompressionEncryptionMethod encryption;
+        private char[] password;
+
+        public boolean isZipCompressionEnabled() {
+            return MoreMediaTypes.APPLICATION_ZIP_TYPE.equals(type);
+        }
+
     }
 }

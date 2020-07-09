@@ -10,23 +10,39 @@ import java.util.List;
 
 public class CsvRecordMapSerializer implements RecordMapSerializer<String> {
 
+    private List<String> headers = new ArrayList<>();
     private static final char SEPARATOR = ';';
     private static final Joiner JOINER = Joiner.on(SEPARATOR).useForNull("null");
 
-    // FIXME: This implementation is a bit so-so - deducing header stuff from only the first record.
+    // This implementation is a bit so-so - deducing header stuff from only one record.
     @Override
     public String serialize(RecordMap record, int position) {
-        boolean renderHeader = (position == 0);
-        List<String> headers = new ArrayList<>();
+        boolean recordHeaders = headers.isEmpty();
+        boolean printHeaders = position == 0;
         List<String> values = new ArrayList<>();
         MapTraverser.traverse(record, (field, value) -> {
-            headers.add(field.getName());
+            if (recordHeaders) {
+                headers.add(field.getName());
+            }
             values.add(value);
             return null;
         });
 
-        return (renderHeader ?
+        if (values.size() != headers.size()) {
+            throw new CsvSerializationException("CSV value to header mismatch for record at pos=" + position +
+              ". Expected CSV row to have " + headers.size() + " columns, but encountered " + values.size() +
+              ". This can happen if the source document does not contain values for all fields.");
+        }
+
+        return (printHeaders ?
           JOINER.join(headers) + System.lineSeparator() : "") +
           JOINER.join(values) + System.lineSeparator();
+    }
+
+
+    public static class CsvSerializationException extends RuntimeException {
+        public CsvSerializationException(String message) {
+            super(message);
+        }
     }
 }

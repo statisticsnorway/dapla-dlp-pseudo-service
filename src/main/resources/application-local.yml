@@ -12,3 +12,6 @@ pseudo.secrets:
     secret1:
       content: C5sn7B4YtwcilAwuVx6NuAsMWLusOSA/ldia40ZugDI=
       type: AES256
+    pseudo-secret-sirius-person-fastsatt:
+      content: C5sn7B4YtwcilAwuVx6NuAsMWLusOSA/ldia40ZugDI=
+      type: AES256

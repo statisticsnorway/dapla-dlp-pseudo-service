@@ -7,28 +7,30 @@ import io.micronaut.http.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dlp.pseudo.service.mediatype.FileTypes;
 import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
+import no.ssb.dlp.pseudo.service.util.FileSlayer;
 import no.ssb.dlp.pseudo.service.util.HumanReadableBytes;
-import no.ssb.dlp.pseudo.service.util.ZipFiles;
+import no.ssb.dlp.pseudo.service.util.Zips;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+// TODO: Rename mediaType -> sourceContentType and providedMediaType -> receivedFileContentType
 
 @Slf4j
 public class PseudoFileSource {
     private final MediaType providedMediaType;
     private final MediaType mediaType;
     private final InputStream inputStream;
-    private final List<File> allFiles;
+    private final Set<File> allFiles;
     private final Collection<File> sourceFiles;
 
     public PseudoFileSource(File file) {
@@ -89,20 +91,22 @@ public class PseudoFileSource {
      * Cleanup action that can be invoked when PseudoFileSource has been processed to
      * explicitly delete the source files.
      */
-    public void cleanup() throws IOException {
+    public void cleanup() {
         for (File f : allFiles) {
-            Files.deleteIfExists(f.toPath());
+            FileSlayer.deleteSilently(f);
         }
     }
 
     /**
      * Handle file decompression, if applicable
      */
-    private static List<File> decompress(File file, MediaType mediaType) throws IOException {
+    private static Set<File> decompress(File file, MediaType mediaType) throws IOException {
         if (MoreMediaTypes.APPLICATION_ZIP_TYPE.equals(mediaType)) {
             log.info("Decompressing zip file (size={})...", HumanReadableBytes.fromBin(file.length()));
             Path destPath = java.nio.file.Files.createTempDirectory("temp");
-            List<File> files = ZipFiles.unzipAndDelete(file, destPath);
+            Set<File> files = Zips.unzip(file, destPath, Zips.UnzipOptions.builder()
+              .deleteAfterUnzip(true)
+              .build());
             StringBuilder sb = new StringBuilder();
             for (File f : files) {
                 sb.append("- " + f.getName() + " ( " + HumanReadableBytes.fromBin(f.length()) + ")\n");
@@ -111,7 +115,7 @@ public class PseudoFileSource {
             return files;
         }
 
-        return List.of(file);
+        return Set.of(file);
     }
 
     /**
