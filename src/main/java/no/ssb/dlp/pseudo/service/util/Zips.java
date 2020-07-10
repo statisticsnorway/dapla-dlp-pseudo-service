@@ -26,7 +26,6 @@ import java.util.stream.Stream;
 
 import static no.ssb.dlp.pseudo.service.util.FileSlayer.deleteSilently;
 
-// TODO: Test encryption of files when using addStream
 @UtilityClass
 @Slf4j
 public class Zips {
@@ -44,7 +43,7 @@ public class Zips {
     }
 
     public static void zip(Path pathToZip, Flowable<String> source, String contentFilename, ZipOptions options) {
-        ZipFile zipFile = new ZipFile(pathToZip.toFile());
+        ZipFile zipFile = new ZipFile(pathToZip.toFile(), options.getPassword());
         ZipParameters zipParams = options.toZip4jParameters();
         zipParams.setFileNameInZip(contentFilename);
         try {

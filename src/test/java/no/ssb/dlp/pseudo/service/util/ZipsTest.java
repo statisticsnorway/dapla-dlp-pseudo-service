@@ -21,46 +21,77 @@ import static no.ssb.dlp.pseudo.service.util.FileUtils.readFileFromClasspath;
 import static no.ssb.dlp.pseudo.service.util.Zips.ZipOptions.zipOpts;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ZipFilesTest {
+class ZipsTest {
 
     private static final char[] PASSWORD = "kensentme".toCharArray();
 
-    @Test
-    public void flowable_zipFlowable_shouldCreateZippedFile() throws Exception {
-        Path zipFile = Files.createTempDirectory("test").resolve("test.zip");
-        AtomicInteger calls = new AtomicInteger();
-        Flowable<String> f = Flowable.range(100, 10).map(Object::toString)
-          .doOnCancel(() -> calls.incrementAndGet())
-          .subscribeOn(Schedulers.computation())
-          .delay(10, TimeUnit.MILLISECONDS);
-        Zips.zip(zipFile, f, "something.txt");
-        assertThat(Files.exists(zipFile)).isTrue();
-        FileSlayer.deleteSilently(zipFile);
+    private static void assertValidZip(Path p) {
+        assertThat(new ZipFile(p.toFile()).isValidZipFile()).isTrue();
+    }
+
+    private static void assertInvalidZip(Path p) {
+        assertThat(new ZipFile(p.toFile()).isValidZipFile()).isFalse();
+    }
+
+    private static void assertEncryptedZip(Path p) throws IOException {
+        assertThat(new ZipFile(p.toFile()).isEncrypted()).isTrue();
     }
 
     @Test
     public void jsonFile_zip_shouldCreateZippedFile() throws IOException {
         Path pathToZip = Files.createTempDirectory("tst").resolve("test.zip");
         File content = readFileFromClasspath("data/somedata.json");
-        assertThat(new ZipFile(pathToZip.toFile()).isValidZipFile()).isFalse();
+        assertInvalidZip(pathToZip);
         Zips.zip(pathToZip, content);
-        assertThat(new ZipFile(pathToZip.toFile()).isValidZipFile()).isTrue();
+
+        assertValidZip(pathToZip);
         FileSlayer.deleteSilently(pathToZip);
     }
 
     @Test
-    public void jsonFile_zip_shouldCreateZippedPasswordProtectedFile() throws IOException {
+    public void jsonFile_zip_shouldCreateZippedAndEncryptedFile() throws IOException {
         Path pathToZip = Files.createTempDirectory("tst").resolve("test.zip");
         File content = readFileFromClasspath("data/somedata.json");
-        assertThat(new ZipFile(pathToZip.toFile()).isValidZipFile()).isFalse();
+        assertInvalidZip(pathToZip);
         Zips.zip(pathToZip, content, zipOpts()
           .encryptionMethod(CompressionEncryptionMethod.AES)
           .password(PASSWORD)
           .build());
 
-        ZipFile zipFile = new ZipFile(pathToZip.toFile());
-        assertThat(zipFile.isValidZipFile()).isTrue();
-        assertThat(zipFile.isEncrypted()).isTrue();
+        assertValidZip(pathToZip);
+        assertEncryptedZip(pathToZip);
+        FileSlayer.deleteSilently(pathToZip);
+    }
+
+    @Test
+    public void flowable_zipFlowable_shouldCreateZippedFile() throws Exception {
+        Path pathToZip = Files.createTempDirectory("test").resolve("test.zip");
+        AtomicInteger calls = new AtomicInteger();
+        Flowable<String> f = Flowable.range(100, 10).map(Object::toString)
+          .doOnCancel(() -> calls.incrementAndGet())
+          .subscribeOn(Schedulers.computation())
+          .delay(10, TimeUnit.MILLISECONDS);
+        Zips.zip(pathToZip, f, "something.txt");
+
+        assertValidZip(pathToZip);
+        FileSlayer.deleteSilently(pathToZip);
+    }
+
+    @Test
+    public void flowable_zipFlowable_shouldCreateZippedAndEncryptedFile() throws Exception {
+        Path pathToZip = Files.createTempDirectory("test").resolve("test.zip");
+        AtomicInteger calls = new AtomicInteger();
+        Flowable<String> f = Flowable.range(100, 10).map(Object::toString)
+          .doOnCancel(() -> calls.incrementAndGet())
+          .subscribeOn(Schedulers.computation())
+          .delay(10, TimeUnit.MILLISECONDS);
+        Zips.zip(pathToZip, f, "something.txt", zipOpts()
+          .encryptionMethod(CompressionEncryptionMethod.AES)
+          .password(PASSWORD)
+          .build());
+
+        assertValidZip(pathToZip);
+        assertEncryptedZip(pathToZip);
         FileSlayer.deleteSilently(pathToZip);
     }
 
@@ -75,15 +106,15 @@ class ZipFilesTest {
 
         final Path pathToZip = Files.createTempDirectory("test").resolve(UUID.randomUUID() + ".zip");
         pathToZip.toFile().createNewFile();
-        assertThat(new ZipFile(pathToZip.toFile()).isValidZipFile()).isFalse();
+        assertInvalidZip(pathToZip);
 
         flowableZip.subscribe(
           (byte[] bytes) -> {
               Files.write(pathToZip, bytes, StandardOpenOption.APPEND);
           });
-        assertThat(new ZipFile(pathToZip.toFile()).isValidZipFile()).isTrue();
-        FileSlayer.deleteSilently(pathToZip);
 
+        assertValidZip(pathToZip);
+        FileSlayer.deleteSilently(pathToZip);
     }
 
     @Test
