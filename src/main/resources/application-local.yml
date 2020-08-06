@@ -22,6 +22,9 @@ logger:
     io.micronaut.security: DEBUG
     no.ssb.dlp.pseudo.service: DEBUG
 
+storage:
+  gcs-service-account-file: gcs-secret/gcs_sa_dev.json
+
 pseudo.secrets:
   repo:
     secret1:
