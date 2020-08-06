@@ -9,12 +9,15 @@ import io.micronaut.http.annotation.Part;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.multipart.StreamingFileUpload;
+import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.rules.SecurityRule;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.mediatype.CompressionEncryptionMethod;
 import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
 import no.ssb.dlp.pseudo.service.util.HumanReadableBytes;
@@ -35,6 +38,7 @@ import static no.ssb.dlp.pseudo.service.util.Zips.ZipOptions.zipOpts;
 @RequiredArgsConstructor
 @Controller
 @Slf4j
+@Secured(SecurityRule.IS_AUTHENTICATED)
 public class PseudoController {
 
     private final PseudonymizerFactory pseudonymizerFactory;
@@ -60,6 +64,7 @@ public class PseudoController {
     @Post("/depseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV})
+    @Secured({PseudoServiceRole.ADMIN})
     public HttpResponse<Flowable> depseudonymizeFile(
       @Part("request") String requestString,
       StreamingFileUpload data,
