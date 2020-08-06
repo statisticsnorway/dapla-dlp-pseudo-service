@@ -74,6 +74,11 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>io.micronaut.security</groupId>
+      <artifactId>micronaut-security-jwt</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>no.ssb.dapla.dlp.pseudo.func</groupId>
       <artifactId>dapla-dlp-pseudo-func</artifactId>
       <version>0.5.0</version>
@@ -204,6 +209,11 @@
               <artifactId>micronaut-validation</artifactId>
               <version>${micronaut.version}</version>
             </path>
+            <path>
+              <groupId>io.micronaut.security</groupId>
+              <artifactId>micronaut-security-annotations</artifactId>
+              <version>${micronaut.security.version}</version>
+            </path>
           </annotationProcessorPaths>
         </configuration>
         <executions>
@@ -228,6 +238,11 @@
                   <groupId>io.micronaut</groupId>
                   <artifactId>micronaut-validation</artifactId>
                   <version>${micronaut.version}</version>
+                </path>
+                <path>
+                  <groupId>io.micronaut.security</groupId>
+                  <artifactId>micronaut-security-annotations</artifactId>
+                  <version>${micronaut.security.version}</version>
                 </path>
               </annotationProcessorPaths>
             </configuration>

@@ -6,6 +6,21 @@ micronaut:
     max-request-size: 2gb
     multipart:
       max-file-size: 2gb
+  security:
+    token:
+      name-key: preferred_username
+      jwt:
+        signatures:
+          jwks:
+            keycloak:
+              url: 'https://keycloak.prod-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
+    basic-auth:
+      enabled: false
+
+logger:
+  levels:
+    io.micronaut.security: DEBUG
+    no.ssb.dlp.pseudo.service: DEBUG
 
 pseudo.secrets:
   repo:
@@ -15,3 +30,8 @@ pseudo.secrets:
     pseudo-secret-sirius-person-fastsatt:
       content: C5sn7B4YtwcilAwuVx6NuAsMWLusOSA/ldia40ZugDI=
       type: AES256
+
+app-roles:
+  admins:
+    - kenneth.schulstad@ssb.no
+    - oyvind.strommen@ssb.no
