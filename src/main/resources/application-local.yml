@@ -12,8 +12,10 @@ micronaut:
       jwt:
         signatures:
           jwks:
-            keycloak:
+            keycloak-prod:
               url: 'https://keycloak.prod-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
+            keycloak-staging:
+              url: 'https://keycloak.staging-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
     basic-auth:
       enabled: false
 
@@ -37,4 +39,6 @@ pseudo.secrets:
 app-roles:
   admins:
     - kenneth.schulstad@ssb.no
+    - kenneth.schulstad@ssbmod.net
     - oyvind.strommen@ssb.no
+    - oyvind.strommen@ssbmod.net
