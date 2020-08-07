@@ -21,10 +21,10 @@ release                        Release a new version. Update POMs and tag the ne
 
 ## Curl examples
 
-### Pseudonymize JSON file
+### Pseudonymize JSON file and stream back the result 
 
 ```sh
-curl -X POST 'http://localhost:8080/depseudonymize/file' \
+curl 'http://localhost:8080/pseudonymize/file' \
 --form 'data=@src/test/resources/data/15k.json' \
 --form 'request={
   "pseudoConfig": {
@@ -39,13 +39,13 @@ curl -X POST 'http://localhost:8080/depseudonymize/file' \
 }'
 ```
 
-### Depseudonymize JSON file, output CSV
+### Depseudonymize JSON file and stream back the result as CSV
 
 ```sh
-curl -X POST 'http://localhost:8080/depseudonymize/file' \
---header 'Accept: text/csv' \
+curl 'http://localhost:8080/depseudonymize/file' \
 --form 'data=@src/test/resources/data/15k-pseudonymized.json' \
 --form 'request={
+  "targetContentType": "text/csv",
   "pseudoConfig": {
     "rules": [
       {
@@ -58,5 +58,26 @@ curl -X POST 'http://localhost:8080/depseudonymize/file' \
 }'
 ```
 
-Note that you can specify output format in the Accept header. 
-Valid values: `application/json`, `text/csv`
+### Depseudonymize JSON file and upload to google cloud storage as a zipped CSV-file
+```sh
+curl 'http://localhost:8080/depseudonymize/file' \
+--form 'data=@src/test/resources/data/15k-pseudonymized.json' \
+--form 'request={
+  "targetUri": "gs://my-bucket/depseudomized-csv.zip",
+  "targetContentType": "text/csv",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "id",
+        "pattern": "**/*identifikator*",
+        "func": "fpe-fnr(pseudo-secret-sirius-person-fastsatt)"
+      }
+    ]
+  },
+  "compression": {
+        "type": "application/zip",
+        "encryption": "AES",
+        "password": "kensentme"
+  }
+}'
+```
