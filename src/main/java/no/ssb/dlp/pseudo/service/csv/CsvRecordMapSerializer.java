@@ -1,12 +1,13 @@
 package no.ssb.dlp.pseudo.service.csv;
 
 import com.google.common.base.Joiner;
+import io.reactivex.Flowable;
 import no.ssb.dlp.pseudo.service.MapTraverser;
-import no.ssb.dlp.pseudo.service.RecordMap;
 import no.ssb.dlp.pseudo.service.RecordMapSerializer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class CsvRecordMapSerializer implements RecordMapSerializer<String> {
 
@@ -16,7 +17,7 @@ public class CsvRecordMapSerializer implements RecordMapSerializer<String> {
 
     // This implementation is a bit so-so - deducing header stuff from only one record.
     @Override
-    public String serialize(RecordMap record, int position) {
+    public String serialize(Map<String, Object> record, int position) {
         boolean recordHeaders = headers.isEmpty();
         boolean printHeaders = position == 0;
         List<String> values = new ArrayList<>();
@@ -37,6 +38,11 @@ public class CsvRecordMapSerializer implements RecordMapSerializer<String> {
         return (printHeaders ?
           JOINER.join(headers) + System.lineSeparator() : "") +
           JOINER.join(values) + System.lineSeparator();
+    }
+
+    @Override
+    public Flowable<String> serialize(Flowable<Map<String, Object>> recordStream) {
+        throw new RuntimeException("Not implemented yet!");
     }
 
 

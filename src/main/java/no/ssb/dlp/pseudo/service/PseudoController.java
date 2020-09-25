@@ -18,7 +18,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.storage.client.backend.gcs.GoogleCloudStorageBackend;
-import no.ssb.dlp.pseudo.service.mediatype.CompressionEncryptionMethod;
+import no.ssb.dlp.pseudo.service.mediatype.Compression;
 import no.ssb.dlp.pseudo.service.mediatype.MoreMediaTypes;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.util.HumanReadableBytes;
@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static no.ssb.dlp.pseudo.service.util.Zips.ZipOptions.zipOpts;
@@ -57,7 +56,12 @@ public class PseudoController {
             ProcessFileResult res = processFile(request, data, PseudoOperation.PSEUDONYMIZE);
             Flowable file = res.getFlowable();
             if (request.getTargetUri() != null) {
-                Completable fileUpload = uploadFile(request.getTargetUri(), file);
+                URI targetUri = request.getTargetUri();
+                Completable fileUpload = storageBackend
+                        .write(targetUri.toString(), file)
+                        .timeout(30, TimeUnit.SECONDS)
+                        .doOnError(throwable -> log.error("Upload failed: %s".formatted(targetUri), throwable))
+                        .doOnComplete(() -> log.info("Successful upload: %s".formatted(targetUri)));
                 return HttpResponse.ok(fileUpload.toFlowable());
             }
             return HttpResponse.ok(file).contentType(request.getTargetContentType());
@@ -77,7 +81,12 @@ public class PseudoController {
             ProcessFileResult fileResult = processFile(request, data, PseudoOperation.DEPSEUDONYMIZE);
             Flowable file = fileResult.getFlowable();
             if (request.getTargetUri() != null) {
-                Completable fileUpload = uploadFile(request.getTargetUri(), file);
+                URI targetUri = request.getTargetUri();
+                Completable fileUpload = storageBackend
+                        .write(targetUri.toString(), file)
+                        .timeout(30, TimeUnit.SECONDS)
+                        .doOnError(throwable -> log.error("Upload failed: %s".formatted(targetUri), throwable))
+                        .doOnComplete(() -> log.info("Successful upload: %s".formatted(targetUri)));
                 return HttpResponse.ok(fileUpload.toFlowable());
             }
             return HttpResponse.ok(file).contentType(request.getTargetContentType());
@@ -87,16 +96,8 @@ public class PseudoController {
         }
     }
 
-    private Completable uploadFile(URI uri, Flowable<byte[]> contents) {
-        return storageBackend
-                .write(uri.toString(), contents)
-                .timeout(10, TimeUnit.SECONDS)
-                .doOnError(throwable -> log.error(String.format("Upload failed: %s", uri), throwable))
-                .doOnComplete(() -> log.info(String.format("File uploaded: %s", uri)));
-    }
-
     private ProcessFileResult processFile(PseudoRequest request, StreamingFileUpload data, PseudoOperation operation) throws IOException {
-        MediaType targetContentType = validContentType(request.getTargetContentType());
+        MediaType targetContentType = MoreMediaTypes.validContentType(request.getTargetContentType());
         File tempFile = null;
         PseudoFileSource fileSource = null;
         try {
@@ -142,16 +143,6 @@ public class PseudoController {
           : pseudonymizer.depseudonymize(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
     }
 
-    private static MediaType validContentType(MediaType contentType) {
-        if (MoreMediaTypes.TEXT_CSV_TYPE.equals(contentType) || MediaType.APPLICATION_JSON_TYPE.equals(contentType)) {
-            return contentType;
-        } else if (MediaType.ALL_TYPE.equals(contentType)) {
-            return MediaType.APPLICATION_JSON_TYPE;
-        } else {
-            throw new IllegalArgumentException("Unsupported media type: " + contentType);
-        }
-    }
-
     private Single<File> receiveFile(StreamingFileUpload data) throws IOException {
         Path tempDir = java.nio.file.Files.createTempDirectory("temp");
         File tempFile = tempDir.resolve(data.getFilename()).toFile();
@@ -187,11 +178,6 @@ public class PseudoController {
     }
 
     @Data
-    static class PseudoConfig {
-        private List<PseudoFuncRule> rules;
-    }
-
-    @Data
     static class DatasetId {
         private String path;
         private String version;
@@ -201,17 +187,5 @@ public class PseudoController {
     static class ProcessFileResult {
         private final Flowable flowable;
         private final MediaType targetContentType;
-    }
-
-    @Data
-    static class Compression {
-        private MediaType type;
-        private CompressionEncryptionMethod encryption;
-        private char[] password;
-
-        public boolean isZipCompressionEnabled() {
-            return MoreMediaTypes.APPLICATION_ZIP_TYPE.equals(type);
-        }
-
     }
 }

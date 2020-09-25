@@ -12,7 +12,7 @@
   </parent>
 
   <properties>
-    <jdk.version>14</jdk.version>
+    <jdk.version>15</jdk.version>
     <maven.compiler.target>${jdk.version}</maven.compiler.target>
     <maven.compiler.source>${jdk.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -96,7 +96,7 @@
     <dependency>
       <groupId>no.ssb.dapla.storage</groupId>
       <artifactId>dapla-storage-client</artifactId>
-      <version>4.1.0</version>
+      <version>4.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -173,7 +173,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
-          <argLine>--enable-preview</argLine>
           <detail>true</detail>
           <includes>
             <include>%regex[.*]</include>
@@ -198,7 +197,6 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <release>${jdk.version}</release>
-          <compilerArgs>--enable-preview</compilerArgs>
           <annotationProcessorPaths>
             <path>
               <groupId>org.projectlombok</groupId>

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,27 +21,27 @@ class CsvRecordMapSerializerTest {
         serializer = new CsvRecordMapSerializer();
     }
 
-    public String serializeHeader(RecordMap recordMap) {
+    public String serializeHeader(Map<String, Object> recordMap) {
         return serializer.serialize(recordMap, 0).split("\\n")[0];
     }
 
-    public String serialize(RecordMap recordMap) {
+    public String serialize(Map<String, Object> recordMap) {
         return serializer.serialize(recordMap, 1);
     }
 
     @Test
     void simpleRecordMap_serialize_shouldCreateCsvLine() {
-        RecordMap r = Json.toObject(RecordMap.class, """
-        {
-            "navn": "Bolla",
-            "alder": 42,
-            "adresse": {
-                "adresselinjer": ["Bolleveien 1", "Bollerud"],
-                "postnummer": "0123",
-                "poststed": "Oslo"
-            }
-        }
-        """);
+        Map<String, Object> r = Json.toObject(RecordMap.class, """
+                {
+                    "navn": "Bolla",
+                    "alder": 42,
+                    "adresse": {
+                        "adresselinjer": ["Bolleveien 1", "Bollerud"],
+                        "postnummer": "0123",
+                        "poststed": "Oslo"
+                    }
+                }
+                """);
 
         assertThat(serializeHeader(r)).isEqualTo("navn;alder;adresselinjer[0];adresselinjer[1];postnummer;poststed");
         assertThat(serialize(r)).isEqualTo("Bolla;42;Bolleveien 1;Bollerud;0123;Oslo\n");
@@ -48,7 +49,7 @@ class CsvRecordMapSerializerTest {
 
     @Test
     void recordMapWithNullAndEmptyVals_serialize_shouldCreateCsvLine() {
-        RecordMap r = Json.toObject(RecordMap.class, """
+        Map<String, Object> r = Json.toObject(RecordMap.class, """
         {
             "someString": "Foo",
             "someEmptyString": "",
@@ -84,5 +85,4 @@ class CsvRecordMapSerializerTest {
           .isInstanceOf(CsvRecordMapSerializer.CsvSerializationException.class)
           .hasStackTraceContaining("CSV value to header mismatch for record at pos=1");
     }
-
 }

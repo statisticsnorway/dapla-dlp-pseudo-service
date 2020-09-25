@@ -18,6 +18,7 @@ import no.ssb.dlp.pseudo.service.StreamPseudonymizer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
@@ -66,8 +67,8 @@ public class JsonStreamPseudonymizer implements StreamPseudonymizer {
 
         if (jsonToken != null) {
             int position = ctx.currentPosition.getAndIncrement();
-            RecordMap record = OBJECT_MAPPER.readValue(jsonParser, RecordMap.class);
-            RecordMap processedRecord = ctx.operation == PseudoOperation.PSEUDONYMIZE
+            Map<String, Object> record = OBJECT_MAPPER.readValue(jsonParser, RecordMap.class);
+            Map<String, Object> processedRecord = ctx.operation == PseudoOperation.PSEUDONYMIZE
               ? recordPseudonymizer.pseudonymize(record)
               : recordPseudonymizer.depseudonymize(record);
             emitter.onNext(ctx.getSerializer().serialize(processedRecord, position));
