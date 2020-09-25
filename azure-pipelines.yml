@@ -9,13 +9,16 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+variables:
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+  MAVEN_OPTS: '-Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)'
+
 jobs:
+
   - job: testAndBuild
-    displayName: 'Run tests and build artifacts'
-    condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
-    variables:
-      MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
-      MAVEN_OPTS: '-Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)' 
+    displayName: 'Run tests and build maven artifacts'
+    container: maven@sha256:6d837359937c7aa0449e1dab864bb5c69c7cac896da8776d9c90fd25ed41ea12 # maven:3.6.3-openjdk-15
+    condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')) # Always, except from when a tag is pushed
     steps:
 
       #Cache maven artifacts  
@@ -30,41 +33,42 @@ jobs:
 
       #Authenticate with maven
       - task: MavenAuthenticate@0
-        displayName: 'Authenticate with maven'
+        displayName: 'Authenticate'
         inputs:
           mavenServiceConnections: 'mvnSsbBipPublic, mvnSsbBipReleases, mvnSsbBipSnapshots'
 
-      #Download java 14
+      #Test and build
+      - task: Maven@3
+        displayName: 'Test and build'
+        inputs:
+          goals: 'verify test'
+          options: '-P ssb-bip --batch-mode'
+          mavenOptions: '$(MAVEN_OPTS)'
+
+      # Publish pipeline artifact
+      - publish: target
+        displayName: 'Publish artifact to pipeline'
+        artifact: target
+
+  - job: buildAndPushDockerImage
+    dependsOn: testAndBuild
+    displayName: 'Build and push docker image'
+    steps:
+
+      # Download pipeline artifact
+      - download: current
+        displayName: 'Download pipeline artifact'
+        patterns: |
+          **/dapla-dlp-pseudo-service-*.jar
+          **/logback*.xml
+        artifact: target
+
+      #Copy pipeline artifact into working directory
       - bash: |
-          echo "Downloading java 14 from https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz"
-          curl https://download.java.net/java/GA/jdk14.0.1/664493ef4a6946b186ff29eb326336a2/7/GPL/openjdk-14.0.1_linux-x64_bin.tar.gz --output $HOME/openjdk-14.0.1_linux-x64_bin.tar.gz          
-        displayName: 'Download java 14'
-
-      #Install java 14
-      - task: JavaToolInstaller@0
-        displayName: 'Install Java 14'
-        inputs:
-          versionSpec: '14'
-          jdkArchitectureOption: 'x64'
-          jdkSourceOption: 'LocalDirectory'
-          jdkFile: "$(HOME)/openjdk-14.0.1_linux-x64_bin.tar.gz"
-          jdkDestinationDirectory: "$(HOME)/builds/binaries/externals"
-
-      #Build
-      - task: Maven@3
-        displayName: 'Compile'
-        inputs:
-           goals: 'compile'
-           options: '-P ssb-bip -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode'
-           mavenOptions: '$(MAVEN_OPTS)'
-      
-      #Run tests
-      - task: Maven@3
-        displayName: 'Test'
-        inputs:
-           goals: 'verify test'
-           options: '-P ssb-bip --batch-mode'
-           mavenOptions: '$(MAVEN_OPTS)'
+          ls -latr $(Pipeline.Workspace)/target
+          cp -r $(Pipeline.Workspace)/target .
+          ls -latr target
+        displayName: 'Copy pipeline artifact into working directory'
 
       #Docker login
       - task: Docker@2
@@ -73,6 +77,16 @@ jobs:
           command: 'login'
           containerRegistry: 'gcrServiceConnection'
 
+      #Create image tag
+      - bash: |
+          BRANCH="$(Build.SourceBranchName)"
+          COMMIT_SHA="$(Build.SourceVersion)"
+          IMAGE_TAG="${BRANCH}-${COMMIT_SHA:0:8}"
+          echo "Image tag: ${IMAGE_TAG}"
+          echo "##vso[task.setvariable variable=image_tag]${IMAGE_TAG}"
+        displayName: 'Create image tag'
+        failOnStderr: true
+
       #Docker build and push
       - task: Docker@2
         displayName: 'Build and push Docker image'
@@ -80,27 +94,30 @@ jobs:
           containerRegistry: 'gcrServiceConnection'
           repository: 'prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
           command: 'buildAndPush'
-          tags: '$(Build.SourceVersion)'
+          tags: '$(IMAGE_TAG)'
 
   - job: promoteToProduction
     displayName: 'Tag production image'
-    condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/')
+    condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/') # Whenever a tag is pushed
     steps:
-      
+
       # Download GCR credentials
       - task: DownloadSecureFile@1
         name: gcrJsonKey
         displayName: 'Download GCR credentials'
         inputs:
           secureFile: 'gcr-key.json'
-      
+
+      # Tag production image
       - bash: |
           regex="refs/tags/(.*)"
           [[ $(Build.SourceBranch) =~ $regex ]]
-          TAG="${BASH_REMATCH[1]}"
-          echo "Tagging image eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$(Build.SourceVersion) with $TAG"
+          RELEASE_TAG="${BASH_REMATCH[1]}"
+          COMMIT_SHA="$(Build.SourceVersion)"
+          CURRENT_TAG="master-${COMMIT_SHA:0:8}"
+          echo "Tagging image eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$CURRENT_TAG with $RELEASE_TAG"
           cat $(gcrJsonKey.secureFilePath) | docker login -u _json_key --password-stdin https://eu.gcr.io
-          docker pull eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$(Build.SourceVersion)
-          docker tag eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$(Build.SourceVersion) eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$TAG
-          docker push eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$TAG
+          docker pull eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$CURRENT_TAG
+          docker tag eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$CURRENT_TAG eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$RELEASE_TAG
+          docker push eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service:$RELEASE_TAG
         displayName: 'Tag production image'
