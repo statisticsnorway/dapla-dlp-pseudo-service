@@ -19,5 +19,11 @@ public interface RecordMapSerializer<T> {
      */
     T serialize(Map<String, Object> record, int position);
 
+    /**
+     * Serialize a {@link Flowable} of records.
+     *
+     * @param recordStream the stream of records to serialize
+     * @return a {@link Flowable} of the serialized records
+     */
     Flowable<T> serialize(Flowable<Map<String, Object>> recordStream);
 }

@@ -12,6 +12,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Intercept all fields, determine if they should be (de)pseudonymized and perform the (de)pseudonymization where
+ * appropriate.
+ */
 @RequiredArgsConstructor
 public class FieldPseudoInterceptor implements FieldInterceptor {
 

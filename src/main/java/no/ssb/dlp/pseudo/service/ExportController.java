@@ -41,9 +41,13 @@ public class ExportController {
 
     @Post("/export")
     public Single<HttpResponse<String>> export(@Body ExportRequest request) {
+
+        // Resolve pseudo config
+        // TODO: Read and use pseudo config from .dataset-meta.json if no pseudo config is present in request
         PseudoFuncs pseudoFuncs = new PseudoFuncs(request.getPseudoConfig().getRules(), secrets);
         FieldPseudoInterceptor fieldPseudoInterceptor = new FieldPseudoInterceptor(pseudoFuncs, PseudoOperation.DEPSEUDONYMIZE);
 
+        // TODO: Implement and utilize DatasetStorage#getDatasetUri(String datasetPath)
         DatasetUri datasetUri = DatasetUri.of(
                 request.getDatasetIdentifier().getParentUri().toString(),
                 request.getDatasetIdentifier().getPath(),
@@ -62,7 +66,7 @@ public class ExportController {
                 .encryptionMethod(request.getCompression().getEncryption())
                 .build();
 
-        // Compress stream contents
+        // Compress and encrypt stream contents
         Flowable<byte[]> compressedRecords = Zips.zip(serializedRecords, "records.%s".formatted(targetContentType.getExtension().toLowerCase()), zipOptions);
 
         // Upload stream contents
