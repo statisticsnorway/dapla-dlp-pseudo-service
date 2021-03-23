@@ -1,0 +1,49 @@
+micronaut:
+  application:
+    name: pseudo-service
+  server:
+    port: 30950
+    cors:
+      enabled: true
+    thread-selection: AUTO
+    max-request-size: 2gb
+    multipart:
+      max-file-size: 2gb
+  security:
+    token:
+      name-key: preferred_username
+      jwt:
+        signatures:
+          jwks:
+            keycloak-prod:
+              url: 'https://keycloak.prod-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
+            keycloak-staging:
+              url: 'https://keycloak.staging-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
+    basic-auth:
+      enabled: false
+
+logger:
+  levels:
+    io.micronaut.security: DEBUG
+    no.ssb.dlp.pseudo.service: DEBUG
+
+services:
+  secrets:
+    impl: LOCAL
+    overrides:
+      pseudo-secret-secret1: C5sn7B4YtwcilAwuVx6NuAsMWLusOSA/ldia40ZugDI=
+
+export:
+  default-target-root: gs://ssb-dataexport-dev-default/export
+
+storage:
+  gcs-service-account-file: private/gcp/sa-keys/dev-sirius-sa-key.json
+
+pseudo.secrets:
+  secret1:
+    id: pseudo-secret-secret1
+    type: AES256
+
+app-roles:
+  admins:
+    - kenneth.schulstad@ssb.no

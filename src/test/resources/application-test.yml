@@ -1,0 +1,10 @@
+micronaut:
+  application.name: pseudo-service
+  server:
+    port: 18080
+
+services:
+  secrets:
+    impl: LOCAL
+    overrides:
+      foo: bar

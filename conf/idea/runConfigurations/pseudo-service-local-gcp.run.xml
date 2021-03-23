@@ -1,0 +1,21 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="pseudo-service-local-gcp" type="MicronautRunConfigurationType" factoryName="Micronaut">
+    <module name="dapla-dlp-pseudo-service" />
+    <option name="alternativeJrePath" />
+    <option name="alternativeJrePathEnabled" value="false" />
+    <option name="includeProvidedScope" value="true" />
+    <option name="mainClass" value="no.ssb.dlp.pseudo.service.Application" />
+    <option name="passParentEnvs" value="true" />
+    <option name="programParameters" value="" />
+    <option name="shortenCommandLine" />
+    <option name="vmParameters" value="-Dmicronaut.bootstrap.context=true" />
+    <option name="workingDirectory" value="$MODULE_DIR$" />
+    <envs>
+      <env name="MICRONAUT_ENVIRONMENTS" value="local,local-gcp" />
+      <env name="MICRONAUT_CONFIG_FILES" value="conf/bootstrap-local-gcp.yml,conf/application-local.yml" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
