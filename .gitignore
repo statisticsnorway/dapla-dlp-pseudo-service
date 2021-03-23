@@ -12,3 +12,4 @@ out/
 .settings
 .classpath
 micronaut-cli.yml
+private/

@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>no.ssb.dlp.pseudo.service</groupId>
   <artifactId>dapla-dlp-pseudo-service</artifactId>
-  <version>0.0.6-SNAPSHOT</version>
+  <version>0.1-0-SNAPSHOT</version>
 
   <parent>
     <groupId>io.micronaut</groupId>
     <artifactId>micronaut-parent</artifactId>
-    <version>2.0.1</version>
+    <version>2.4.0</version>
   </parent>
 
   <properties>
@@ -17,10 +17,11 @@
     <maven.compiler.source>${jdk.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <micronaut.version>2.0.1</micronaut.version>
+    <micronaut.version>2.4.0</micronaut.version>
     <exec.mainClass>no.ssb.dlp.pseudo.service.Application</exec.mainClass>
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
+    <micronaut-openapi.version>2.3.1</micronaut-openapi.version>
   </properties>
 
   <scm>
@@ -79,6 +80,41 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>io.micronaut.cache</groupId>
+      <artifactId>micronaut-cache-core</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.micronaut.cache</groupId>
+      <artifactId>micronaut-cache-caffeine</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.micronaut.gcp</groupId>
+      <artifactId>micronaut-gcp-common</artifactId>
+      <version>3.4.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.micronaut.gcp</groupId>
+      <artifactId>micronaut-gcp-secret-manager</artifactId>
+      <version>3.4.0</version>
+    </dependency>
+    <dependency> <!-- TODO: This should not be necessary - remove when micronaut-gcp fixes issues with their pom, ref: https://github.com/micronaut-projects/micronaut-core/issues/5035 -->
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-secretmanager</artifactId>
+      <version>1.2.8</version>
+    </dependency>
+    <dependency>
+      <groupId>no.ssb.dapla.dlp.pseudo.func</groupId>
+      <artifactId>dapla-dlp-pseudo-func</artifactId>
+      <version>0.5.0</version>
+    </dependency>
+    <dependency>
+      <groupId>no.ssb.dapla.dlp.pseudo</groupId>
+      <artifactId>dapla-dlp-pseudo-core</artifactId>
+      <version>0.1.3-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>no.ssb.dapla.dlp.pseudo.func</groupId>
       <artifactId>dapla-dlp-pseudo-func</artifactId>
       <version>0.5.0</version>
@@ -99,6 +135,11 @@
       <version>4.2.0</version>
     </dependency>
     <dependency>
+      <groupId>no.ssb.dapla</groupId>
+      <artifactId>dataset-api</artifactId>
+      <version>0.6</version>
+    </dependency>
+    <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <version>1.18.12</version>
@@ -107,7 +148,7 @@
     <dependency>
      <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>28.1-jre</version>
+      <version>29.0-jre</version>
     </dependency>
     <dependency>
       <groupId>com.univocity</groupId>
@@ -122,7 +163,7 @@
     <dependency>
       <groupId>net.lingala.zip4j</groupId>
       <artifactId>zip4j</artifactId>
-      <version>2.6.1</version>
+      <version>2.6.4</version>
     </dependency>
     <dependency>
       <groupId>com.github.davidmoten</groupId>
@@ -135,6 +176,11 @@
       <version>1.2.3</version>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-annotations</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
@@ -223,6 +269,11 @@
               <groupId>io.micronaut.security</groupId>
               <artifactId>micronaut-security-annotations</artifactId>
               <version>${micronaut.security.version}</version>
+            </path>
+            <path>
+              <groupId>io.micronaut.openapi</groupId>
+              <artifactId>micronaut-openapi</artifactId>
+              <version>${micronaut-openapi.version}</version>
             </path>
           </annotationProcessorPaths>
         </configuration>
