@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>no.ssb.dlp.pseudo.service</groupId>
   <artifactId>dapla-dlp-pseudo-service</artifactId>
-  <version>0.1.3-SNAPSHOT</version>
+  <version>0.1.3</version>
 
   <parent>
     <groupId>io.micronaut</groupId>
@@ -29,7 +29,7 @@
     <connection>scm:git:git://github.com/statisticsnorway/dapla-dlp-pseudo-service.git</connection>
     <developerConnection>scm:git:git@github.com:statisticsnorway/dapla-dlp-pseudo-service.git</developerConnection>
     <url>https://github.com/statisticsnorway/dapla-dlp-pseudo-service</url>
-    <tag>0.1-1</tag>
+    <tag>0.1.3</tag>
   </scm>
 
   <repositories>
@@ -227,7 +227,7 @@
                   <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                     <mainClass>${exec.mainClass}</mainClass>
                   </transformer>
-                  <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                 </transformers>
                 <filters>
                   <filter>
