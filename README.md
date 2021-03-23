@@ -108,7 +108,7 @@ curl 'http://localhost:30950/depseudonymize/file' \
 --header "Authorization: Bearer ${dapla_auth_token}" \
 --form 'data=@src/test/resources/data/15k-pseudonymized.json' \
 --form 'request={
-  "targetUri": "gs://ssb-dataexport-dev-default/export/depseudomized-json.zip",
+  "targetUri": "gs://ssb-dataexport-dev-default/export/depseudonymized-csv.zip",
   "targetContentType": "text/csv",
   "pseudoConfig": {
     "rules": [
