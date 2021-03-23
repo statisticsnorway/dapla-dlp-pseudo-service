@@ -102,7 +102,7 @@ curl 'http://localhost:30950/depseudonymize/file' \
 }'
 ```
 
-### Depseudonymize JSON file and upload to google cloud storage as a zipped CSV-file
+### Depseudonymize JSON file and upload to google cloud storage as as zipped CSV-file
 ```sh
 curl 'http://localhost:30950/depseudonymize/file' \
 --header "Authorization: Bearer ${dapla_auth_token}" \
