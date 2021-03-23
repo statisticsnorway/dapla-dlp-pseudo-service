@@ -27,6 +27,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
+import java.security.Principal;
 import java.util.Set;
 
 // TODO: Implement and utilize DatasetStorage#getDatasetUri(String datasetPath)
@@ -43,7 +44,9 @@ public class ExportController {
 
     @Post("/export")
     @Secured({PseudoServiceRole.ADMIN})
-    public Single<ExportService.DatasetExportResult> export(@Body @Valid ExportRequest request) {
+    public Single<ExportService.DatasetExportResult> export(@Body @Valid ExportRequest request, Principal principal) {
+        log.info("Export dataset - user={}, dataset={}", principal.getName(), request.getDatasetIdentifier().asDatasetUri());
+
         ExportService.DatasetExport datasetExport = ExportService.DatasetExport.builder()
           .sourceDatasetUri(request.getDatasetIdentifier().asDatasetUri())
           .columnSelectors(request.getColumnSelectors())
