@@ -21,7 +21,7 @@ public interface CatalogService {
     @Builder
     class GetDatasetRequest {
         private String path;
-        private String version;
+        private String timestamp;
     }
 
     @Data

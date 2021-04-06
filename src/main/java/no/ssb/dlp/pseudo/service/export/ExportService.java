@@ -92,7 +92,7 @@ public class ExportService {
     public Single<DatasetExportResult> export(DatasetExport e) {
         CatalogService.Dataset datasetInfo = catalogService.getDataset(GetDatasetRequest.builder()
           .path(e.getSourceDatasetId().getPath())
-          .version(e.getSourceDatasetId().getVersion())
+          .timestamp(e.getSourceDatasetId().getVersion())
           .build()).blockingGet()
           .getDataset();
 

@@ -71,7 +71,7 @@ public class ExportController {
        DatasetId datasetId() {
             return DatasetId.newBuilder()
               .setPath(path)
-              .setVersion(timestamp)
+              .setVersion(timestamp != null ? timestamp : System.currentTimeMillis() + "")
               .build();
         }
     }
