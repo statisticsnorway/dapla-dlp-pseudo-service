@@ -9,7 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dapla.dataset.api.DatasetId;
 import no.ssb.dapla.dataset.uri.DatasetUri;
+import no.ssb.dapla.parquet.FieldInterceptor;
 import no.ssb.dapla.storage.client.DatasetStorage;
 import no.ssb.dapla.storage.client.backend.gcs.GoogleCloudStorageBackend;
 import no.ssb.dlp.pseudo.core.FieldPseudoInterceptor;
@@ -21,9 +23,11 @@ import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
 import no.ssb.dlp.pseudo.core.map.RecordMapSerializerFactory;
 import no.ssb.dlp.pseudo.core.util.PathJoiner;
 import no.ssb.dlp.pseudo.core.util.Zips;
+import no.ssb.dlp.pseudo.service.catalog.CatalogService;
 import no.ssb.dlp.pseudo.service.datasetmeta.DatasetMetaService;
 import no.ssb.dlp.pseudo.service.pseudo.PseudoConfig;
 import no.ssb.dlp.pseudo.service.pseudo.PseudoSecrets;
+import no.ssb.dlp.pseudo.service.useraccess.UserAccessService;
 
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
@@ -39,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.CharMatcher.anyOf;
 import static com.google.common.base.CharMatcher.inRange;
 import static no.ssb.dlp.pseudo.core.util.Zips.ZipOptions.zipOpts;
+import static no.ssb.dlp.pseudo.service.catalog.CatalogService.GetDatasetRequest;
 
 @RequiredArgsConstructor
 @Singleton
@@ -54,17 +59,25 @@ public class ExportService {
     private final GoogleCloudStorageBackend storageBackend;
     private final PseudoSecrets pseudoSecrets;
     private final DatasetMetaService datasetMetaService;
+    private final CatalogService catalogService;
+    private final UserAccessService userAccessService;
 
     @Data
     @Builder
     @Introspected
     static class DatasetExport {
-        private DatasetUri sourceDatasetUri;
+        private String userId;
+
+        @NotNull
+        private DatasetId sourceDatasetId;
         private Set<String> columnSelectors;
 
         @NotNull
         private Compression compression;
+
+        private Boolean depseudonymize;
         private PseudoConfig pseudoConfig;
+
         private String targetPath;
         private String targetName;
         private MediaType targetContentType;
@@ -77,14 +90,38 @@ public class ExportService {
     }
 
     public Single<DatasetExportResult> export(DatasetExport e) {
-        FieldPseudoInterceptor fieldPseudoInterceptor = initPseudoInterceptor(e.getPseudoConfig(), e.getSourceDatasetUri());
+        CatalogService.Dataset datasetInfo = catalogService.getDataset(GetDatasetRequest.builder()
+          .path(e.getSourceDatasetId().getPath())
+          .version(e.getSourceDatasetId().getVersion())
+          .build()).blockingGet()
+          .getDataset();
+
+        UserAccessService.DatasetPrivilege accessPrivilege = e.getDepseudonymize()
+          ? UserAccessService.DatasetPrivilege.DEPSEUDO
+          : UserAccessService.DatasetPrivilege.READ;
+
+        Boolean hasAccess = userAccessService.hasAccess(UserAccessService.AccessCheckRequest.builder()
+          .userId(e.getUserId())
+          .privilege(accessPrivilege)
+          .path(datasetInfo.getId().getPath())
+          .state(datasetInfo.getState())
+          .valuation(datasetInfo.getValuation())
+          .build()).blockingGet();
+
+        if (! hasAccess) {
+            throw new ExportServiceException("User %s does not have %s access to ".formatted(e.getUserId(), accessPrivilege, datasetInfo.getId().getPath()));
+        }
+
+        FieldInterceptor fieldPseudoInterceptor = e.getDepseudonymize()
+          ? initPseudoInterceptor(e.getPseudoConfig(), datasetInfo.datasetUri())
+          : FieldInterceptor.noOp();
 
         String targetName = Optional.ofNullable(e.getTargetName())
-          .orElse(e.getSourceDatasetUri().getPath().replaceFirst(".*/([^/?]+).*", "$1"));
+          .orElse(e.getSourceDatasetId().getPath().replaceFirst(".*/([^/?]+).*", "$1"));
         MediaType targetContentType = MoreMediaTypes.validContentType(e.getTargetContentType());
 
         // Initiate record stream
-        Flowable<Map<String, Object>> records = datasetClient.readParquetRecords(e.getSourceDatasetUri(), e.getColumnSelectors(), fieldPseudoInterceptor);
+        Flowable<Map<String, Object>> records = datasetClient.readParquetRecords(datasetInfo.datasetUri(), e.getColumnSelectors(), fieldPseudoInterceptor);
 
         // Serialize records
         Flowable<String> serializedRecords = RecordMapSerializerFactory.newFromMediaType(targetContentType).serialize(records);
@@ -135,4 +172,15 @@ public class ExportService {
         PseudoFuncs pseudoFuncs = new PseudoFuncs(pseudoConfig.getRules(), pseudoSecrets.resolve());
         return new FieldPseudoInterceptor(pseudoFuncs, PseudoOperation.DEPSEUDONYMIZE);
     }
+
+    class ExportServiceException extends RuntimeException {
+        public ExportServiceException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public ExportServiceException(String message) {
+            super(message);
+        }
+    }
+
 }

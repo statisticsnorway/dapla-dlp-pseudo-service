@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import no.ssb.dapla.dataset.uri.DatasetUri;
+import no.ssb.dapla.dataset.api.DatasetId;
 import no.ssb.dlp.pseudo.core.file.Compression;
 import no.ssb.dlp.pseudo.core.file.CompressionEncryptionMethod;
 import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
@@ -26,11 +26,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.net.URI;
 import java.security.Principal;
 import java.util.Set;
-
-// TODO: Implement and utilize DatasetStorage#getDatasetUri(String datasetPath)
 
 @RequiredArgsConstructor
 @Controller
@@ -45,11 +42,13 @@ public class ExportController {
     @Post("/export")
     @Secured({PseudoServiceRole.ADMIN})
     public Single<ExportService.DatasetExportResult> export(@Body @Valid ExportRequest request, Principal principal) {
-        log.info("Export dataset - user={}, dataset={}", principal.getName(), request.getDatasetIdentifier().asDatasetUri());
+        log.info("Export dataset - user={}, dataset={}", principal.getName(), request.getSourceDataset().getPath());
 
         ExportService.DatasetExport datasetExport = ExportService.DatasetExport.builder()
-          .sourceDatasetUri(request.getDatasetIdentifier().asDatasetUri())
+          .userId(principal.getName())
+          .sourceDatasetId(request.getSourceDataset().datasetId())
           .columnSelectors(request.getColumnSelectors())
+          .depseudonymize(request.getDepseudonymize())
           .pseudoConfig(request.getPseudoConfig())
           .compression(Compression.builder()
             .encryption(CompressionEncryptionMethod.AES)
@@ -66,20 +65,23 @@ public class ExportController {
 
    @Data
     static class DatasetIdentifier {
-        private URI parentUri;
         private String path;
-        private String version;
+        private String timestamp;
 
-        DatasetUri asDatasetUri() {
-            return DatasetUri.of(parentUri.toString(), path, version);
+       DatasetId datasetId() {
+            return DatasetId.newBuilder()
+              .setPath(path)
+              .setVersion(timestamp)
+              .build();
         }
     }
 
     @Data
     @Introspected
     static class ExportRequest {
+
         @NotNull
-        private DatasetIdentifier datasetIdentifier;
+        private DatasetIdentifier sourceDataset;
 
         /**
          * A set of glob patterns that can be used to specify a subset of all fields to export.
@@ -87,8 +89,11 @@ public class ExportController {
          */
         private Set<String> columnSelectors = Set.of();
 
+        /** Whether or not to depseudonymize dataset during export */
+        private Boolean depseudonymize;
+
         /**
-         * The pseudonymization config to apply
+         * The pseudonymization config to apply - if depseudonymize = true
          */
         private PseudoConfig pseudoConfig = new PseudoConfig();
 
