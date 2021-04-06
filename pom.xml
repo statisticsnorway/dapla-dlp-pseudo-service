@@ -106,11 +106,6 @@
       <version>1.2.8</version>
     </dependency>
     <dependency>
-      <groupId>no.ssb.dapla.dlp.pseudo.func</groupId>
-      <artifactId>dapla-dlp-pseudo-func</artifactId>
-      <version>0.5.0</version>
-    </dependency>
-    <dependency>
       <groupId>no.ssb.dapla.dlp.pseudo</groupId>
       <artifactId>dapla-dlp-pseudo-core</artifactId>
       <version>0.1.4</version>
