@@ -7,10 +7,13 @@ import no.ssb.dapla.dataset.api.DatasetState;
 import no.ssb.dapla.dataset.api.Valuation;
 import no.ssb.dlp.pseudo.service.security.StaticRolesConfig;
 
+import javax.inject.Singleton;
+
 /**
  * UserAccessService that grants access iff the userId is among a preconfigured set of admin users.
  */
 @RequiredArgsConstructor
+@Singleton
 @Requires(property = UserAccessService.CONFIG_PREFIX + ".impl", value="STATIC")
 public class StaticUserAccessService implements UserAccessService {
 
