@@ -9,6 +9,16 @@ micronaut:
     max-request-size: 2gb
     multipart:
       max-file-size: 2gb
+  http:
+    services:
+      dapla-catalog:
+        #impl: MOCK
+        urls:
+          - "http://localhost:10110"
+      dapla-user-access:
+        #impl: MOCK
+        urls:
+          - "http://localhost:10100"
   security:
     token:
       name-key: preferred_username
