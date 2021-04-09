@@ -6,6 +6,8 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.scheduling.TaskExecutors;
+import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.validation.Validated;
@@ -41,6 +43,7 @@ public class ExportController {
 
     @Post("/export")
     @Secured({PseudoServiceRole.ADMIN})
+    @ExecuteOn(TaskExecutors.IO)
     public Single<ExportService.DatasetExportResult> export(@Body @Valid ExportRequest request, Principal principal) {
         log.info("Export dataset - user={}, dataset={}", principal.getName(), request.getSourceDataset().getPath());
 
