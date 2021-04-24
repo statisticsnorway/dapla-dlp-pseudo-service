@@ -23,6 +23,7 @@ import no.ssb.dlp.pseudo.core.file.CompressionEncryptionMethod;
 import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
 import no.ssb.dlp.pseudo.core.util.PathJoiner;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
+import no.ssb.dlp.pseudo.service.util.DatasetIdParser;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -51,7 +52,7 @@ public class ExportController {
 
         ExportService.DatasetExport datasetExport = ExportService.DatasetExport.builder()
           .userId(principal.getName())
-          .sourceDatasetId(request.datasetId())
+          .sourceDatasetId(datasetIdOf(request.getDatasetPath()))
           .columnSelectors(request.getColumnSelectors() == null ? Set.of() : request.getColumnSelectors())
           .depseudonymize(request.getDepseudonymize())
           .pseudoRules(request.getPseudoRules() == null ? List.of() : request.getPseudoRules())
@@ -75,10 +76,6 @@ public class ExportController {
         /** Path to dataset to be exported */
         @NotNull
         private String datasetPath;
-
-        /** Optional timestamp of dataset - will be resolved against the closest matching.
-         * If not specified, request timestamp will be used. */
-        private Long datasetTimestamp;
 
         /**
          * A set of glob patterns that can be used to specify a subset of all fields to export.
@@ -124,12 +121,10 @@ public class ExportController {
          */
         private List<PseudoFuncRule> pseudoRules = new ArrayList<>();
 
-        DatasetId datasetId() {
-            return DatasetId.newBuilder()
-              .setPath(datasetPath)
-              .setVersion("" + (datasetTimestamp != null ? datasetTimestamp : System.currentTimeMillis()))
-              .build();
-        }
+        /** Path to dataset that pseudo rules should be retrieved from (if different from dataset to be exported) */
+    // TODO: Translate DatasetIdParser.ParseException so that it maps to 400
+    private DatasetId datasetIdOf(String path) {
+        return (path == null) ? null : DatasetIdParser.parse(path);
     }
 
 }
