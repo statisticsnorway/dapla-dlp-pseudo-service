@@ -56,6 +56,7 @@ public class ExportController {
           .columnSelectors(request.getColumnSelectors() == null ? Set.of() : request.getColumnSelectors())
           .depseudonymize(request.getDepseudonymize())
           .pseudoRules(request.getPseudoRules() == null ? List.of() : request.getPseudoRules())
+          .pseudoRulesDatasetId(datasetIdOf(request.getPseudoRulesDatasetPath()))
           .compression(Compression.builder()
             .encryption(CompressionEncryptionMethod.AES)
             .type(MoreMediaTypes.APPLICATION_ZIP_TYPE)
@@ -122,6 +123,9 @@ public class ExportController {
         private List<PseudoFuncRule> pseudoRules = new ArrayList<>();
 
         /** Path to dataset that pseudo rules should be retrieved from (if different from dataset to be exported) */
+        private String pseudoRulesDatasetPath;
+    }
+
     // TODO: Translate DatasetIdParser.ParseException so that it maps to 400
     private DatasetId datasetIdOf(String path) {
         return (path == null) ? null : DatasetIdParser.parse(path);
