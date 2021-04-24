@@ -21,7 +21,6 @@ import no.ssb.dlp.pseudo.core.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.file.Compression;
 import no.ssb.dlp.pseudo.core.file.CompressionEncryptionMethod;
 import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
-import no.ssb.dlp.pseudo.core.util.PathJoiner;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.util.DatasetIdParser;
 
@@ -41,7 +40,7 @@ import java.util.Set;
 @Validated
 public class ExportController {
 
-    private final ExportConfig exportConfig;
+//    private final ExportConfig exportConfig;
     private final ExportService exportService;
 
     @Post("/export")
@@ -62,12 +61,16 @@ public class ExportController {
             .type(MoreMediaTypes.APPLICATION_ZIP_TYPE)
             .password(request.getTargetPassword())
             .build())
-          .targetPath(PathJoiner.joinWithoutLeadingOrTrailingSlash(exportConfig.getDefaultTargetRoot(), request.getTargetPath()))
           .targetContentName(request.getTargetContentName())
           .targetContentType(request.getTargetContentType())
           .build();
 
         return exportService.export(datasetExport);
+    }
+
+    // TODO: Translate DatasetIdParser.ParseException so that it maps to 400
+    private DatasetId datasetIdOf(String path) {
+        return (path == null) ? null : DatasetIdParser.parse(path);
     }
 
     @Data
@@ -83,11 +86,6 @@ public class ExportController {
          * A dataset can however be exported in its entirety by simply omitting any column selectors.
          */
         private Set<String> columnSelectors = Set.of();
-
-        /**
-         * Path to where the exported dataset archive will be stored.
-         */
-        private String targetPath;
 
         /**
          * Descriptive name of the contents. This will be used as baseline for the target archive name and its contents.
@@ -124,11 +122,6 @@ public class ExportController {
 
         /** Path to dataset that pseudo rules should be retrieved from (if different from dataset to be exported) */
         private String pseudoRulesDatasetPath;
-    }
-
-    // TODO: Translate DatasetIdParser.ParseException so that it maps to 400
-    private DatasetId datasetIdOf(String path) {
-        return (path == null) ? null : DatasetIdParser.parse(path);
     }
 
 }

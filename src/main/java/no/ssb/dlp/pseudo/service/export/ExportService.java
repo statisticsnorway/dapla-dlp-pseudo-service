@@ -57,41 +57,13 @@ public class ExportService {
       .or(inRange('0', '9'))
       .or(anyOf("_-"));
 
+    private final ExportConfig exportConfig;
     private final DatasetStorage datasetClient;
     private final GoogleCloudStorageBackend storageBackend;
     private final PseudoSecrets pseudoSecrets;
     private final DatasetMetaService datasetMetaService;
     private final CatalogService catalogService;
     private final UserAccessService userAccessService;
-
-    @Data
-    @Builder
-    @Introspected
-    static class DatasetExport {
-        private String userId;
-
-        @NotNull
-        private DatasetId sourceDatasetId;
-        private Set<String> columnSelectors;
-
-        @NotNull
-        private Compression compression;
-
-        private Boolean depseudonymize;
-
-        private List<PseudoFuncRule> pseudoRules;
-        private DatasetId pseudoRulesDatasetId;
-
-        private String targetPath;
-        private String targetContentName;
-        private MediaType targetContentType;
-    }
-
-    @Data
-    @Builder
-    static class DatasetExportResult {
-        private String targetUri;
-    }
 
     public Single<DatasetExportResult> export(DatasetExport e) {
         // Retrieve dataset information from the catalog service
@@ -127,7 +99,8 @@ public class ExportService {
         Flowable<byte[]> compressedRecords = encryptAndCompress(e, serializedRecords);
 
         // Upload stream contents
-        String targetUri = PathJoiner.joinWithoutLeadingOrTrailingSlash(e.getTargetPath(), filenameOf(e.getTargetContentName(), e.getCompression().getType()));
+        String filename = filenameOf(e.getTargetContentName(), e.getCompression().getType());
+        String targetUri = targetUriOf(e.getSourceDatasetId(), filename);
         log.debug("Uploading results to %s".formatted(targetUri));
         return storageBackend
           .write(targetUri, compressedRecords)
@@ -206,6 +179,15 @@ public class ExportService {
         return "%s-%s.%s".formatted(timestamp, contentName, contentType.getExtension().toLowerCase());
     }
 
+    String targetUriOf(DatasetId datasetId, String filename) {
+        return PathJoiner.joinWithoutLeadingOrTrailingSlash(
+          exportConfig.getDefaultTargetRoot(),
+          datasetId.getPath(),
+          "" + System.currentTimeMillis(),
+          filename
+        );
+    }
+
     FieldInterceptor initPseudoInterceptor(DatasetExport e, CatalogService.Dataset sourceDsInfo) {
         if (! e.getDepseudonymize()) {
             return FieldInterceptor.noOp();
@@ -245,6 +227,34 @@ public class ExportService {
 
         PseudoFuncs pseudoFuncs = new PseudoFuncs(pseudoRules, pseudoSecrets.resolve());
         return new FieldPseudoInterceptor(pseudoFuncs, PseudoOperation.DEPSEUDONYMIZE);
+    }
+
+    @Data
+    @Builder
+    @Introspected
+    static class DatasetExport {
+        private String userId;
+
+        @NotNull
+        private DatasetId sourceDatasetId;
+        private Set<String> columnSelectors;
+
+        @NotNull
+        private Compression compression;
+
+        private Boolean depseudonymize;
+
+        private List<PseudoFuncRule> pseudoRules;
+        private DatasetId pseudoRulesDatasetId;
+
+        private String targetContentName;
+        private MediaType targetContentType;
+    }
+
+    @Data
+    @Builder
+    static class DatasetExportResult {
+        private String targetUri;
     }
 
     public static class ExportServiceException extends RuntimeException {

@@ -8,7 +8,7 @@ import lombok.Data;
 public class ExportConfig {
 
     /**
-     * The default root path of exports. E.g. gs://[export-bucket-name]
+     * The default root path of exports. E.g. gs://[export-bucket-name]/export
      */
     private String defaultTargetRoot;
 
