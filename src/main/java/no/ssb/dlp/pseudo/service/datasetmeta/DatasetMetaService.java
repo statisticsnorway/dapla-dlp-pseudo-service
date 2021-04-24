@@ -59,6 +59,7 @@ public class DatasetMetaService {
     }
 
     public PseudoConfig readDatasetPseudoConfig(DatasetUri datasetUri) {
+        log.debug("Read pseudo rules from " + datasetUri);
         PseudoConfig pseudoConfig = new PseudoConfig();
         DatasetMeta datasetMeta = readDatasetMeta(datasetUri).orElse(null);
         if (datasetMeta == null) {

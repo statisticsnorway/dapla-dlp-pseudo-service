@@ -80,6 +80,7 @@ public class ExportService {
         private Boolean depseudonymize;
 
         private List<PseudoFuncRule> pseudoRules;
+        private DatasetId pseudoRulesDatasetId;
 
         private String targetPath;
         private String targetContentName;
@@ -94,7 +95,7 @@ public class ExportService {
 
     public Single<DatasetExportResult> export(DatasetExport e) {
         // Retrieve dataset information from the catalog service
-        CatalogService.Dataset datasetInfo = getDatasetInfo(e.getSourceDatasetId()).orElseThrow(
+        CatalogService.Dataset sourceDatasetInfo = getDatasetInfo(e.getSourceDatasetId()).orElseThrow(
           () -> new ExportServiceException("Unable to resolve dataset '%s' in catalog".formatted(e.getSourceDatasetId().getPath()))
         );
 
@@ -102,18 +103,16 @@ public class ExportService {
         UserAccessService.DatasetPrivilege accessPrivilege = e.getDepseudonymize()
           ? UserAccessService.DatasetPrivilege.DEPSEUDO
           : UserAccessService.DatasetPrivilege.READ;
-        if (! hasAccess(e.getUserId(), accessPrivilege, datasetInfo)) {
-            throw new ExportServiceException("User %s does not have %s access to %s".formatted(e.getUserId(), accessPrivilege, datasetInfo.getId().getPath()));
+        if (! hasAccess(e.getUserId(), accessPrivilege, sourceDatasetInfo)) {
+            throw new ExportServiceException("User %s does not have %s access to %s".formatted(e.getUserId(), accessPrivilege, sourceDatasetInfo.getId().getPath()));
         }
 
         // Initialize depseudo mechanism if needed - else use a noOp interceptor
-        FieldInterceptor fieldPseudoInterceptor = e.getDepseudonymize()
-          ? initPseudoInterceptor(e.getPseudoRules(), datasetInfo.datasetUri())
-          : FieldInterceptor.noOp();
+        FieldInterceptor fieldPseudoInterceptor = initPseudoInterceptor(e, sourceDatasetInfo);
 
         // Initiate record stream
         log.debug("Read parquet records");
-        Flowable<Map<String, Object>> records = datasetClient.readParquetRecords(datasetInfo.datasetUri(), e.getColumnSelectors(), fieldPseudoInterceptor);
+        Flowable<Map<String, Object>> records = datasetClient.readParquetRecords(sourceDatasetInfo.datasetUri(), e.getColumnSelectors(), fieldPseudoInterceptor);
 
         // Serialize records
         MediaType targetContentType = MoreMediaTypes.validContentType(e.getTargetContentType());
@@ -207,25 +206,56 @@ public class ExportService {
         return "%s-%s.%s".formatted(timestamp, contentName, contentType.getExtension().toLowerCase());
     }
 
-    FieldPseudoInterceptor initPseudoInterceptor(List<PseudoFuncRule> pseudoRules, DatasetUri datasetUri) {
-        log.debug("Initializing depseudonymization mechanism");
-        if (pseudoRules == null || pseudoRules.isEmpty()) {
-            log.info("No explicit pseudo config provided. Checking for pseudo config in .dataset-meta.json");
-            PseudoConfig pseudoConfig = datasetMetaService.readDatasetPseudoConfig(datasetUri);
+    FieldInterceptor initPseudoInterceptor(DatasetExport e, CatalogService.Dataset sourceDsInfo) {
+        if (! e.getDepseudonymize()) {
+            return FieldInterceptor.noOp();
+        }
+
+        final List<PseudoFuncRule> pseudoRules;
+
+        // If specified explicitly
+        if (e.getPseudoRules() != null && ! e.getPseudoRules().isEmpty()) {
+            log.debug("Pseudo rules was explicitly specified");
+            pseudoRules = e.getPseudoRules();
+        }
+
+        // Or if pseudo rules dataset id has been explicitly specified
+        else if (e.pseudoRulesDatasetId != null) {
+            log.debug("Retrieve pseudo rules from explicitly specified dataset path {}", e.getPseudoRulesDatasetId().getPath());
+            CatalogService.Dataset dsInfo = getDatasetInfo(e.getPseudoRulesDatasetId()).orElseThrow(
+              () -> new ExportServiceException("Unable to resolve dataset '%s' in catalog".formatted(e.getSourceDatasetId().getPath()))
+            );
+            PseudoConfig pseudoConfig = datasetMetaService.readDatasetPseudoConfig(dsInfo.datasetUri());
             pseudoRules = pseudoConfig.getRules();
         }
 
-        // TODO: Fail if no pseudo rules could be resolved?
-        log.info(pseudoRules.isEmpty()
-          ? "No pseudo config provided. Target dataset will not be depseudonymized"
-          : "Pseudo rules " + pseudoRules);
+        // Else retrieve the pseudo rules from the source dataset (this is the "standard flow")
+        else {
+            log.debug("Retrieve pseudo rules from source dataset at {}", sourceDsInfo.getId().getPath());
+            PseudoConfig pseudoConfig = datasetMetaService.readDatasetPseudoConfig(sourceDsInfo.datasetUri());
+            pseudoRules = pseudoConfig.getRules();
+        }
+
+        if (e.getDepseudonymize() && pseudoRules.isEmpty()) {
+            throw new DepseudonymizationException("no pseudonymization rules found - unable to depseudonymize dataset %s".formatted(sourceDsInfo.getId().getPath()));
+        }
+        else {
+            log.info("Pseudo rules: {}", pseudoRules);
+        }
 
         PseudoFuncs pseudoFuncs = new PseudoFuncs(pseudoRules, pseudoSecrets.resolve());
         return new FieldPseudoInterceptor(pseudoFuncs, PseudoOperation.DEPSEUDONYMIZE);
     }
 
-    class ExportServiceException extends RuntimeException {
+    public static class ExportServiceException extends RuntimeException {
         public ExportServiceException(String message) {
+            super(message);
+        }
+    }
+
+
+    public static class DepseudonymizationException extends ExportServiceException {
+        public DepseudonymizationException(String message) {
             super(message);
         }
     }
