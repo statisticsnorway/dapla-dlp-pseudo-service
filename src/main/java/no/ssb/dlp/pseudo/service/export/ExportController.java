@@ -17,11 +17,11 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dataset.api.DatasetId;
+import no.ssb.dlp.pseudo.core.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.file.Compression;
 import no.ssb.dlp.pseudo.core.file.CompressionEncryptionMethod;
 import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
 import no.ssb.dlp.pseudo.core.util.PathJoiner;
-import no.ssb.dlp.pseudo.service.pseudo.PseudoConfig;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 
 import javax.validation.Valid;
@@ -29,6 +29,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -45,46 +47,38 @@ public class ExportController {
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     public Single<ExportService.DatasetExportResult> export(@Body @Valid ExportRequest request, Principal principal) {
-        log.info("Export dataset - user={}, dataset={}", principal.getName(), request.getSourceDataset().getPath());
+        log.info("Export dataset - user={}, dataset={}", principal.getName(), request.getDatasetPath());
 
         ExportService.DatasetExport datasetExport = ExportService.DatasetExport.builder()
           .userId(principal.getName())
-          .sourceDatasetId(request.getSourceDataset().datasetId())
-          .columnSelectors(request.getColumnSelectors())
+          .sourceDatasetId(request.datasetId())
+          .columnSelectors(request.getColumnSelectors() == null ? Set.of() : request.getColumnSelectors())
           .depseudonymize(request.getDepseudonymize())
-          .pseudoConfig(request.getPseudoConfig())
+          .pseudoRules(request.getPseudoRules() == null ? List.of() : request.getPseudoRules())
           .compression(Compression.builder()
             .encryption(CompressionEncryptionMethod.AES)
             .type(MoreMediaTypes.APPLICATION_ZIP_TYPE)
-            .password(request.getTarget().getPassword())
+            .password(request.getTargetPassword())
             .build())
-          .targetPath(PathJoiner.joinWithoutLeadingOrTrailingSlash(exportConfig.getDefaultTargetRoot(), request.getTarget().getPath()))
-          .targetName(request.getTarget().getContentName())
-          .targetContentType(request.getTarget().getContentType())
+          .targetPath(PathJoiner.joinWithoutLeadingOrTrailingSlash(exportConfig.getDefaultTargetRoot(), request.getTargetPath()))
+          .targetContentName(request.getTargetContentName())
+          .targetContentType(request.getTargetContentType())
           .build();
 
         return exportService.export(datasetExport);
-    }
-
-   @Data
-    static class DatasetIdentifier {
-        private String path;
-        private String timestamp;
-
-       DatasetId datasetId() {
-            return DatasetId.newBuilder()
-              .setPath(path)
-              .setVersion(timestamp != null ? timestamp : System.currentTimeMillis() + "")
-              .build();
-        }
     }
 
     @Data
     @Introspected
     static class ExportRequest {
 
+        /** Path to dataset to be exported */
         @NotNull
-        private DatasetIdentifier sourceDataset;
+        private String datasetPath;
+
+        /** Optional timestamp of dataset - will be resolved against the closest matching.
+         * If not specified, request timestamp will be used. */
+        private Long datasetTimestamp;
 
         /**
          * A set of glob patterns that can be used to specify a subset of all fields to export.
@@ -92,40 +86,50 @@ public class ExportController {
          */
         private Set<String> columnSelectors = Set.of();
 
-        /** Whether or not to depseudonymize dataset during export */
-        private Boolean depseudonymize;
-
         /**
-         * The pseudonymization config to apply - if depseudonymize = true
+         * Path to where the exported dataset archive will be stored.
          */
-        private PseudoConfig pseudoConfig = new PseudoConfig();
-
-        @NotNull
-        private ExportTarget target;
-    }
-
-    @Introspected
-    @Data
-    static class ExportTarget {
-        private String path;
+        private String targetPath;
 
         /**
          * Descriptive name of the contents. This will be used as baseline for the target archive name and its contents.
+         * If not specified then this will be deduced from the source dataset name.
+         * Should not include file suffixes such as .csv or .json.
          */
-        @NotNull
-        private String contentName;
+        private String targetContentName;
 
-        /** The content type of the resulting file. */
+        /**
+         * The content type of the resulting file.
+         * Defaults to application/json.
+         */
         @Schema(implementation = String.class, allowableValues = {
           MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV})
-        @NotNull
-        private MediaType contentType;
+        private MediaType targetContentType = MediaType.APPLICATION_JSON_TYPE;
 
-        /** The password on the resulting archive */
+        /** The password for the resulting archive */
         @NotBlank
         @Schema(implementation = String.class)
         @Min(9)
-        private char[] password;
+        private char[] targetPassword;
+
+        /** Whether or not to depseudonymize dataset during export */
+        private Boolean depseudonymize = false;
+
+        /**
+         * <p>Pseudnymization rules to be used to depseudonymize the dataset. This is only
+         * relevant if depseudonymize=true.</p>
+         *
+         * <p>If not specified then pseudonymization rules are read from the
+         * dataset's dataset-meta.json file.</p>
+         */
+        private List<PseudoFuncRule> pseudoRules = new ArrayList<>();
+
+        DatasetId datasetId() {
+            return DatasetId.newBuilder()
+              .setPath(datasetPath)
+              .setVersion("" + (datasetTimestamp != null ? datasetTimestamp : System.currentTimeMillis()))
+              .build();
+        }
     }
 
 }

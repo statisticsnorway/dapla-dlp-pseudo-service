@@ -4,8 +4,6 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Stopwatch;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.http.MediaType;
-import io.micronaut.scheduling.TaskExecutors;
-import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import lombok.Builder;
@@ -80,10 +78,11 @@ public class ExportService {
         private Compression compression;
 
         private Boolean depseudonymize;
-        private PseudoConfig pseudoConfig;
+
+        private List<PseudoFuncRule> pseudoRules;
 
         private String targetPath;
-        private String targetName;
+        private String targetContentName;
         private MediaType targetContentType;
     }
 
@@ -109,7 +108,7 @@ public class ExportService {
 
         // Initialize depseudo mechanism if needed - else use a noOp interceptor
         FieldInterceptor fieldPseudoInterceptor = e.getDepseudonymize()
-          ? initPseudoInterceptor(e.getPseudoConfig(), datasetInfo.datasetUri())
+          ? initPseudoInterceptor(e.getPseudoRules(), datasetInfo.datasetUri())
           : FieldInterceptor.noOp();
 
         // Initiate record stream
@@ -121,14 +120,15 @@ public class ExportService {
         log.debug("Serialize records as %s".formatted(targetContentType));
         Flowable<String> serializedRecords = RecordMapSerializerFactory.newFromMediaType(targetContentType).serialize(records);
 
-        // Encrypt and compress stream contents
-        if (e.getTargetName() == null) {
-            e.setTargetName(e.getSourceDatasetId().getPath().replaceFirst(".*/([^/?]+).*", "$1"));
+        // Encrypt and compress stream contents:
+        // Deduce content name from dataset name
+        if (e.getTargetContentName() == null) {
+            e.setTargetContentName(e.getSourceDatasetId().getPath().replaceFirst(".*/([^/?]+).*", "$1"));
         }
         Flowable<byte[]> compressedRecords = encryptAndCompress(e, serializedRecords);
 
         // Upload stream contents
-        String targetUri = PathJoiner.joinWithoutLeadingOrTrailingSlash(e.getTargetPath(), filenameOf(e.getTargetName(), e.getCompression().getType()));
+        String targetUri = PathJoiner.joinWithoutLeadingOrTrailingSlash(e.getTargetPath(), filenameOf(e.getTargetContentName(), e.getCompression().getType()));
         log.debug("Uploading results to %s".formatted(targetUri));
         return storageBackend
           .write(targetUri, compressedRecords)
@@ -151,9 +151,9 @@ public class ExportService {
           .password(e.getCompression().getPassword())
           .encryptionMethod(e.getCompression().getEncryption())
           .build();
-        log.debug("Compress and encrypt serialized stream to temporary file. Encryption type: %s, Content name: %s. This can take some time...".formatted(e.getCompression().getEncryption(), e.getTargetName()));
-        Flowable<byte[]> compressedRecords = Zips.zip(serializedRecords, filenameOf(e.getTargetName(), e.getTargetContentType()), zipOptions);
-        log.debug("Compression/encryption done in %s" .formatted(stopwatch.elapsed()));
+        log.debug("Compress and encrypt serialized stream to temporary file. Encryption type: %s, Content name: %s. This can take some time...".formatted(e.getCompression().getEncryption(), e.getTargetContentName()));
+        Flowable<byte[]> compressedRecords = Zips.zip(serializedRecords, filenameOf(e.getTargetContentName(), e.getTargetContentType()), zipOptions);
+        log.debug("Compression/encryption done in %s" .formatted(stopwatch.stop().elapsed()));
         return compressedRecords;
     }
 
@@ -207,20 +207,20 @@ public class ExportService {
         return "%s-%s.%s".formatted(timestamp, contentName, contentType.getExtension().toLowerCase());
     }
 
-    FieldPseudoInterceptor initPseudoInterceptor(PseudoConfig pseudoConfig, DatasetUri datasetUri) {
+    FieldPseudoInterceptor initPseudoInterceptor(List<PseudoFuncRule> pseudoRules, DatasetUri datasetUri) {
         log.debug("Initializing depseudonymization mechanism");
-        if (pseudoConfig == null || pseudoConfig.getRules().isEmpty()) {
+        if (pseudoRules == null || pseudoRules.isEmpty()) {
             log.info("No explicit pseudo config provided. Checking for pseudo config in .dataset-meta.json");
-            pseudoConfig = datasetMetaService.readDatasetPseudoConfig(datasetUri);
+            PseudoConfig pseudoConfig = datasetMetaService.readDatasetPseudoConfig(datasetUri);
+            pseudoRules = pseudoConfig.getRules();
         }
-        List<PseudoFuncRule> pseudoRules = pseudoConfig.getRules();
 
         // TODO: Fail if no pseudo rules could be resolved?
         log.info(pseudoRules.isEmpty()
           ? "No pseudo config provided. Target dataset will not be depseudonymized"
           : "Pseudo rules " + pseudoRules);
 
-        PseudoFuncs pseudoFuncs = new PseudoFuncs(pseudoConfig.getRules(), pseudoSecrets.resolve());
+        PseudoFuncs pseudoFuncs = new PseudoFuncs(pseudoRules, pseudoSecrets.resolve());
         return new FieldPseudoInterceptor(pseudoFuncs, PseudoOperation.DEPSEUDONYMIZE);
     }
 
