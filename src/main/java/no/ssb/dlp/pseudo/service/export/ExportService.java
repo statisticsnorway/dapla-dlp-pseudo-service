@@ -1,7 +1,10 @@
 package no.ssb.dlp.pseudo.service.export;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Stopwatch;
+import com.google.protobuf.util.JsonFormat;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.http.MediaType;
 import io.reactivex.Flowable;
@@ -11,7 +14,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dataset.api.DatasetId;
-import no.ssb.dapla.dataset.uri.DatasetUri;
+import no.ssb.dapla.dataset.api.DatasetMeta;
 import no.ssb.dapla.parquet.FieldInterceptor;
 import no.ssb.dapla.storage.client.DatasetStorage;
 import no.ssb.dapla.storage.client.backend.gcs.GoogleCloudStorageBackend;
@@ -22,6 +25,7 @@ import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.file.Compression;
 import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
 import no.ssb.dlp.pseudo.core.map.RecordMapSerializerFactory;
+import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.core.util.PathJoiner;
 import no.ssb.dlp.pseudo.core.util.Zips;
 import no.ssb.dlp.pseudo.service.catalog.CatalogService;
@@ -33,6 +37,8 @@ import no.ssb.dlp.pseudo.service.useraccess.UserAccessService.AccessCheckRequest
 
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -66,10 +72,15 @@ public class ExportService {
     private final UserAccessService userAccessService;
 
     public Single<DatasetExportResult> export(DatasetExport e) {
+        final Stopwatch stopwatch = Stopwatch.createStarted();
+        final DatasetExportReport report = new DatasetExportReport(e);
+
         // Retrieve dataset information from the catalog service
         CatalogService.Dataset sourceDatasetInfo = getDatasetInfo(e.getSourceDatasetId()).orElseThrow(
           () -> new ExportServiceException("Unable to resolve dataset '%s' in catalog".formatted(e.getSourceDatasetId().getPath()))
         );
+        DatasetMeta sourceDatasetMeta = datasetMetaService.readDatasetMeta(sourceDatasetInfo.datasetUri()).orElse(null);
+        report.setDatasetMeta(sourceDatasetMeta);
 
         // Check if the user has access to export the dataset
         UserAccessService.DatasetPrivilege accessPrivilege = e.getDepseudonymize()
@@ -80,7 +91,7 @@ public class ExportService {
         }
 
         // Initialize depseudo mechanism if needed - else use a noOp interceptor
-        FieldInterceptor fieldPseudoInterceptor = initPseudoInterceptor(e, sourceDatasetInfo);
+        FieldInterceptor fieldPseudoInterceptor = initPseudoInterceptor(e, sourceDatasetMeta, report);
 
         // Initiate record stream
         log.debug("Read parquet records");
@@ -93,25 +104,37 @@ public class ExportService {
 
         // Encrypt and compress stream contents:
         // Deduce content name from dataset name
-        if (e.getTargetContentName() == null) {
+        if (e.getTargetContentName() == null || e.getTargetContentName().isBlank()) {
             e.setTargetContentName(e.getSourceDatasetId().getPath().replaceFirst(".*/([^/?]+).*", "$1"));
         }
         Flowable<byte[]> compressedRecords = encryptAndCompress(e, serializedRecords);
 
         // Upload stream contents
-        String filename = filenameOf(e.getTargetContentName(), e.getCompression().getType());
-        String targetUri = targetUriOf(e.getSourceDatasetId(), filename);
-        log.debug("Uploading results to %s".formatted(targetUri));
+        String targetRootLocation = targetRootLocationOf(e.getSourceDatasetId());
+        String targetArchiveUri = targetFileLocationOf(targetRootLocation, archiveFilenameOf(e.getTargetContentName(), e.getCompression().getType()));
+        log.debug("Uploading results to %s".formatted(targetArchiveUri));
         return storageBackend
-          .write(targetUri, compressedRecords)
+          .write(targetArchiveUri, compressedRecords)
           .timeout(30, TimeUnit.SECONDS)
-          .doOnError(throwable -> log.error("Upload failed: %s".formatted(targetUri), throwable))
+          .doOnError(throwable -> log.error("Upload failed: %s".formatted(targetArchiveUri), throwable))
           .toSingle(() -> {
-              log.info("Successful upload: %s".formatted(targetUri));
+              report.setElapsedMillis(stopwatch.stop().elapsed(TimeUnit.MILLISECONDS));
+              log.info("Successful upload: %s".formatted(targetArchiveUri));
+              uploadExportReport(report, targetRootLocation);
               return DatasetExportResult.builder()
-                .targetUri(targetUri)
+                .targetUri(targetArchiveUri)
                 .build();
           });
+    }
+
+    void uploadExportReport(DatasetExportReport report, String targetRootLocation) {
+        String targetUri = targetFileLocationOf(targetRootLocation, ".export-meta.json");
+        try {
+            storageBackend.write(targetUri, Json.prettyFrom(report).getBytes(StandardCharsets.UTF_8));
+        }
+        catch (IOException e) {
+            log.error("Error uploading export report to " + targetUri, e);
+        }
     }
 
     /**
@@ -124,7 +147,7 @@ public class ExportService {
           .encryptionMethod(e.getCompression().getEncryption())
           .build();
         log.debug("Compress and encrypt serialized stream to temporary file. Encryption type: %s, Content name: %s. This can take some time...".formatted(e.getCompression().getEncryption(), e.getTargetContentName()));
-        Flowable<byte[]> compressedRecords = Zips.zip(serializedRecords, filenameOf(e.getTargetContentName(), e.getTargetContentType()), zipOptions);
+        Flowable<byte[]> compressedRecords = Zips.zip(serializedRecords, archiveFilenameOf(e.getTargetContentName(), e.getTargetContentType()), zipOptions);
         log.debug("Compression/encryption done in %s" .formatted(stopwatch.stop().elapsed()));
         return compressedRecords;
     }
@@ -170,7 +193,22 @@ public class ExportService {
         return hasAccess;
     }
 
-    String filenameOf(String contentName, MediaType contentType) {
+    String targetRootLocationOf(DatasetId datasetId) {
+        return PathJoiner.joinWithoutLeadingOrTrailingSlash(
+          exportConfig.getDefaultTargetRoot(),
+          datasetId.getPath(),
+          "" + System.currentTimeMillis()
+        );
+    }
+
+    String targetFileLocationOf(String rootLocation, String filename) {
+        return PathJoiner.joinWithoutLeadingOrTrailingSlash(
+          rootLocation,
+          filename
+        );
+    }
+
+    String archiveFilenameOf(String contentName, MediaType contentType) {
         String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd")
           .withZone(ZoneOffset.UTC)
           .format(Instant.now());
@@ -179,16 +217,7 @@ public class ExportService {
         return "%s-%s.%s".formatted(timestamp, contentName, contentType.getExtension().toLowerCase());
     }
 
-    String targetUriOf(DatasetId datasetId, String filename) {
-        return PathJoiner.joinWithoutLeadingOrTrailingSlash(
-          exportConfig.getDefaultTargetRoot(),
-          datasetId.getPath(),
-          "" + System.currentTimeMillis(),
-          filename
-        );
-    }
-
-    FieldInterceptor initPseudoInterceptor(DatasetExport e, CatalogService.Dataset sourceDsInfo) {
+    FieldInterceptor initPseudoInterceptor(DatasetExport e, DatasetMeta datasetMeta, DatasetExportReport report) {
         if (! e.getDepseudonymize()) {
             return FieldInterceptor.noOp();
         }
@@ -197,7 +226,7 @@ public class ExportService {
 
         // If specified explicitly
         if (e.getPseudoRules() != null && ! e.getPseudoRules().isEmpty()) {
-            log.debug("Pseudo rules was explicitly specified");
+            log.debug("Pseudo rules were explicitly specified");
             pseudoRules = e.getPseudoRules();
         }
 
@@ -205,7 +234,7 @@ public class ExportService {
         else if (e.pseudoRulesDatasetId != null) {
             log.debug("Retrieve pseudo rules from explicitly specified dataset path {}", e.getPseudoRulesDatasetId().getPath());
             CatalogService.Dataset dsInfo = getDatasetInfo(e.getPseudoRulesDatasetId()).orElseThrow(
-              () -> new ExportServiceException("Unable to resolve dataset '%s' in catalog".formatted(e.getSourceDatasetId().getPath()))
+              () -> new ExportServiceException("Unable to resolve dataset '%s' in catalog".formatted(e.getPseudoRulesDatasetId().getPath()))
             );
             PseudoConfig pseudoConfig = datasetMetaService.readDatasetPseudoConfig(dsInfo.datasetUri());
             pseudoRules = pseudoConfig.getRules();
@@ -213,18 +242,19 @@ public class ExportService {
 
         // Else retrieve the pseudo rules from the source dataset (this is the "standard flow")
         else {
-            log.debug("Retrieve pseudo rules from source dataset at {}", sourceDsInfo.getId().getPath());
-            PseudoConfig pseudoConfig = datasetMetaService.readDatasetPseudoConfig(sourceDsInfo.datasetUri());
+            log.debug("Retrieve pseudo rules from source dataset at {}", e.getSourceDatasetId().getPath());
+            PseudoConfig pseudoConfig = datasetMetaService.pseudoConfigOf(datasetMeta);
             pseudoRules = pseudoConfig.getRules();
         }
 
         if (e.getDepseudonymize() && pseudoRules.isEmpty()) {
-            throw new DepseudonymizationException("no pseudonymization rules found - unable to depseudonymize dataset %s".formatted(sourceDsInfo.getId().getPath()));
+            throw new DepseudonymizationException("no pseudonymization rules found - unable to depseudonymize dataset %s".formatted(e.getSourceDatasetId().getPath()));
         }
         else {
             log.info("Pseudo rules: {}", pseudoRules);
         }
 
+        report.setAppliedPseudoRules(pseudoRules);
         PseudoFuncs pseudoFuncs = new PseudoFuncs(pseudoRules, pseudoSecrets.resolve());
         return new FieldPseudoInterceptor(pseudoFuncs, PseudoOperation.DEPSEUDONYMIZE);
     }
@@ -257,12 +287,37 @@ public class ExportService {
         private String targetUri;
     }
 
+    @Data
+    static class DatasetExportReport {
+        public DatasetExportReport(DatasetExport e) {
+            this.userId = e.getUserId();
+            this.exportTimestamp = Instant.now().toString();
+            this.depseudonymize = e.getDepseudonymize();
+        }
+
+        private final String userId;
+        private final String exportTimestamp;
+        private Long elapsedMillis;
+        private boolean depseudonymize;
+        private List<PseudoFuncRule> appliedPseudoRules;
+        private JsonNode datasetMetaJson;
+
+        public void setDatasetMeta(DatasetMeta datasetMeta) {
+            try {
+                datasetMetaJson = (datasetMeta == null) ? null : new ObjectMapper().readTree(JsonFormat.printer().print(datasetMeta));
+            }
+            catch (IOException e) {
+                log.warn("Error writing dataset meta", e);
+                datasetMetaJson = null;
+            }
+        }
+    }
+
     public static class ExportServiceException extends RuntimeException {
         public ExportServiceException(String message) {
             super(message);
         }
     }
-
 
     public static class DepseudonymizationException extends ExportServiceException {
         public DepseudonymizationException(String message) {

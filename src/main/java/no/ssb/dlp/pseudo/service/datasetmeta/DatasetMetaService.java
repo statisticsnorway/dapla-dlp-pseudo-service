@@ -60,15 +60,19 @@ public class DatasetMetaService {
 
     public PseudoConfig readDatasetPseudoConfig(DatasetUri datasetUri) {
         log.debug("Read pseudo rules from " + datasetUri);
-        PseudoConfig pseudoConfig = new PseudoConfig();
         DatasetMeta datasetMeta = readDatasetMeta(datasetUri).orElse(null);
+        return pseudoConfigOf(datasetMeta);
+    }
+
+    public PseudoConfig pseudoConfigOf(DatasetMeta datasetMeta) {
+        PseudoConfig pseudoConfig = new PseudoConfig();
         if (datasetMeta == null) {
             return pseudoConfig;
         }
 
         AtomicInteger ruleNo = new AtomicInteger();
         pseudoConfig.setRules(datasetMeta.getPseudoConfig().getVarsList().stream()
-            .map(i -> new PseudoFuncRule("pseudo-rule-" + ruleNo.getAndIncrement(), i.getVar(), i.getPseudoFunc()))
+          .map(i -> new PseudoFuncRule("pseudo-rule-" + ruleNo.getAndIncrement(), i.getVar(), i.getPseudoFunc()))
           .collect(Collectors.toList())
         );
 
@@ -80,5 +84,6 @@ public class DatasetMetaService {
             super(message, cause);
         }
     }
+
 
 }
