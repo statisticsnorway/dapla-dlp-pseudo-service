@@ -2,7 +2,7 @@ micronaut:
   application:
     name: pseudo-service
   server:
-    port: 30950
+    port: 10210
     cors:
       enabled: true
     thread-selection: AUTO
