@@ -32,6 +32,11 @@ micronaut:
     basic-auth:
       enabled: false
 
+endpoints:
+  info:
+    enabled: true
+    sensitive: false
+
 logger:
   levels:
     io.micronaut.security: INFO
