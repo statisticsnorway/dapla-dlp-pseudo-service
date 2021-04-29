@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.5](https://github.com/statisticsnorway/dapla-dlp-pseudo-service/tree/0.2.5) (2021-04-29)
+
+[Full Changelog](https://github.com/statisticsnorway/dapla-dlp-pseudo-service/compare/0.2.4...0.2.5)
+
+**Closed issues:**
+
+- Add version endpoint [\#8](https://github.com/statisticsnorway/dapla-dlp-pseudo-service/issues/8)
+
 ## [0.2.4](https://github.com/statisticsnorway/dapla-dlp-pseudo-service/tree/0.2.4) (2021-04-26)
 
 [Full Changelog](https://github.com/statisticsnorway/dapla-dlp-pseudo-service/compare/0.2.3...0.2.4)
