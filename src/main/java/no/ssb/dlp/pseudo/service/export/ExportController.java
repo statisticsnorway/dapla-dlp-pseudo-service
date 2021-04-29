@@ -70,7 +70,7 @@ public class ExportController {
 
     // TODO: Translate DatasetIdParser.ParseException so that it maps to 400
     private DatasetId datasetIdOf(String path) {
-        return (path == null) ? null : DatasetIdParser.parse(path);
+        return (path == null || path.isBlank()) ? null : DatasetIdParser.parse(path);
     }
 
     @Data
