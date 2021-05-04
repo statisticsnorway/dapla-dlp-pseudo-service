@@ -10,7 +10,7 @@ import io.reactivex.Single;
 import no.ssb.dapla.dataset.api.DatasetState;
 import no.ssb.dapla.dataset.api.Valuation;
 
-@Requires(property = UserAccessService.CONFIG_PREFIX + ".impl", value="HTTP", defaultValue="HTTP")
+@Requires(property = UserAccessService.CONFIG_PREFIX + ".impl", value="DAPLA", defaultValue="DAPLA")
 @Client(UserAccessService.SERVICE_ID)
 public interface DaplaUserAccessServiceClient {
 
