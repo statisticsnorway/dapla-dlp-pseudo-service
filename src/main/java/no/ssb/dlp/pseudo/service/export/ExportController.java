@@ -49,7 +49,6 @@ public class ExportController {
     private final ExportService exportService;
 
     @Post("/export")
-    @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     public Single<ExportService.DatasetExportResult> export(@Body @Valid ExportRequest request, Principal principal) {
         log.info("Export dataset - user={}, dataset={}", principal.getName(), request.getDatasetPath());
