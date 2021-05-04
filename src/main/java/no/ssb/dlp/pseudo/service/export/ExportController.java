@@ -2,10 +2,16 @@ package no.ssb.dlp.pseudo.service.export;
 
 
 import io.micronaut.core.annotation.Introspected;
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.http.hateoas.JsonError;
+import io.micronaut.http.hateoas.Link;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
@@ -40,7 +46,6 @@ import java.util.Set;
 @Validated
 public class ExportController {
 
-//    private final ExportConfig exportConfig;
     private final ExportService exportService;
 
     @Post("/export")
@@ -68,9 +73,35 @@ public class ExportController {
         return exportService.export(datasetExport);
     }
 
-    // TODO: Translate DatasetIdParser.ParseException so that it maps to 400
     private DatasetId datasetIdOf(String path) {
         return (path == null || path.isBlank()) ? null : DatasetIdParser.parse(path);
+    }
+
+    @Error
+    public HttpResponse<JsonError> userNotAuthorizedError(HttpRequest request, ExportService.UserNotAuthorizedException e) {
+        JsonError error = new JsonError("Export error: " + e.getMessage())
+          .link(Link.SELF, Link.of(request.getUri()));
+
+        return HttpResponse.<JsonError>status(HttpStatus.FORBIDDEN, "not authorized for " + e.getAccessPrivilege() + " of " + e.getPath())
+          .body(error);
+    }
+
+    @Error
+    public HttpResponse<JsonError> datasetNotFoundError(HttpRequest request, ExportService.DatasetNotFoundException e) {
+        JsonError error = new JsonError("Export error: " + e.getMessage())
+          .link(Link.SELF, Link.of(request.getUri()));
+
+        return HttpResponse.<JsonError>status(HttpStatus.BAD_REQUEST, "dataset not found")
+          .body(error);
+    }
+
+    @Error
+    public HttpResponse<JsonError> datasetParseError(HttpRequest request, DatasetIdParser.ParseException e) {
+        JsonError error = new JsonError("Export error: " + e.getMessage())
+          .link(Link.SELF, Link.of(request.getUri()));
+
+        return HttpResponse.<JsonError>status(HttpStatus.BAD_REQUEST, "malformed dataset")
+          .body(error);
     }
 
     @Data
@@ -123,5 +154,4 @@ public class ExportController {
         /** Path to dataset that pseudo rules should be retrieved from (if different from dataset to be exported) */
         private String pseudoRulesDatasetPath;
     }
-
 }

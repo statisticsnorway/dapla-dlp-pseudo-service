@@ -11,6 +11,7 @@ import io.reactivex.Flowable;
 import io.reactivex.Single;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dataset.api.DatasetId;
@@ -77,7 +78,7 @@ public class ExportService {
 
         // Retrieve dataset information from the catalog service
         CatalogService.Dataset sourceDatasetInfo = getDatasetInfo(e.getSourceDatasetId()).orElseThrow(
-          () -> new ExportServiceException("Unable to resolve dataset '%s' in catalog".formatted(e.getSourceDatasetId().getPath()))
+          () -> new DatasetNotFoundException("unable to resolve dataset '%s' in catalog".formatted(e.getSourceDatasetId().getPath()))
         );
         DatasetMeta sourceDatasetMeta = datasetMetaService.readDatasetMeta(sourceDatasetInfo.datasetUri()).orElse(null);
         report.setDatasetMeta(sourceDatasetMeta);
@@ -87,7 +88,7 @@ public class ExportService {
           ? UserAccessService.DatasetPrivilege.DEPSEUDO
           : UserAccessService.DatasetPrivilege.READ;
         if (! hasAccess(e.getUserId(), accessPrivilege, sourceDatasetInfo)) {
-            throw new ExportServiceException("User %s does not have %s access to %s".formatted(e.getUserId(), accessPrivilege, sourceDatasetInfo.getId().getPath()));
+            throw new UserNotAuthorizedException(e.getUserId(), accessPrivilege, sourceDatasetInfo.getId().getPath());
         }
 
         // Initialize depseudo mechanism if needed - else use a noOp interceptor
@@ -316,6 +317,26 @@ public class ExportService {
     public static class ExportServiceException extends RuntimeException {
         public ExportServiceException(String message) {
             super(message);
+        }
+    }
+
+    public static class DatasetNotFoundException extends ExportServiceException {
+        public DatasetNotFoundException(String message) {
+            super(message);
+        }
+    }
+
+    @Getter
+    public static class UserNotAuthorizedException extends ExportServiceException {
+        private final String userId;
+        private final UserAccessService.DatasetPrivilege accessPrivilege;
+        private final String path;
+
+        public UserNotAuthorizedException(String userId, UserAccessService.DatasetPrivilege accessPrivilege, String path) {
+            super("user %s does not have %s access to %s".formatted(userId, accessPrivilege, path));
+            this.userId = userId;
+            this.accessPrivilege = accessPrivilege;
+            this.path = path;
         }
     }
 
