@@ -96,7 +96,7 @@ public class ExportController {
     }
 
     static HttpResponse<JsonError> error(HttpRequest request, Exception e, HttpStatus httpStatus, String httpStatusReason) {
-        JsonError error = new JsonError("Export error: " + e.getMessage())
+        JsonError error = new JsonError(e.getMessage())
           .link(Link.SELF, Link.of(request.getUri()));
 
         return HttpResponse.<JsonError>status(httpStatus, httpStatusReason)
