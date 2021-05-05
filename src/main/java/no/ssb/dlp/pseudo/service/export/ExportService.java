@@ -249,7 +249,7 @@ public class ExportService {
         }
 
         if (e.getDepseudonymize() && pseudoRules.isEmpty()) {
-            throw new DepseudonymizationException("no pseudonymization rules found - unable to depseudonymize dataset %s".formatted(e.getSourceDatasetId().getPath()));
+            throw new NoPseudoRulesFoundException("no pseudonymization rules found - unable to depseudonymize dataset %s".formatted(e.getSourceDatasetId().getPath()));
         }
         else {
             log.info("Pseudo rules: {}", pseudoRules);
@@ -340,8 +340,8 @@ public class ExportService {
         }
     }
 
-    public static class DepseudonymizationException extends ExportServiceException {
-        public DepseudonymizationException(String message) {
+    public static class NoPseudoRulesFoundException extends ExportServiceException {
+        public NoPseudoRulesFoundException(String message) {
             super(message);
         }
     }

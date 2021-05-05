@@ -27,7 +27,6 @@ import no.ssb.dlp.pseudo.core.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.file.Compression;
 import no.ssb.dlp.pseudo.core.file.CompressionEncryptionMethod;
 import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
-import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.util.DatasetIdParser;
 
 import javax.validation.Valid;
@@ -78,28 +77,29 @@ public class ExportController {
 
     @Error
     public HttpResponse<JsonError> userNotAuthorizedError(HttpRequest request, ExportService.UserNotAuthorizedException e) {
-        JsonError error = new JsonError("Export error: " + e.getMessage())
-          .link(Link.SELF, Link.of(request.getUri()));
-
-        return HttpResponse.<JsonError>status(HttpStatus.FORBIDDEN, "not authorized for " + e.getAccessPrivilege() + " of " + e.getPath())
-          .body(error);
+        return error(request, e, HttpStatus.FORBIDDEN, "not authorized for " + e.getAccessPrivilege() + " of " + e.getPath());
     }
 
     @Error
     public HttpResponse<JsonError> datasetNotFoundError(HttpRequest request, ExportService.DatasetNotFoundException e) {
-        JsonError error = new JsonError("Export error: " + e.getMessage())
-          .link(Link.SELF, Link.of(request.getUri()));
-
-        return HttpResponse.<JsonError>status(HttpStatus.BAD_REQUEST, "dataset not found")
-          .body(error);
+        return error(request, e, HttpStatus.BAD_REQUEST, "dataset not found");
     }
 
     @Error
     public HttpResponse<JsonError> datasetParseError(HttpRequest request, DatasetIdParser.ParseException e) {
+        return error(request, e, HttpStatus.BAD_REQUEST, "malformed dataset id");
+    }
+
+    @Error
+    public HttpResponse<JsonError> noPseudoRulesFoundError(HttpRequest request, ExportService.NoPseudoRulesFoundException e) {
+        return error(request, e, HttpStatus.BAD_REQUEST, "no pseudo rules found for dataset");
+    }
+
+    static HttpResponse<JsonError> error(HttpRequest request, Exception e, HttpStatus httpStatus, String httpStatusReason) {
         JsonError error = new JsonError("Export error: " + e.getMessage())
           .link(Link.SELF, Link.of(request.getUri()));
 
-        return HttpResponse.<JsonError>status(HttpStatus.BAD_REQUEST, "malformed dataset")
+        return HttpResponse.<JsonError>status(httpStatus, httpStatusReason)
           .body(error);
     }
 
