@@ -132,6 +132,11 @@
       <version>4.2.1</version>
     </dependency>
     <dependency>
+      <groupId>no.ssb.dapla.parquet</groupId>
+      <artifactId>parquet-buddy</artifactId>
+      <version>0.2.2</version>
+    </dependency>
+    <dependency>
       <groupId>no.ssb.dapla</groupId>
       <artifactId>dataset-api</artifactId>
       <version>0.6</version>
