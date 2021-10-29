@@ -7,13 +7,14 @@
     <option name="mainClass" value="no.ssb.dlp.pseudo.service.Application" />
     <option name="passParentEnvs" value="true" />
     <option name="programParameters" value="" />
-    <option name="shortenCommandLine" />
+    <option name="shortenCommandLine" value="NONE" />
     <option name="vmParameters" value="-Dmicronaut.bootstrap.context=true" />
     <option name="workingDirectory" value="$MODULE_DIR$" />
     <envs>
       <env name="MICRONAUT_ENVIRONMENTS" value="local,local-gcp" />
       <env name="MICRONAUT_CONFIG_FILES" value="conf/bootstrap-local-gcp.yml,conf/application-local.yml" />
     </envs>
+    <RunnerSettings />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

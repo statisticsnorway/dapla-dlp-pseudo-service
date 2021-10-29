@@ -14,6 +14,7 @@
       <env name="MICRONAUT_ENVIRONMENTS" value="local" />
       <env name="MICRONAUT_CONFIG_FILES" value="conf/application-local.yml" />
     </envs>
+    <RunnerSettings />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
