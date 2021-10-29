@@ -9,6 +9,11 @@ micronaut:
     max-request-size: 2gb
     multipart:
       max-file-size: 2gb
+  router:
+    static-resources:
+      swagger:
+        paths: classpath:META-INF/swagger
+        mapping: /openapi/**
   http:
     services:
       dapla-catalog:
