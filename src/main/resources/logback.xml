@@ -9,6 +9,8 @@
         </encoder>
     </appender>
 
+    <logger name="no.ssb.dlp.pseudo.core.util" level="TRACE"/>
+
     <root level="info">
         <appender-ref ref="STDOUT" />
     </root>

@@ -17,7 +17,6 @@ import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.validation.Validated;
-import io.reactivex.Single;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +48,7 @@ public class ExportController {
 
     @Post("/export")
     @ExecuteOn(TaskExecutors.IO)
-    public Single<ExportService.DatasetExportResult> export(@Body @Valid ExportRequest request, Principal principal) {
+    public ExportService.DatasetExportResult export(@Body @Valid ExportRequest request, Principal principal) {
         log.info("Export dataset - user={}, dataset={}", principal.getName(), request.getDatasetPath());
 
         ExportService.DatasetExport datasetExport = ExportService.DatasetExport.builder()
