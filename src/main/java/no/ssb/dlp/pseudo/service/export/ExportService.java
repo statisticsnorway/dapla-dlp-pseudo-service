@@ -5,14 +5,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Stopwatch;
 import com.google.protobuf.util.JsonFormat;
+import io.micronaut.context.event.ApplicationEventPublisher;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.http.MediaType;
+import io.micronaut.runtime.event.annotation.EventListener;
+import io.micronaut.scheduling.annotation.Async;
 import io.reactivex.Flowable;
-import io.reactivex.Single;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dataset.api.DatasetId;
 import no.ssb.dapla.dataset.api.DatasetMeta;
@@ -48,6 +53,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.CharMatcher.anyOf;
 import static com.google.common.base.CharMatcher.inRange;
@@ -64,6 +70,8 @@ public class ExportService {
       .or(inRange('0', '9'))
       .or(anyOf("_-"));
 
+    private final static Long NINETY_MEGABYTES = 90 * 1000 * 1024L;
+
     private final ExportConfig exportConfig;
     private final DatasetStorage datasetClient;
     private final GoogleCloudStorageBackend storageBackend;
@@ -71,9 +79,9 @@ public class ExportService {
     private final DatasetMetaService datasetMetaService;
     private final CatalogService catalogService;
     private final UserAccessService userAccessService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public Single<DatasetExportResult> export(DatasetExport e) {
-        final Stopwatch stopwatch = Stopwatch.createStarted();
+    public DatasetExportResult export(DatasetExport e) {
         final DatasetExportReport report = new DatasetExportReport(e);
 
         // Retrieve dataset information from the catalog service
@@ -91,42 +99,77 @@ public class ExportService {
             throw new UserNotAuthorizedException(e.getUserId(), accessPrivilege, sourceDatasetInfo.getId().getPath());
         }
 
+        // Initialize target names
+        if (e.getTargetContentName() == null || e.getTargetContentName().isBlank()) {
+            // if not specified then deduce content name from dataset name
+            e.setTargetContentName(e.getSourceDatasetId().getPath().replaceFirst(".*/([^/?]+).*", "$1"));
+        }
+        String targetRootLocation = targetRootLocationOf(e.getSourceDatasetId());
+        String targetArchiveUri = targetFileLocationOf(targetRootLocation, archiveFilenameOf(e.getTargetContentName(), e.getCompression().getType()));
+
+        eventPublisher.publishEvent(ExportEvent.builder()
+          .targetRootLocation(targetRootLocation)
+          .targetArchiveUri(targetArchiveUri)
+          .datasetExport(e)
+          .report(report)
+          .sourceDatasetInfo(sourceDatasetInfo)
+          .sourceDatasetMeta(sourceDatasetMeta)
+          .build());
+
+        return DatasetExportResult.builder()
+          .targetUri(targetArchiveUri)
+          .build();
+    }
+
+    @Value
+    @Builder
+    @Accessors(fluent = true)
+    public static class ExportEvent {
+        @NonNull String targetRootLocation;
+        @NonNull String targetArchiveUri;
+        @NonNull DatasetExport datasetExport;
+        @NonNull DatasetExportReport report;
+        @NonNull CatalogService.Dataset sourceDatasetInfo;
+        @NonNull DatasetMeta sourceDatasetMeta;
+    }
+
+    @EventListener
+    @Async
+    public void onExportEvent(ExportEvent e) {
+        final Stopwatch stopwatch = Stopwatch.createStarted();
+        final AtomicInteger counter = new AtomicInteger();
+
         // Initialize depseudo mechanism if needed - else use a noOp interceptor
-        FieldInterceptor fieldPseudoInterceptor = initPseudoInterceptor(e, sourceDatasetMeta, report);
+        FieldInterceptor fieldPseudoInterceptor = initPseudoInterceptor(e.datasetExport(), e.sourceDatasetMeta(), e.report());
 
         // Initiate record stream
         log.debug("Read parquet records");
-        Flowable<Map<String, Object>> records = datasetClient.readParquetRecords(sourceDatasetInfo.datasetUri(), e.getColumnSelectors(), fieldPseudoInterceptor);
+        Flowable<Map<String, Object>> records = datasetClient.readParquetRecords(e.sourceDatasetInfo().datasetUri(), e.datasetExport().getColumnSelectors(), fieldPseudoInterceptor)
+          .doOnNext(s -> {
+            if (counter.incrementAndGet() % 100000 == 0) {
+                log.debug(String.format("Processed %,d records", counter.get()));
+            }
+        });;
 
         // Serialize records
-        MediaType targetContentType = MoreMediaTypes.validContentType(e.getTargetContentType());
+        MediaType targetContentType = MoreMediaTypes.validContentType(e.datasetExport().getTargetContentType());
         log.debug("Serialize records as %s".formatted(targetContentType));
         Flowable<String> serializedRecords = RecordMapSerializerFactory.newFromMediaType(targetContentType).serialize(records);
 
         // Encrypt and compress stream contents:
-        // Deduce content name from dataset name
-        if (e.getTargetContentName() == null || e.getTargetContentName().isBlank()) {
-            e.setTargetContentName(e.getSourceDatasetId().getPath().replaceFirst(".*/([^/?]+).*", "$1"));
-        }
-        Flowable<byte[]> compressedRecords = encryptAndCompress(e, serializedRecords);
-
+        Flowable<byte[]> compressedRecords = encryptAndCompress(e.datasetExport(), serializedRecords);
         // Upload stream contents
-        String targetRootLocation = targetRootLocationOf(e.getSourceDatasetId());
-        String targetArchiveUri = targetFileLocationOf(targetRootLocation, archiveFilenameOf(e.getTargetContentName(), e.getCompression().getType()));
-        log.debug("Uploading results to %s".formatted(targetArchiveUri));
-        return storageBackend
-          .write(targetArchiveUri, compressedRecords)
+
+        storageBackend
+          .write(e.targetArchiveUri(), compressedRecords)
           .timeout(30, TimeUnit.SECONDS)
-          .doOnError(throwable -> log.error("Upload failed: %s".formatted(targetArchiveUri), throwable))
-          .toSingle(() -> {
-              report.setElapsedMillis(stopwatch.stop().elapsed(TimeUnit.MILLISECONDS));
-              log.info("Successful upload: %s".formatted(targetArchiveUri));
-              uploadExportReport(report, targetRootLocation);
-              return DatasetExportResult.builder()
-                .targetUri(targetArchiveUri)
-                .build();
+          .doOnError(throwable -> log.error("Upload failed: %s".formatted(e.targetArchiveUri()), throwable))
+          .subscribe(() -> {
+              e.report().setElapsedMillis(stopwatch.stop().elapsed(TimeUnit.MILLISECONDS));
+              log.info("Successful upload: %s".formatted(e.targetArchiveUri()));
+              uploadExportReport(e.report(), e.targetRootLocation());
           });
-    }
+   }
 
     void uploadExportReport(DatasetExportReport report, String targetRootLocation) {
         String targetUri = targetFileLocationOf(targetRootLocation, ".export-meta.json");
@@ -149,7 +192,7 @@ public class ExportService {
           .build();
         log.debug("Compress and encrypt serialized stream to temporary file. Encryption type: %s, Content name: %s. This can take some time...".formatted(e.getCompression().getEncryption(), e.getTargetContentName()));
         Flowable<byte[]> compressedRecords = Zips.zip(serializedRecords, archiveFilenameOf(e.getTargetContentName(), e.getTargetContentType()), zipOptions);
-        log.debug("Compression/encryption done in %s" .formatted(stopwatch.stop().elapsed()));
+        log.debug("Compression/encryption done in %s".formatted(stopwatch.stop().elapsed()));
         return compressedRecords;
     }
 
