@@ -23,7 +23,7 @@
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
     <micronaut-openapi.version>2.3.1</micronaut-openapi.version>
-    <lombok.version>1.18.20</lombok.version>
+    <lombok.version>1.18.22</lombok.version>
   </properties>
 
   <scm>
@@ -256,7 +256,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>3.0.0-M1</version>
+        <version>3.0.0-M4</version>
         <configuration>
           <tagNameFormat>@{project.version}</tagNameFormat>
         </configuration>
