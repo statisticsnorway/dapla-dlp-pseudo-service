@@ -17,7 +17,7 @@ jobs:
 
   - job: testAndBuild
     displayName: 'Run tests and build maven artifacts'
-    container: maven@sha256:6d837359937c7aa0449e1dab864bb5c69c7cac896da8776d9c90fd25ed41ea12 # maven:3.6.3-openjdk-15
+    container: maven:3.8.2-openjdk-17
     condition: not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')) # Always, except from when a tag is pushed
     steps:
 
