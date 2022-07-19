@@ -1,4 +1,4 @@
-FROM openjdk:17-slim-buster
+FROM openjdk:17-slim-bullseye
 RUN apt-get update && apt-get install -y curl
 COPY target/dapla-dlp-pseudo-service-*.jar dapla-dlp-pseudo-service.jar
 COPY target/classes/logback*.xml /conf/
