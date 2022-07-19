@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class MockSecretService implements SecretService {
 
-    final static byte[] MOCKED_VALUE = "mockedsecret".getBytes(StandardCharsets.UTF_8);
+    static final byte[] MOCKED_VALUE = "mockedsecret".getBytes(StandardCharsets.UTF_8);
 
     public MockSecretService() {
         log.info("Using MockSecretService");

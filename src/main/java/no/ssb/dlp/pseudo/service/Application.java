@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.annotations.servers.Servers;
+import lombok.extern.slf4j.Slf4j;
 
 @OpenAPIDefinition
 @SecurityScheme(name = "BearerAuth",
@@ -14,12 +15,12 @@ import io.swagger.v3.oas.annotations.servers.Servers;
   scheme = "bearer",
   bearerFormat = "jwt")
 @SecurityRequirement(name = "BearerAuth")
-@Servers({
-  @Server(url = "http://localhost:30950", description = "Locally proxied pseudo service")
-})
+@Server(url = "http://localhost:10210", description = "Locally proxied pseudo service")
+@Slf4j
 public class Application {
 
     public static void main(String[] args) {
+        log.info("pseudo-service version: {}", BuildInfo.INSTANCE.getVersionAndBuildTimestamp());
         Micronaut.run(Application.class);
     }
 }

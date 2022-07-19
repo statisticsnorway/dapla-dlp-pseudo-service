@@ -26,10 +26,17 @@ public class GoogleCloudStorageBackendFactory {
         Configuration configuration = new Configuration();
         if (serviceAccountCredentials != null) {
             if (Files.notExists(serviceAccountCredentials)) {
-                throw new RuntimeException("Could not find service account credentials: " + serviceAccountCredentials);
+                throw new StorageBackendException("Could not find service account credentials: " + serviceAccountCredentials);
             }
             configuration.setServiceAccountCredentials(serviceAccountCredentials);
         }
         return new GoogleCloudStorageBackend(configuration);
     }
+
+    public static class StorageBackendException extends RuntimeException {
+        public StorageBackendException(String message) {
+            super(message);
+        }
+    }
+
 }

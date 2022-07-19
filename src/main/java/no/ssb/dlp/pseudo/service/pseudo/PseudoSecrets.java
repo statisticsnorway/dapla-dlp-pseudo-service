@@ -8,12 +8,11 @@ import javax.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Singleton
 public class PseudoSecrets {
 
-    private final static String DEFAULT_PSEUDO_SECRET_TYPE = "AES256";
+    private static final String DEFAULT_PSEUDO_SECRET_TYPE = "AES256";
     private final SecretService secretService;
     private final Map<String, PseudoSecret> configuredPseudoSecrets;
 
@@ -71,7 +70,8 @@ public class PseudoSecrets {
 
               return secret;
           })
-          .collect(Collectors.toList());
+        .toList();
+
     }
 
     class InvalidPseudoSecretException extends RuntimeException {
