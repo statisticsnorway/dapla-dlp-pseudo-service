@@ -33,7 +33,7 @@ Where `root_url` points to an instance of the pseudo-service, `dapla_auth_token`
 ```
 
 This example exports all columns matching either `**/foedsel` or `**/kontonummer` from a dataset located in a GCS
-bucket at `gs://ssb-dev-demo-enhjoern-a-data-produkt/path/to/data` (with version`123`).
+bucket at `gs://ssb-dev-demo-enhjoern-a-data-produkt/path/to/data/123`.
 Columns matching `**/kontonummer` will be depseudonymized using the function `fpe-anychar(secret1)` and then compressed,
 encrypted and uploaded (as json) to the preconfigured data export bucket (see config).      
 
