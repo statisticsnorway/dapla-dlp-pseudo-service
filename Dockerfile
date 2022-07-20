@@ -1,5 +1,5 @@
-FROM openjdk:17.0.1-slim-buster
-RUN apt-get update && apt-get install -y curl
+FROM azul/zulu-openjdk-alpine:17
+RUN apk --no-cache add curl gcompat
 COPY target/dapla-dlp-pseudo-service-*.jar dapla-dlp-pseudo-service.jar
 COPY target/classes/logback*.xml /conf/
 EXPOSE 10210

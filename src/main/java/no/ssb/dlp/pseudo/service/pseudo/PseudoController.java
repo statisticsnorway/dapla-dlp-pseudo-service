@@ -70,7 +70,7 @@ public class PseudoController {
             }
             return HttpResponse.ok(file).contentType(res.getTargetContentType());
         } catch (Exception e) {
-            log.error(String.format("Failed to pseudonymize:\nrequest:\n%s", request), e);
+            log.error(String.format("Failed to pseudonymize:%nrequest:%n%s", request), e);
             return HttpResponse.serverError(Flowable.error(e));
         }
     }
@@ -97,7 +97,7 @@ public class PseudoController {
                 return HttpResponse.ok(file).contentType(res.getTargetContentType());
             }
         } catch (Exception e) {
-            log.error(String.format("Failed to depseudonymize:\nrequest:\n%s", request), e);
+            log.error(String.format("Failed to depseudonymize:%nrequest:%n%s", request), e);
             return HttpResponse.serverError(Flowable.error(e));
         }
     }
@@ -146,14 +146,14 @@ public class PseudoController {
     }
 
     private static Flowable<String> serialize(Flowable<String> recordStream, MediaType targetContentType) {
-        if (targetContentType.equals(MediaType.APPLICATION_JSON)) {
+        if (targetContentType.equals(MediaType.APPLICATION_JSON_TYPE)) {
             AtomicBoolean first = new AtomicBoolean(true);
             return recordStream
-              .map(record -> {
+              .map(rec -> {
                   if (first.getAndSet(false)) {
-                      return "[%s".formatted(record);
+                      return "[%s".formatted(rec);
                   }
-                  return ",%s".formatted(record);
+                  return ",%s".formatted(rec);
               })
               .concatWith(Single.just("]"));
         }

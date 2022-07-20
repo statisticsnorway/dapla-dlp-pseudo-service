@@ -72,8 +72,8 @@ public class DatasetMetaService {
 
         AtomicInteger ruleNo = new AtomicInteger();
         pseudoConfig.setRules(datasetMeta.getPseudoConfig().getVarsList().stream()
-          .map(i -> new PseudoFuncRule("pseudo-rule-" + ruleNo.getAndIncrement(), i.getVar(), i.getPseudoFunc()))
-          .collect(Collectors.toList())
+            .map(i -> new PseudoFuncRule("pseudo-rule-" + ruleNo.getAndIncrement(), i.getVar(), i.getPseudoFunc()))
+            .toList()
         );
 
         return pseudoConfig;

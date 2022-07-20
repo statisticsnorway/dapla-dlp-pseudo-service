@@ -8,6 +8,7 @@ import io.micronaut.gcp.secretmanager.client.SecretManagerClient;
 import io.micronaut.gcp.secretmanager.client.VersionedSecret;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 import javax.inject.Singleton;
 import java.util.Optional;
@@ -19,7 +20,8 @@ import java.util.Optional;
 @CacheConfig(cacheNames = {"secrets"})
 public class GcpSecretService implements SecretService {
 
-    private final static String LATEST_VERSION = "latest";
+
+    private static final String LATEST_VERSION = "latest";
 
     @NonNull
     private final SecretManagerClient secretManager;
@@ -54,7 +56,7 @@ public class GcpSecretService implements SecretService {
         final VersionedSecret secret;
         version = Optional.ofNullable(version).orElse(LATEST_VERSION);
         try {
-            secret = secretManager.getSecret(secretId, version).blockingGet();
+            secret = Mono.from(secretManager.getSecret(secretId, version)).block();
         }
         catch (Exception e) {
             throw new SecretServiceException("Error fetching secret with id '" + secretId + "' and version=" + version + " from secret manager", e);

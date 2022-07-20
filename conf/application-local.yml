@@ -1,6 +1,6 @@
 micronaut:
   application:
-    name: pseudo-service
+    name: my-pseudo-service
   server:
     port: 10210
     cors:
@@ -14,16 +14,7 @@ micronaut:
       swagger:
         paths: classpath:META-INF/swagger
         mapping: /openapi/**
-  http:
-    services:
-      dapla-catalog:
-        #impl: MOCK
-        urls:
-          - "http://localhost:10110"
-      dapla-user-access:
-        #impl: MOCK
-        urls:
-          - "http://localhost:10100"
+
   security:
     token:
       name-key: preferred_username
@@ -54,10 +45,10 @@ services:
       pseudo-secret-secret1: C5sn7B4YtwcilAwuVx6NuAsMWLusOSA/ldia40ZugDI=
 
 export:
-  default-target-root: gs://ssb-dataexport-dev-default/export
+  default-target-root: gs://ssb-dev-dapla-data-synk-ned/export
 
 storage:
-  gcs-service-account-file: private/gcp/sa-keys/dev-sirius-sa-key.json
+  gcs-service-account-file: private/gcp/sa-keys/dev-dapla-pseudo-service-test-sa-key.json
 
 pseudo.secrets:
   secret1:
@@ -66,4 +57,4 @@ pseudo.secrets:
 
 app-roles:
   admins:
-    - kenneth.schulstad@ssb.no
+    - kons_schu@ssb.no
