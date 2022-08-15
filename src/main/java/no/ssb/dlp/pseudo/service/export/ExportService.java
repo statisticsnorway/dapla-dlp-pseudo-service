@@ -259,7 +259,7 @@ public class ExportService {
     @Accessors(fluent = true)
     public static class ExportEvent {
         @NonNull DatasetUri sourceDataset;
-        @NonNull DatasetMeta sourceDatasetMeta;
+        DatasetMeta sourceDatasetMeta;
         @NonNull DatasetExport datasetExport;
         @NonNull DatasetExportReport report;
         @NonNull String targetRootLocation;
