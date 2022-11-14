@@ -1,0 +1,25 @@
+[
+  {
+    "navn": "ARWIiphxIz78SmuwPtGAZ0LmCH6vCiAZMUI7",
+    "alder": 42,
+    "adresse": {
+      "adresselinjer": [
+        "Andeveien 1",
+        "Andegrenda"
+      ],
+      "postnummer": "3158",
+      "poststed": "Andebu"
+    }
+  },
+  {
+    "navn": "ARWIipgV1bGcUMdsY/D/gTh/bd6S78h9ySJHpzQ=",
+    "alder": 13,
+    "adresse": {
+      "adresselinjer": [
+        "Langelia 2"
+      ],
+      "postnummer": "3158",
+      "poststed": "Andebu"
+    }
+  }
+]

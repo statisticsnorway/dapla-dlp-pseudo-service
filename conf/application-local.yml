@@ -9,24 +9,40 @@ micronaut:
     max-request-size: 2gb
     multipart:
       max-file-size: 2gb
+
   router:
     static-resources:
       swagger:
         paths: classpath:META-INF/swagger
-        mapping: /openapi/**
+        mapping: /api-docs/**
+      swagger-ui:
+        paths: classpath:META-INF/swagger/views/swagger-ui
+        mapping: /api-docs/swagger-ui/**
+      rapidoc:
+        paths: classpath:META-INF/swagger/views/rapidoc
+        mapping: /api-docs/rapidoc/**
+      redoc:
+        paths: classpath:META-INF/swagger/views/redoc
+        mapping: /api-docs/redoc/**
 
   security:
+    enabled: true
+    intercept-url-map:
+      - pattern: /**/swagger/**
+        httpMethod: GET
+        access:
+          - isAnonymous()
+      - pattern: /**/api-docs/**
+        httpMethod: GET
+        access:
+          - isAnonymous()
     token:
       name-key: preferred_username
       jwt:
         signatures:
           jwks:
-            keycloak-prod:
-              url: 'https://keycloak.prod-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
             keycloak-staging:
               url: 'https://keycloak.staging-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
-    basic-auth:
-      enabled: false
 
 endpoints:
   info:
@@ -58,3 +74,7 @@ pseudo.secrets:
 app-roles:
   admins:
     - kons_schu@ssb.no
+
+gcp:
+  kms:
+    master-kek: gcp-kms://projects/{PROJECT_ID}/locations/europe-north1/keyRings/{KEYRING_NAME}/cryptoKeys/{KEY_NAME}

@@ -7,6 +7,8 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.multipart.StreamingFileUpload;
+import io.micronaut.scheduling.TaskExecutors;
+import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.reactivex.Completable;
@@ -18,10 +20,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.storage.client.backend.gcs.GoogleCloudStorageBackend;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
-import no.ssb.dlp.pseudo.core.StreamPseudonymizer;
+import no.ssb.dlp.pseudo.core.StreamProcessor;
 import no.ssb.dlp.pseudo.core.file.CompressionEncryptionMethod;
 import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
 import no.ssb.dlp.pseudo.core.file.PseudoFileSource;
+import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.map.RecordMapSerializerFactory;
 import no.ssb.dlp.pseudo.core.util.HumanReadableBytes;
 import no.ssb.dlp.pseudo.core.util.Json;
@@ -47,20 +50,23 @@ import static no.ssb.dlp.pseudo.core.util.Zips.ZipOptions.zipOpts;
 @Secured(SecurityRule.IS_AUTHENTICATED)
 public class PseudoController {
 
-    private final PseudonymizerFactory pseudonymizerFactory;
+    private final StreamProcessorFactory streamProcessorFactory;
+    private final RecordMapProcessorFactory recordProcessorFactory;
 
     private final GoogleCloudStorageBackend storageBackend;
 
     @Post("/pseudonymize/file")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA})
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MoreMediaTypes.APPLICATION_ZIP})
+    @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable> pseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data) {
         try {
-            PseudoRequest pseudoRequest = Json.toObject(PseudoRequest.class, request);
-            ProcessFileResult res = processFile(pseudoRequest, data, PseudoOperation.PSEUDONYMIZE);
+            PseudoRequest req = Json.toObject(PseudoRequest.class, request);
+            RecordMapProcessor recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(req.getPseudoConfig());
+            ProcessFileResult res = processFile(data, PseudoOperation.PSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Flowable file = res.getFlowable();
-            if (pseudoRequest.getTargetUri() != null) {
-                URI targetUri = pseudoRequest.getTargetUri();
+            if (req.getTargetUri() != null) {
+                URI targetUri = req.getTargetUri();
                 Completable fileUpload = storageBackend
                         .write(targetUri.toString(), file)
                         .timeout(30, TimeUnit.SECONDS)
@@ -79,13 +85,15 @@ public class PseudoController {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MediaType.APPLICATION_OCTET_STREAM})
     @Secured({PseudoServiceRole.ADMIN})
+    @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable> depseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data) {
         try {
-            PseudoRequest pseudoRequest = Json.toObject(PseudoRequest.class, request);
-            ProcessFileResult res = processFile(pseudoRequest, data, PseudoOperation.DEPSEUDONYMIZE);
+            PseudoRequest req = Json.toObject(PseudoRequest.class, request);
+            RecordMapProcessor recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(req.getPseudoConfig());
+            ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Flowable file = res.getFlowable();
-            if (pseudoRequest.getTargetUri() != null) {
-                URI targetUri = pseudoRequest.getTargetUri();
+            if (req.getTargetUri() != null) {
+                URI targetUri = req.getTargetUri();
                 Completable fileUpload = storageBackend
                         .write(targetUri.toString(), file)
                         .timeout(30, TimeUnit.SECONDS)
@@ -102,8 +110,37 @@ public class PseudoController {
         }
     }
 
-    private ProcessFileResult processFile(PseudoRequest request, StreamingFileUpload data, PseudoOperation operation) throws IOException {
-        MediaType targetContentType = MoreMediaTypes.validContentType(request.getTargetContentType());
+    @Post("/repseudonymize/file")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MediaType.APPLICATION_OCTET_STREAM})
+    @Secured({PseudoServiceRole.ADMIN})
+    @ExecuteOn(TaskExecutors.IO)
+    public HttpResponse<Flowable> repseudonymizeFile(@Schema(implementation = RepseudoRequest.class) String request, StreamingFileUpload data) {
+        try {
+            RepseudoRequest req = Json.toObject(RepseudoRequest.class, request);
+            RecordMapProcessor recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig());
+            ProcessFileResult res = processFile(data, PseudoOperation.REPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
+            Flowable file = res.getFlowable();
+            if (req.getTargetUri() != null) {
+                URI targetUri = req.getTargetUri();
+                Completable fileUpload = storageBackend
+                        .write(targetUri.toString(), file)
+                        .timeout(30, TimeUnit.SECONDS)
+                        .doOnError(throwable -> log.error("Upload failed: %s".formatted(targetUri), throwable))
+                        .doOnComplete(() -> log.info("Successful upload: %s".formatted(targetUri)));
+                return HttpResponse.ok(fileUpload.toFlowable());
+            }
+            else {
+                return HttpResponse.ok(file).contentType(res.getTargetContentType());
+            }
+        } catch (Exception e) {
+            log.error(String.format("Failed to repseudonymize:%nrequest:%n%s", request), e);
+            return HttpResponse.serverError(Flowable.error(e));
+        }
+    }
+
+    private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) throws IOException {
+        targetContentType = MoreMediaTypes.validContentType(targetContentType);
         File tempFile = null;
         PseudoFileSource fileSource = null;
 
@@ -113,18 +150,18 @@ public class PseudoController {
             log.info("Received file ({}, {})", fileSource.getProvidedMediaType(), HumanReadableBytes.fromBin(tempFile.length()));
             log.info("{} {} files with content type {}", operation, fileSource.getFiles().size(), fileSource.getMediaType());
             log.info("Target content type: {}", targetContentType);
-            StreamPseudonymizer pseudonymizer = pseudonymizerFactory.newStreamPseudonymizer(request.getPseudoConfig().getRules(), fileSource.getMediaType());
-            Flowable<String> res = processStream(operation, fileSource.getInputStream(), targetContentType, pseudonymizer);
 
-            TargetCompression targetCompression = request.getCompression();
+            StreamProcessor streamProcessor = streamProcessorFactory.newStreamProcessor(fileSource.getMediaType(), recordMapProcessor);
+            Flowable<String> res = processStream(fileSource.getInputStream(), streamProcessor, operation, targetContentType);
+
             if (targetCompression != null) {
                 log.info("Applying target compression: " + MoreMediaTypes.APPLICATION_ZIP_TYPE);
                 String contentFilename = (operation + "-" + System.currentTimeMillis() + "." + targetContentType.getExtension()).toLowerCase();
                 res = serialize(res, targetContentType);
                 return new ProcessFileResult(MediaType.APPLICATION_OCTET_STREAM_TYPE, Zips.zip(res, contentFilename, zipOpts()
-                  .password(targetCompression.getPassword())
-                  .encryptionMethod(CompressionEncryptionMethod.AES)
-                  .build()
+                        .password(targetCompression.getPassword())
+                        .encryptionMethod(CompressionEncryptionMethod.AES)
+                        .build()
                 ));
             }
 
@@ -161,10 +198,8 @@ public class PseudoController {
         return recordStream;
     }
 
-    private Flowable<String> processStream(PseudoOperation operation, InputStream is, MediaType targetContentType, StreamPseudonymizer pseudonymizer) {
-        return operation == PseudoOperation.PSEUDONYMIZE
-          ? pseudonymizer.pseudonymize(is, RecordMapSerializerFactory.newFromMediaType(targetContentType))
-          : pseudonymizer.depseudonymize(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
+    private Flowable<String> processStream(InputStream is, StreamProcessor streamProcessor, PseudoOperation operation, MediaType targetContentType) {
+        return streamProcessor.process(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
     }
 
     private Single<File> receiveFile(StreamingFileUpload data) throws IOException {
@@ -208,6 +243,39 @@ public class PseudoController {
          */
         private TargetCompression compression;
     }
+
+    @Data
+    public static class RepseudoRequest {
+
+        /**
+         * The source pseudonymization config
+         */
+        private PseudoConfig sourcePseudoConfig;
+
+        /**
+         * The target pseudonymization config
+         */
+        private PseudoConfig targetPseudoConfig;
+
+        /**
+         * Specify this if you want to stream the result to a specific location such as a GCS bucket. Note that the pseudo
+         * service needs to have access to the bucket. Leave this unspecified in order to just stream the result back to
+         * the client.
+         */
+        @Schema(implementation = String.class)
+        private URI targetUri;
+
+        /** The content type of the resulting file. */
+        @Schema(implementation = String.class, allowableValues = {
+                MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV})
+        private MediaType targetContentType;
+
+        /**
+         * Specify this if you want to compress and password protect the payload. The archive will be encrypted with AES256.
+         */
+        private TargetCompression compression;
+    }
+
 
     @Data
     public static class ProcessFileResult {
