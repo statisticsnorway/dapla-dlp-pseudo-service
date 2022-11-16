@@ -1,5 +1,6 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
+import com.google.common.base.Strings;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
@@ -45,6 +46,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.Principal;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -65,7 +67,9 @@ public class PseudoController {
     @Consumes({MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA})
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MoreMediaTypes.APPLICATION_ZIP})
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Flowable> pseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data) {
+    public HttpResponse<Flowable> pseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
+        log.info(Strings.padEnd("*** Pseudonymize File ", 80, '*'));
+        log.debug("User: {}\n{}", principal.getName(), request);
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
             RecordMapProcessor recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(req.getPseudoConfig());
@@ -92,7 +96,10 @@ public class PseudoController {
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MediaType.APPLICATION_OCTET_STREAM})
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Flowable> depseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data) {
+    public HttpResponse<Flowable> depseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
+        log.info(Strings.padEnd("*** Depseudonymize File ", 80, '*'));
+        log.debug("User: {}\n{}", principal.getName(), request);
+
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
             RecordMapProcessor recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(req.getPseudoConfig());
@@ -121,7 +128,10 @@ public class PseudoController {
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MediaType.APPLICATION_OCTET_STREAM})
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Flowable> repseudonymizeFile(@Schema(implementation = RepseudoRequest.class) String request, StreamingFileUpload data) {
+    public HttpResponse<Flowable> repseudonymizeFile(@Schema(implementation = RepseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
+        log.info(Strings.padEnd("*** Repseudonymize File ", 80, '*'));
+        log.debug("User: {}\n{}", principal.getName(), request);
+
         try {
             RepseudoRequest req = Json.toObject(RepseudoRequest.class, request);
             RecordMapProcessor recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig());
