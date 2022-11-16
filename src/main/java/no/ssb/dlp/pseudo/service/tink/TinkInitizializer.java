@@ -4,8 +4,11 @@ import com.google.crypto.tink.daead.DeterministicAeadConfig;
 import com.google.crypto.tink.integration.gcpkms.GcpKmsClient;
 import io.micronaut.context.annotation.Context;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dlp.pseudo.core.PseudoException;
 
 import javax.inject.Singleton;
+import java.net.URI;
+import java.security.GeneralSecurityException;
 import java.util.Optional;
 
 @Context
@@ -15,13 +18,19 @@ public class TinkInitizializer {
 
     public TinkInitizializer(KmsConfig kmsConfig) {
         try {
+            // Register DAEAD config
+            log.info("Initialize Tink config");
             DeterministicAeadConfig.register();
-            GcpKmsClient.register(Optional.of(kmsConfig.getMasterKek()), Optional.empty());
-            log.info("Initialized Tink GcpKmsClient");
+
+            // Register Key Encryption Keys
+            for (URI keyUri : kmsConfig.getKeyUris()) {
+                log.info("Register KMS key {}", keyUri);
+                GcpKmsClient.register(Optional.of(keyUri.toString()), Optional.ofNullable(kmsConfig.getCredentialsPath()));
+            }
         }
         catch (Exception e) {
-            throw new RuntimeException("Error initializing tink", e);
+            throw new PseudoException("Error initializing Tink", e);
         }
-
     }
+
 }
