@@ -18,6 +18,7 @@ import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.validation.Validated;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ import java.util.Set;
 @Slf4j
 @Secured(SecurityRule.IS_AUTHENTICATED)
 @Validated
+@Tag(name = "Pseudo operations")
 public class ExportController {
 
     private final ExportService exportService;

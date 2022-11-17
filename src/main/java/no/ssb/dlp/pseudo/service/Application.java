@@ -22,17 +22,21 @@ import java.util.Optional;
                 title = "Dapla Pseudo Service",
                 version = "1.0",
                 description = "Endpoints that supports pseudonymization and depseudonymization of data and datasets",
-                contact = @Contact(url = "https://blah", name = "Team Skyinfrastruktur", email = "team-skyinfrastruktur@ssb.no")
+                contact = @Contact(url = "https://statistics-norway.atlassian.net/wiki/spaces/PSEUDO", name = "Team Skyinfrastruktur", email = "team-skyinfrastruktur@ssb.no")
         ),
-        security = @SecurityRequirement(name = "bearerAuth"),
-        servers = {@Server(url = "http://localhost:10210", description = "Locally proxied pseudo service")}
+        security = @SecurityRequirement(name = "Keycloak token"),
+        servers = {
+                @Server(url = "https://dapla-pseudo-service.staging-bip-app.ssb.no", description = "Staging"),
+                @Server(url = "http://localhost:10210", description = "Locally proxied pseudo service")
+        }
 )
 @SecurityScheme(
-        name = "BearerAuth",
+        name = "Keycloak token",
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "jwt",
-        in = SecuritySchemeIn.HEADER
+        in = SecuritySchemeIn.HEADER,
+        paramName = "Authorization"
 )
 @Slf4j
 public class Application {

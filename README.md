@@ -2,6 +2,13 @@
 
 (De/)pseudonymization and export endpoints.
 
+Browse the API docs as:
+* [Redoc](https://dapla-pseudo-service.staging-bip-app.ssb.no/api-docs/redoc) (recommended)
+* [Rapidoc](https://dapla-pseudo-service.staging-bip-app.ssb.no/api-docs/rapidoc)
+* [Swagger UI](https://dapla-pseudo-service.staging-bip-app.ssb.no/api-docs/swagger-ui)
+
+... or parse [the Open API specs](https://dapla-pseudo-service.staging-bip-app.ssb.no/api-docs/dapla-pseudo-service-1.0.yml) for yourself 🤓
+
 ## Examples
 
 ### Export a dataset

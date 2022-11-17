@@ -20,7 +20,10 @@ import io.micronaut.security.rules.SecurityRule;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,13 +59,36 @@ import static no.ssb.dlp.pseudo.core.util.Zips.ZipOptions.zipOpts;
 @Controller
 @Slf4j
 @Secured(SecurityRule.IS_AUTHENTICATED)
+@Tag(name = "Pseudo operations")
 public class PseudoController {
 
     private final StreamProcessorFactory streamProcessorFactory;
     private final RecordMapProcessorFactory recordProcessorFactory;
-
     private final GoogleCloudStorageBackend storageBackend;
 
+    @Operation(
+            summary = "Pseudonymize file",
+            description = """
+            Pseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
+            
+            Choose between streaming the pseudonymized result back, or storing it as a file in GCS (by providing a `targetUri`).
+            
+            Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
+            formats. E.g. your source could be a CSV file and the result could be a JSON file.
+
+            Reduce transmission times by applying compression both to the source and target files.
+            Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
+            
+            Pseudonymization will be applied according to a list of "rules" that targets the fields of the file being
+            pseudonymized. Each rule defines as a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
+            that identifies one or multple fields, and a `func` that will be applied to the matching fields. Rules are
+            processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
+            is important).
+            
+            Pseudo rules will most times refer to crypto keys. You can provide your own keys to use (via the `keysets` param)
+            or use one of the predefined keys: `ssb-common-key-1` or `ssb-common-key-2`.
+            """
+    )
     @Post("/pseudonymize/file")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA})
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MoreMediaTypes.APPLICATION_ZIP})
