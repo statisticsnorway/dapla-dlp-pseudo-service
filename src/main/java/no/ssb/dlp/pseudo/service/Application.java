@@ -1,7 +1,5 @@
 package no.ssb.dlp.pseudo.service;
 
-import com.google.crypto.tink.daead.DeterministicAeadConfig;
-import com.google.crypto.tink.integration.gcpkms.GcpKmsClient;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.runtime.Micronaut;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -15,13 +13,11 @@ import io.swagger.v3.oas.annotations.servers.Server;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @OpenAPIDefinition(
         info = @Info(
                 title = "Dapla Pseudo Service",
                 version = "1.0",
-                description = "Endpoints that supports pseudonymization and depseudonymization of data and datasets",
+                description = "Endpoints that support pseudonymization and depseudonymization of data and datasets",
                 contact = @Contact(url = "https://statistics-norway.atlassian.net/wiki/spaces/PSEUDO", name = "Team Skyinfrastruktur", email = "team-skyinfrastruktur@ssb.no")
         ),
         security = @SecurityRequirement(name = "Keycloak token"),

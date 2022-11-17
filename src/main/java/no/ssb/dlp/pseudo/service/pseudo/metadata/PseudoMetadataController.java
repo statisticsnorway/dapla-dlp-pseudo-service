@@ -8,7 +8,7 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +25,9 @@ public class PseudoMetadataController {
 
     private final PseudoMetadataService pseudoMetadataService;
 
+    @Operation(
+            summary = "List all metadata"
+    )
     @Get("/metadata")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA})
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MoreMediaTypes.APPLICATION_ZIP})

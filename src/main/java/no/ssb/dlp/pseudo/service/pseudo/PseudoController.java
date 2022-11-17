@@ -5,11 +5,8 @@ import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
-import io.micronaut.http.annotation.Consumes;
-import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
-import io.micronaut.http.annotation.Post;
-import io.micronaut.http.annotation.Produces;
+import io.micronaut.http.annotation.*;
 import io.micronaut.http.hateoas.JsonError;
 import io.micronaut.http.hateoas.Link;
 import io.micronaut.http.multipart.StreamingFileUpload;
@@ -22,7 +19,6 @@ import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -80,7 +76,7 @@ public class PseudoController {
             Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
             
             Pseudonymization will be applied according to a list of "rules" that targets the fields of the file being
-            pseudonymized. Each rule defines as a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
+            processed. Each rule defines as a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
             that identifies one or multple fields, and a `func` that will be applied to the matching fields. Rules are
             processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
             is important).
@@ -117,6 +113,31 @@ public class PseudoController {
         }
     }
 
+    @Operation(
+            summary = "Depseudonymize file",
+            description = """
+            Depseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
+            
+            Notice that only certain whitelisted users can depseudonymize data.
+            
+            Choose between streaming the result back, or storing it as a file in GCS (by providing a `targetUri`).
+            
+            Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
+            formats. E.g. your source could be a CSV file and the result could be a JSON file.
+
+            Reduce transmission times by applying compression both to the source and target files.
+            Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
+            
+            Depseudonymization will be applied according to a list of "rules" that targets the fields of the file being
+            processed. Each rule defines as a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
+            that identifies one or multple fields, and a `func` that will be applied to the matching fields. Rules are
+            processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
+            is important).
+            
+            Pseudo rules will most times refer to crypto keys. You can provide your own keys to use (via the `keysets` param)
+            or use one of the predefined keys: `ssb-common-key-1` or `ssb-common-key-2`.
+            """
+    )
     @Post("/depseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MediaType.APPLICATION_OCTET_STREAM})
@@ -149,6 +170,31 @@ public class PseudoController {
         }
     }
 
+    @Operation(
+            summary = "Repseudonymize file",
+            description = """
+            Repseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
+            Repseudonymization is done by applying depseudonuymization and then pseudonymization to a fields of the file.
+            
+            Choose between streaming the result back, or storing it as a file in GCS (by providing a `targetUri`).
+            
+            Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
+            formats. E.g. your source could be a CSV file and the result could be a JSON file.
+
+            Reduce transmission times by applying compression both to the source and target files.
+            Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
+            
+            Repseudonymization will be applied according to a list of "rules" that targets the fields of the file being
+            processed. Each rule defines as a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
+            that identifies one or multple fields, and a `func` that will be applied to the matching fields. Rules are
+            processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
+            is important). Two sets of rules are provided: one that defines how to depseudonymize and a second that defines
+            how to pseudonymize. These sets of rules are linked to separate keysets.
+            
+            Pseudo rules will most times refer to crypto keys. You can provide your own keys to use (via the `keysets` param)
+            or use one of the predefined keys: `ssb-common-key-1` or `ssb-common-key-2`.
+            """
+    )
     @Post("/repseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MediaType.APPLICATION_OCTET_STREAM})

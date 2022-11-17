@@ -8,7 +8,6 @@ import no.ssb.dlp.pseudo.core.PseudoException;
 
 import javax.inject.Singleton;
 import java.net.URI;
-import java.security.GeneralSecurityException;
 import java.util.Optional;
 
 @Context
