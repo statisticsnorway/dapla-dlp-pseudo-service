@@ -75,9 +75,9 @@ public class PseudoController {
             Reduce transmission times by applying compression both to the source and target files.
             Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
             
-            Pseudonymization will be applied according to a list of "rules" that targets the fields of the file being
-            processed. Each rule defines as a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
-            that identifies one or multple fields, and a `func` that will be applied to the matching fields. Rules are
+            Pseudonymization will be applied according to a list of "rules" that target the fields of the file being
+            processed. Each rule defines a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
+            that identifies one or multiple fields, and a `func` that will be applied to the matching fields. Rules are
             processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
             is important).
             
@@ -86,11 +86,11 @@ public class PseudoController {
             """
     )
     @Post("/pseudonymize/file")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA})
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MoreMediaTypes.APPLICATION_ZIP})
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable> pseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
-        log.info(Strings.padEnd("*** Pseudonymize File ", 80, '*'));
+        log.info(Strings.padEnd("*** Pseudonymize File " + data.getFilename(), 80, '*'));
         log.debug("User: {}\n{}", principal.getName(), request);
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
@@ -128,9 +128,9 @@ public class PseudoController {
             Reduce transmission times by applying compression both to the source and target files.
             Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
             
-            Depseudonymization will be applied according to a list of "rules" that targets the fields of the file being
-            processed. Each rule defines as a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
-            that identifies one or multple fields, and a `func` that will be applied to the matching fields. Rules are
+            Depseudonymization will be applied according to a list of "rules" that target the fields of the file being
+            processed. Each rule defines a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
+            that identifies one or multiple fields, and a `func` that will be applied to the matching fields. Rules are
             processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
             is important).
             
@@ -144,7 +144,7 @@ public class PseudoController {
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable> depseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
-        log.info(Strings.padEnd("*** Depseudonymize File ", 80, '*'));
+        log.info(Strings.padEnd("*** Depseudonymize File " + data.getFilename(), 80, '*'));
         log.debug("User: {}\n{}", principal.getName(), request);
 
         try {
@@ -174,7 +174,7 @@ public class PseudoController {
             summary = "Repseudonymize file",
             description = """
             Repseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
-            Repseudonymization is done by applying depseudonuymization and then pseudonymization to a fields of the file.
+            Repseudonymization is done by first applying depseudonuymization and then pseudonymization to fields of the file.
             
             Choose between streaming the result back, or storing it as a file in GCS (by providing a `targetUri`).
             
@@ -184,9 +184,9 @@ public class PseudoController {
             Reduce transmission times by applying compression both to the source and target files.
             Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
             
-            Repseudonymization will be applied according to a list of "rules" that targets the fields of the file being
-            processed. Each rule defines as a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
-            that identifies one or multple fields, and a `func` that will be applied to the matching fields. Rules are
+            Repseudonymization will be applied according to a list of "rules" that target the fields of the file being
+            processed. Each rule defines a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
+            that identifies one or multiple fields, and a `func` that will be applied to the matching fields. Rules are
             processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
             is important). Two sets of rules are provided: one that defines how to depseudonymize and a second that defines
             how to pseudonymize. These sets of rules are linked to separate keysets.
@@ -201,7 +201,7 @@ public class PseudoController {
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable> repseudonymizeFile(@Schema(implementation = RepseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
-        log.info(Strings.padEnd("*** Repseudonymize File ", 80, '*'));
+        log.info(Strings.padEnd("*** Repseudonymize File " + data.getFilename(), 80, '*'));
         log.debug("User: {}\n{}", principal.getName(), request);
 
         try {
