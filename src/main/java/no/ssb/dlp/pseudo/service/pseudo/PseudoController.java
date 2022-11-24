@@ -1,5 +1,6 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
@@ -90,7 +91,7 @@ public class PseudoController {
     @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MoreMediaTypes.APPLICATION_ZIP})
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable> pseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
-        log.info(Strings.padEnd("*** Pseudonymize File " + data.getFilename(), 80, '*'));
+        log.info(Strings.padEnd(String.format("*** Pseudonymize file: %s", data.getFilename()), 80, '*'));
         log.debug("User: {}\n{}", principal.getName(), request);
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
@@ -106,6 +107,7 @@ public class PseudoController {
                         .doOnComplete(() -> log.info("Successful upload: %s".formatted(targetUri)));
                 return HttpResponse.ok(fileUpload.toFlowable());
             }
+
             return HttpResponse.ok(file).contentType(res.getTargetContentType());
         } catch (Exception e) {
             log.error(String.format("Failed to pseudonymize:%nrequest:%n%s", request), e);
@@ -144,7 +146,7 @@ public class PseudoController {
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable> depseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
-        log.info(Strings.padEnd("*** Depseudonymize File " + data.getFilename(), 80, '*'));
+        log.info(Strings.padEnd(String.format("*** Depseudonymize file: %s", data.getFilename()), 80, '*'));
         log.debug("User: {}\n{}", principal.getName(), request);
 
         try {
@@ -161,13 +163,13 @@ public class PseudoController {
                         .doOnComplete(() -> log.info("Successful upload: %s".formatted(targetUri)));
                 return HttpResponse.ok(fileUpload.toFlowable());
             }
-            else {
-                return HttpResponse.ok(file).contentType(res.getTargetContentType());
-            }
+
+            return HttpResponse.ok(file).contentType(res.getTargetContentType());
         } catch (Exception e) {
             log.error(String.format("Failed to depseudonymize:%nrequest:%n%s", request), e);
             return HttpResponse.serverError(Flowable.error(e));
         }
+
     }
 
     @Operation(
@@ -201,7 +203,7 @@ public class PseudoController {
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable> repseudonymizeFile(@Schema(implementation = RepseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
-        log.info(Strings.padEnd("*** Repseudonymize File " + data.getFilename(), 80, '*'));
+        log.info(Strings.padEnd(String.format("*** Repseudonymize file: %s", data.getFilename()), 80, '*'));
         log.debug("User: {}\n{}", principal.getName(), request);
 
         try {
@@ -218,9 +220,8 @@ public class PseudoController {
                         .doOnComplete(() -> log.info("Successful upload: %s".formatted(targetUri)));
                 return HttpResponse.ok(fileUpload.toFlowable());
             }
-            else {
-                return HttpResponse.ok(file).contentType(res.getTargetContentType());
-            }
+
+            return HttpResponse.ok(file).contentType(res.getTargetContentType());
         } catch (Exception e) {
             log.error(String.format("Failed to repseudonymize:%nrequest:%n%s", request), e);
             return HttpResponse.serverError(Flowable.error(e));
@@ -228,6 +229,7 @@ public class PseudoController {
     }
 
     private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) throws IOException {
+        Stopwatch stopwatch = Stopwatch.createStarted();
         targetContentType = MoreMediaTypes.validContentType(targetContentType);
         File tempFile = null;
         PseudoFileSource fileSource = null;
@@ -253,6 +255,7 @@ public class PseudoController {
                 ));
             }
 
+            log.info("{} took {}", operation, stopwatch.stop().elapsed());
             return new ProcessFileResult(targetContentType, res);
         }
         finally {
