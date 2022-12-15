@@ -386,8 +386,9 @@ public class PseudoController {
         private char[] password;
     }
 
-    @Error
-    public HttpResponse<JsonError> converterJobFilterError(HttpRequest request, NoSuchPseudoKeyException e) {
+    // TODO: Validate that this works
+    @Error(status = HttpStatus.BAD_REQUEST)
+    public HttpResponse<JsonError> unknownPseudoKeyError(HttpRequest request, NoSuchPseudoKeyException e) {
         JsonError error = new JsonError(e.getMessage())
                 .link(Link.SELF, Link.of(request.getUri()));
 
