@@ -13,18 +13,10 @@ function usage {
 Generate a new wrapped data encryption key using tinkey (https://developers.google.com/tink/generate-encrypted-keyset#tinkey)
 
 $0
-   -c|--config       <cookiecutter arguments file (yml or json)>                     (default: team-config.yml)
-   -t|--template     the cookiecutter template to use, possibly a local file path    (default: gh:statisticsnorway/cookiecutter-dapla-team-default)
-   -d|--debug        run in debug mode, printing details along the way               (default: off)
-   --no-github-push  Only create team repo locally. Don't push.                      (default: off)
+   -k|--kek-uri        url to key encryption key in KMS, such as gcp-kms://projects/blah/locations/europe-north1/keyRings/my-keyring/cryptoKeys/my-kek-1
+   -n|--no-include-kek set if uri to the should not be included in the generated key  (default: off)
+   -s|--silent         set if the should not be printed to the console after creation  (default: off)
    -h|--help"
-Examples:
-  With a custom cookiecutter config file:
-  $0 --kek-uri
-  Using a local cookiecutter template repo:
-  $0 --debug --template ../path/to/local/cookiecutter-dapla-team-default --config my-team-config.yaml
-  Without creating GitHub repo:
-  $0 --debug --no-github-push --config my-team-config.yaml
 EOP
 
     exit 0
