@@ -4,6 +4,7 @@ Thumbs.db
 build/
 target/
 out/
+bin/wdek-*
 .idea
 *.iml
 *.ipr
@@ -13,3 +14,4 @@ out/
 .classpath
 micronaut-cli.yml
 private/
+http-client.private.env.json

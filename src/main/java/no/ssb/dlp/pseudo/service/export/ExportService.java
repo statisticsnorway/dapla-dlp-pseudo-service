@@ -25,7 +25,6 @@ import no.ssb.dlp.pseudo.core.map.RecordMapSerializerFactory;
 import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.core.util.PathJoiner;
 import no.ssb.dlp.pseudo.core.util.Zips;
-
 import no.ssb.dlp.pseudo.service.datasetmeta.DatasetMetaService;
 import no.ssb.dlp.pseudo.service.pseudo.PseudoConfig;
 import no.ssb.dlp.pseudo.service.pseudo.PseudoSecrets;
@@ -37,7 +36,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -212,7 +213,7 @@ public class ExportService {
         }
 
         report.setAppliedPseudoRules(pseudoRules);
-        PseudoFuncs pseudoFuncs = new PseudoFuncs(pseudoRules, pseudoSecrets.resolve());
+        PseudoFuncs pseudoFuncs = new PseudoFuncs(pseudoRules, pseudoSecrets.resolve(), List.of());
         return new FieldPseudoInterceptor(pseudoFuncs, PseudoOperation.DEPSEUDONYMIZE);
     }
 

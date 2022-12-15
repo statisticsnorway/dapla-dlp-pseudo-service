@@ -1,0 +1,17 @@
+[
+  {
+    "person_id": "02099510504",
+    "arbeidsgiver": "Haugen, Eriksen og Evensen",
+    "lonn": 972000
+  },
+  {
+    "person_id": "06097048531",
+    "arbeidsgiver": "Moen, Andreassen og Jakobsen",
+    "lonn": 351000
+  },
+  {
+    "person_id": "18099908978",
+    "arbeidsgiver": "Ali og Sønner",
+    "lonn": 462000
+  }
+]

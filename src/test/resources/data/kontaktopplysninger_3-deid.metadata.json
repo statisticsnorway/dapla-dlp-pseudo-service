@@ -1,0 +1,30 @@
+{
+  "pseudoConfig": {
+    "keysets": [
+      {
+        "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+        "keysetInfo": {
+          "primaryKeyId": 361269912,
+          "keyInfo": [
+            {
+              "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+              "status": "ENABLED",
+              "keyId": 361269912,
+              "outputPrefixType": "TINK"
+            }
+          ]
+        }
+      }
+    ],
+    "rules": [
+      {
+        "pattern": "**/{foedselsnummer,gateadresse,telefonnummer,email}",
+        "func": "tink-daead(361269912)"
+      },
+      {
+        "pattern": "**/{foedselsnummer,gateadresse,telefonnummer,email}",
+        "func": "redact(***)"
+      }
+    ]
+  }
+}

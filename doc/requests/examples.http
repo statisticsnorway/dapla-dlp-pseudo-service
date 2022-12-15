@@ -1,0 +1,484 @@
+### Pseudonymize json file
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "allthenumbers",
+        "pattern": "**/*nummer",
+        "func": "fpe-digits(secret1)"
+      },
+      {
+        "name": "navn",
+        "pattern": "**/navn",
+        "func": "fpe-anychar(secret1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/15k.json
+--separator--
+
+### Pseudonymize zipped archive with multiple json files. Return csv file.
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "text/csv",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "allthenumbers",
+        "pattern": "**/*nummer",
+        "func": "fpe-digits(secret1)"
+      },
+      {
+        "name": "navn",
+        "pattern": "**/navn",
+        "func": "fpe-alphanumeric(secret1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.zip"
+Content-Type: application/zip
+
+< ../../src/test/resources/data/multiple-json-files.zip
+--separator--
+
+### Pseudonymize using mapping database
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "navn",
+        "pattern": "**/navn",
+        "func": "map-db(ssb-1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/15k.json
+--separator--
+
+### Pseudonymize 1 000 000 records (zipped) using DAEAD
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "keysets": [
+{
+  "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+  "keysetInfo": {
+    "primaryKeyId": 361269912,
+    "keyInfo": [
+      {
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 361269912,
+        "outputPrefixType": "TINK"
+      }
+    ]
+  },
+  "kekUri": "{{kek_uri}}"
+}
+    ],
+    "rules": [
+      {
+        "name": "fnr",
+        "pattern": "**/foedselsnummer",
+        "func": "tink-daead(361269912)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.zip"
+Content-Type: application/zip
+
+< ../../src/test/resources/data/kontaktopplysninger_1000000.json.zip
+--separator--
+
+### Pseudonymize using DAEAD
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "keysets": [
+{
+  "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+  "keysetInfo": {
+    "primaryKeyId": 361269912,
+    "keyInfo": [
+      {
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 361269912,
+        "outputPrefixType": "TINK"
+      }
+    ]
+  },
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/crypto-keyring/cryptoKeys/crypto-key"
+},
+{
+  "encryptedKeyset": "CiQA5zQ3ay3sF1bLfNV5ZWnUudjj3J0aEv5lZ7jX1ooOmxP/kswStQEAXU6Lz9haQG61iXKg386s+ZwxIzyJ3NxXCHk2zNShkBZfN0gTI53gzgpBySVRN1GVFKPhF/7CO+YM9GVCXa1DcbyRULtiZ4IStxE0B6rabQYMprSnG0MqL2YLUGHPbe3r+k8RZG5zDs9O0zsq5sCP+KNP1fuGi8HVGTC2unxJ+sdZ4aOYtoo1qZNbZGbSj1V+4vxCpK4o4XOWz5KI2fH/zQm1XPP/BgynHRcwqnr3fHxUvxeO",
+  "keysetInfo": {
+    "primaryKeyId": 145765263,
+    "keyInfo": [
+      {
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 145765263,
+        "outputPrefixType": "TINK"
+      }
+    ]
+  },
+  "kekUri": "{{kek_uri}}"
+}
+    ],
+    "rules": [
+      {
+        "name": "navn",
+        "pattern": "**/navn",
+        "func": "tink-daead(361269912)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/somedata.json
+--separator--
+
+### Depseudonymize using DAEAD
+
+POST {{base_url}}/depseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "keysets": [
+{
+  "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+  "keysetInfo": {
+    "primaryKeyId": 361269912,
+    "keyInfo": [
+      {
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 361269912,
+        "outputPrefixType": "TINK"
+      }
+    ]
+  },
+  "kekUri": "{{kek_uri}}"
+}
+    ],
+    "rules": [
+      {
+        "name": "navn",
+        "pattern": "**/navn",
+        "func": "tink-daead(361269912)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/somedatata-daead-encrypted.json
+--separator--
+
+### Pseudonymize using DAEAD - person
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "keysets": [
+{
+  "encryptedKeyset": "CiQA5zQ3ay3sF1bLfNV5ZWnUudjj3J0aEv5lZ7jX1ooOmxP/kswStQEAXU6Lz9haQG61iXKg386s+ZwxIzyJ3NxXCHk2zNShkBZfN0gTI53gzgpBySVRN1GVFKPhF/7CO+YM9GVCXa1DcbyRULtiZ4IStxE0B6rabQYMprSnG0MqL2YLUGHPbe3r+k8RZG5zDs9O0zsq5sCP+KNP1fuGi8HVGTC2unxJ+sdZ4aOYtoo1qZNbZGbSj1V+4vxCpK4o4XOWz5KI2fH/zQm1XPP/BgynHRcwqnr3fHxUvxeO",
+  "keysetInfo": {
+    "primaryKeyId": 145765263,
+    "keyInfo": [
+      {
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 145765263,
+        "outputPrefixType": "TINK"
+      }
+    ]
+  },
+  "kekUri": "{{kek_uri}}"
+}
+    ],
+    "rules": [
+      {
+        "pattern": "**/{fnr,fornavn,etternavn}",
+        "func": "tink-daead(145765263)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/person_3.json
+--separator--
+
+### Pseudonymize using DAEAD - kontaktopplysninger
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "keysets": [
+{
+  "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+  "keysetInfo": {
+    "primaryKeyId": 361269912,
+    "keyInfo": [
+      {
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 361269912,
+        "outputPrefixType": "TINK"
+      }
+    ]
+  },
+  "kekUri": "{{kek_uri}}"
+}
+    ],
+    "rules": [
+      {
+        "pattern": "/{foedselsnummer,gateadresse,telefonnummer}",
+        "func": "tink-daead(361269912)"
+      },
+      {
+        "pattern": "/email",
+        "func": "redact(***)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/kontaktopplysninger_3.json
+--separator--
+
+### Redact data
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "navn",
+        "pattern": "**/{navn,postnummer}",
+        "func": "redact(***)"
+      },
+      {
+        "name": "poststed",
+        "pattern": "**/poststed",
+        "func": "redact-regex(9999, ^[A|b]|bu$)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/15k.json
+--separator--
+
+### Repseudonymize using DAEAD - kontaktopplysninger
+
+POST {{base_url}}/repseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "sourcePseudoConfig": {
+    "keysets": [
+      {
+        "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+        "keysetInfo": {
+          "primaryKeyId": 361269912,
+          "keyInfo": [
+            {
+              "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+              "status": "ENABLED",
+              "keyId": 361269912,
+              "outputPrefixType": "TINK"
+            }
+          ]
+        },
+        "kekUri": "{{kek_uri}}"
+      }
+    ],
+    "rules": [
+      {
+        "name": "rule-1",
+        "pattern": "**/{foedselsnummer,gateadresse,telefonnummer}",
+        "func": "tink-daead(361269912)"
+      }
+    ]
+  },
+  "targetPseudoConfig": {
+    "keysets": [
+      {
+        "encryptedKeyset": "CiQA5zQ3ay3sF1bLfNV5ZWnUudjj3J0aEv5lZ7jX1ooOmxP/kswStQEAXU6Lz9haQG61iXKg386s+ZwxIzyJ3NxXCHk2zNShkBZfN0gTI53gzgpBySVRN1GVFKPhF/7CO+YM9GVCXa1DcbyRULtiZ4IStxE0B6rabQYMprSnG0MqL2YLUGHPbe3r+k8RZG5zDs9O0zsq5sCP+KNP1fuGi8HVGTC2unxJ+sdZ4aOYtoo1qZNbZGbSj1V+4vxCpK4o4XOWz5KI2fH/zQm1XPP/BgynHRcwqnr3fHxUvxeO",
+        "keysetInfo": {
+          "primaryKeyId": 145765263,
+          "keyInfo": [
+            {
+              "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+              "status": "ENABLED",
+              "keyId": 145765263,
+              "outputPrefixType": "TINK"
+            }
+          ]
+        },
+        "kekUri": "{{kek_uri}}"
+      }
+    ],
+    "rules": [
+      {
+        "name": "rule-1",
+        "pattern": "**/{foedselsnummer,gateadresse,telefonnummer,email}",
+        "func": "tink-daead(145765263)"
+      }
+    ]
+  }
+}
+
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/kontaktopplysninger_3-deid.json
+--separator--
+
+### Pseudonymize using DAEAD and default key - person
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "pattern": "**/{fnr,fornavn,etternavn}",
+        "func": "tink-daead(ssb-common-key-1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/person_3.json
+--separator--
+
+
+### Get all metadata
+
+GET {{base_url}}/metadata
+Authorization: Bearer {{keycloak_token}}

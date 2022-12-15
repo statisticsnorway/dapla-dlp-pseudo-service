@@ -17,7 +17,9 @@ import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.validation.Validated;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,10 +42,24 @@ import java.util.Set;
 @Slf4j
 @Secured(SecurityRule.IS_AUTHENTICATED)
 @Validated
+@Tag(name = "Pseudo operations")
 public class ExportController {
 
     private final ExportService exportService;
 
+    @Operation(
+            summary = "Export",
+            description = """
+            Export a dataset in GCS to CSV or JSON, and optionally depseudonymize the data. The dataset will be
+            archived in an encrypted zip file protected by a user provided password.
+
+            It is possible to specify `columnSelectors`, that allows for _partial export_, e.g. only specific fields.
+            This can be applied as a means to perform data minimization.
+            
+            Data is exported and stored to a specific, predefined GCS bucket. This is specified in the application
+            configuration and cannot be overridden.
+            """
+    )
     @Post("/export")
     @ExecuteOn(TaskExecutors.IO)
     public ExportService.DatasetExportResult export(@Body @Valid ExportRequest request, Principal principal) {

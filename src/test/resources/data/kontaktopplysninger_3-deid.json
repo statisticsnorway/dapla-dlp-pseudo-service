@@ -1,0 +1,26 @@
+[
+  {
+    "foedselsnummer": "ARWIipgGzwjubQdX6efxNSejH57pHr1tbtDB8oRBVN0=",
+    "gateadresse": "ARWIipi5pSGNxA7AR73BVtRJklAyuCY9tflubA1TX4i35Cig4F/SnN4=",
+    "postnummer": "6867",
+    "telefonnummer": "ARWIipit4HuKSvXZ7axGeN3k2ET7IB5pnbE3dKv+vG8=",
+    "kan_kontaktes": true,
+    "email": "***"
+  },
+  {
+    "foedselsnummer": "ARWIipiTmR0DPHUsbv/fg8tofriESbsnQW1V29R5Aps=",
+    "gateadresse": "ARWIipgpk1Vy3Oac/gmmCxkTGJi+zClauHN02ZkWF0A+ZN3G6Vx5kg==",
+    "postnummer": "2255",
+    "telefonnummer": "ARWIiphZX8dtnFThm/rSoYWWWwOtcRLcG3I2VuY=",
+    "kan_kontaktes": false,
+    "email": "***"
+  },
+  {
+    "foedselsnummer": "ARWIipg16rlPk5TkqjYErzu/JOMfN+ltObH2dWQvJkU=",
+    "gateadresse": "ARWIiphiIfazbQpwQyTCHf1DwsO5JLbkMMatT0lEj45h9RLE08w=",
+    "postnummer": "0629",
+    "telefonnummer": "ARWIipgwNLFt/yTtlxkpQeGDjFnqC1QDCO3FUfk=",
+    "kan_kontaktes": false,
+    "email": "***"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "foedselsnummer": "02099510504",
+    "gateadresse": "Kristensentjernet 4D",
+    "postnummer": "6867",
+    "telefonnummer": "+4700300557",
+    "kan_kontaktes": true,
+    "email": "martejacobsen@example.net"
+  },
+  {
+    "foedselsnummer": "06097048531",
+    "gateadresse": "Halvorsenhaugen 862",
+    "postnummer": "2255",
+    "telefonnummer": "99344580",
+    "kan_kontaktes": false,
+    "email": "naesskari@example.net"
+  },
+  {
+    "foedselsnummer": "18099908978",
+    "gateadresse": "Strandstubben 53D",
+    "postnummer": "0629",
+    "telefonnummer": "90802811",
+    "kan_kontaktes": false,
+    "email": "janne96@example.com"
+  }
+]

@@ -6,4 +6,8 @@ micronaut:
 gcp:
   project-id: dev-sirius
   credentials:
-    location: private/gcp/sa-keys/dev-sirius-sa-key.json
+    location: private/gcp/sa-keys/dev-dapla-pseudo-service-test-sa-key.json
+
+  secret-manager:
+    keys:
+      - testsecret
