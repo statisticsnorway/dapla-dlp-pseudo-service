@@ -1,5 +1,16 @@
 {
   "pseudoConfig": {
+    "rules": [
+      {
+        "pattern": "**/{fnr,fornavn,etternavn}",
+        "func": "tink-daead(145765263)"
+      },
+      {
+        "pattern": "**/fodselsdato}",
+        "func": "redact(***)"
+      }
+    ],
+
     "keysets": [
       {
         "encryptedKeyset": "CiQA5zQ3ay3sF1bLfNV5ZWnUudjj3J0aEv5lZ7jX1ooOmxP/kswStQEAXU6Lz9haQG61iXKg386s+ZwxIzyJ3NxXCHk2zNShkBZfN0gTI53gzgpBySVRN1GVFKPhF/7CO+YM9GVCXa1DcbyRULtiZ4IStxE0B6rabQYMprSnG0MqL2YLUGHPbe3r+k8RZG5zDs9O0zsq5sCP+KNP1fuGi8HVGTC2unxJ+sdZ4aOYtoo1qZNbZGbSj1V+4vxCpK4o4XOWz5KI2fH/zQm1XPP/BgynHRcwqnr3fHxUvxeO",
@@ -13,15 +24,7 @@
               "outputPrefixType": "TINK"
             }
           ]
-        },
-        "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/crypto-keyring/cryptoKeys/crypto-key"
-      }
-    ],
-    "rules": [
-      {
-        "name": "rule-1",
-        "pattern": "**/{fnr,fornavn,etternavn}",
-        "func": "tink-daead(145765263)"
+        }
       }
     ]
   }

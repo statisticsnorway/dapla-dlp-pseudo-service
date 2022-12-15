@@ -13,15 +13,17 @@
               "outputPrefixType": "TINK"
             }
           ]
-        },
-        "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/crypto-keyring/cryptoKeys/crypto-key"
+        }
       }
     ],
     "rules": [
       {
-        "name": "rule-1",
         "pattern": "**/{foedselsnummer,gateadresse,telefonnummer,email}",
         "func": "tink-daead(361269912)"
+      },
+      {
+        "pattern": "**/{foedselsnummer,gateadresse,telefonnummer,email}",
+        "func": "redact(***)"
       }
     ]
   }
