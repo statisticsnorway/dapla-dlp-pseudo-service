@@ -4,6 +4,7 @@ Thumbs.db
 build/
 target/
 out/
+bin/wdek-*
 .idea
 *.iml
 *.ipr
