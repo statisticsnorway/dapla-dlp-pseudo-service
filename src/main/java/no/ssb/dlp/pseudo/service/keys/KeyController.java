@@ -13,6 +13,7 @@ import io.micronaut.http.hateoas.JsonError;
 import io.micronaut.http.hateoas.Link;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,16 @@ public class KeyController {
 
     private final KeyService keyService;
 
+    @Operation(
+            summary = "Generate DEK",
+            description = """
+            Generate a custom Data Encryption Key (DEK) that can be used for pseudonymization.
+            
+            The generated key will be encrypted (a process known as "wrapping") by the user-specified KEK
+            (Key Encryption Key). If a `kekUri` is not specified, then the default KEK used. This is the
+            preferred default usage when generating new DEKs.
+            """
+    )
     @Post
     public HttpResponse<EncryptedKeysetWrapper> generateDataEncryptionKey(KeyGenerationRequest request, Principal principal) {
         log.info(Strings.padEnd(String.format("*** Generate data encryption key"), 80, '*'));
@@ -42,6 +53,12 @@ public class KeyController {
 
     @Data
     static class KeyGenerationRequest {
+        /**
+         * URI to the key encryption key stored in KMS.
+         * <p>
+         * E.g. gcp-kms://projects/my-project-id/locations/europe-north1/keyRings/my-keyring/cryptoKeys/my-kek
+         * </p>
+         */
         private URI kekUri;
     }
 
