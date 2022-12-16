@@ -45,9 +45,10 @@ public class KeyController {
     )
     @Post
     public HttpResponse<EncryptedKeysetWrapper> generateDataEncryptionKey(KeyGenerationRequest request, Principal principal) {
-        log.info(Strings.padEnd(String.format("*** Generate data encryption key"), 80, '*'));
-        log.debug("User: {}\n{}", principal.getName(), request);
+        log.info(Strings.padEnd(String.format("*** Generate data encryption key ***"), 80, '*'));
+        log.debug("User: {}", principal.getName());
         EncryptedKeysetWrapper keyset = keyService.createNewDataEncryptionKey(request.getKekUri());
+        log.debug("Generated key:\n{}", keyset.toJson());
         return HttpResponse.ok(keyset);
     }
 
