@@ -482,3 +482,14 @@ Content-Type: application/json
 
 GET {{base_url}}/metadata
 Authorization: Bearer {{keycloak_token}}
+
+
+### Generate data encryption key
+
+POST {{base_url}}/keys
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "kekUri": "{{kek_uri}}"
+}

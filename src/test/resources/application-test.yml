@@ -1,5 +1,6 @@
 micronaut:
   application.name: pseudo-service
+
   server:
     port: 18080
 
@@ -11,5 +12,5 @@ services:
 
 gcp:
   kms:
-    master-kek: gcp-kms://projects/{PROJECT_ID}/locations/europe-north1/keyRings/{KEYRING_NAME}/cryptoKeys/{KEY_NAME}
-
+    key-uris:
+      - gcp-kms://projects/{PROJECT_ID}/locations/europe-north1/keyRings/{KEYRING_NAME}/cryptoKeys/{KEY_NAME}
