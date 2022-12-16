@@ -1,11 +1,9 @@
 package no.ssb.dlp.pseudo.service.keys;
 
 import com.google.common.base.Strings;
-import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.HttpStatus;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Post;

@@ -18,7 +18,6 @@ public class KmsConfig {
     /**
      * URIs to registered KMS KEKs (Key Encryption Keys)
      */
-    @NotEmpty
     private List<URI> keyUris = new ArrayList<>();
 
     /**
