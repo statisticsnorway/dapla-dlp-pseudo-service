@@ -386,14 +386,11 @@ public class PseudoController {
         private char[] password;
     }
 
-    // TODO: Validate that this works
-    @Error(status = HttpStatus.BAD_REQUEST)
+    @Error
     public HttpResponse<JsonError> unknownPseudoKeyError(HttpRequest request, NoSuchPseudoKeyException e) {
         JsonError error = new JsonError(e.getMessage())
                 .link(Link.SELF, Link.of(request.getUri()));
-
-        return HttpResponse.<JsonError>status(HttpStatus.BAD_REQUEST, e.getMessage())
-                .body(error);
+        return HttpResponse.<JsonError>badRequest().body(error);
     }
 
 }
