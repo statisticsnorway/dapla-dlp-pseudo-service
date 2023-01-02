@@ -1,5 +1,14 @@
 
 steps:
+
+  - name: maven:3.8-openjdk-17
+    entrypoint: mvn
+    args: ['test']
+
+  - name: maven:3.8-openjdk-17
+    entrypoint: mvn
+    args: ['package','-Dmaven.test.skip=true']
+
   # Docker Build
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 
