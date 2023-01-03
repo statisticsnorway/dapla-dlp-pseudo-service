@@ -1,11 +1,11 @@
 
 steps:
 
-  - name: maven:3.8-openjdk-17
+  - name: 'gcr.io/cloud-builders/mvn'
     entrypoint: mvn
     args: ['test']
 
-  - name: maven:3.8-openjdk-17
+  - name: 'gcr.io/cloud-builders/mvn'
     entrypoint: mvn
     args: ['package','-Dmaven.test.skip=true']
 
