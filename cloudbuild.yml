@@ -1,7 +1,7 @@
 
 steps:
 
-  # Pull jar-file from Artifact Registry instead building from source. Mimic target folder after build.
+  # Pull jar-file from Artifact Registry instead of building from source.
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
@@ -12,13 +12,13 @@ steps:
           curl --oauth2-bearer "$(gcloud auth print-access-token)" -o target/dapla-dlp-pseudo-service-2.1.1-SNAPSHOT.jar \
           -L https://europe-north1-docker.pkg.dev/artifact-registry-14da/maven-snapshots/no.ssb.dlp.pseudo.service/dapla-dlp-pseudo-service-2.1.1-SNAPSHOT.jar
 
-  # Docker Build
+  # Build Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 
            'europe-north1-docker.pkg.dev/artifact-registry-14da/ssb-docker/ssb/statistikktjenester/automation/dapla-dlp-pseudo', 
            '.']
     
-  # Docker Push
+  # Push Docker image to the ssb-docker Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 
            'europe-north1-docker.pkg.dev/artifact-registry-14da/ssb-docker/ssb/statistikktjenester/automation/dapla-dlp-pseudo']
