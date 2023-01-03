@@ -6,7 +6,8 @@ steps:
     args:
       - "-c"
       - |
-          mkdir target
+          mkdir -p target/classes
+          cp src/main/resources/logback.xml target/classes/.
           curl --oauth2-bearer "$(gcloud auth print-access-token)" -o target/dapla-dlp-pseudo-service-2.1.1-SNAPSHOT.jar \
           -L https://europe-north1-docker.pkg.dev/artifact-registry-14da/maven-snapshots/no.ssb.dlp.pseudo.service/dapla-dlp-pseudo-service-2.1.1-SNAPSHOT.jar
 
