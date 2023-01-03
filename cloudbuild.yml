@@ -4,8 +4,6 @@ steps:
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
-           'europe-north1-docker.pkg.dev/artifact-registry-14da/ssb-docker/ssb/statistikktjenester/automation/dapla-dlp-pseudo', 
-           '.']
       - "-c"
       - |
           curl --oauth2-bearer "$(gcloud auth print-access-token)" -o target/dapla-dlp-pseudo-service-2.1.1-SNAPSHOT.jar \
