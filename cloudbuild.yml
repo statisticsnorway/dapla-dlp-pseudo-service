@@ -6,7 +6,8 @@ steps:
     args:
       - "-c"
       - |
-          curl --oauth2-bearer "$(gcloud auth print-access-token)" -o dapla-dlp-pseudo-service-2.1.1-SNAPSHOT.jar \
+          mkdir target
+          curl --oauth2-bearer "$(gcloud auth print-access-token)" -o target/dapla-dlp-pseudo-service-2.1.1-SNAPSHOT.jar \
           -L https://europe-north1-docker.pkg.dev/artifact-registry-14da/maven-snapshots/no.ssb.dlp.pseudo.service/dapla-dlp-pseudo-service-2.1.1-SNAPSHOT.jar
 
   # Docker Build
