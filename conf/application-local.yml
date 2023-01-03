@@ -40,6 +40,11 @@ micronaut:
             keycloak-staging:
               url: 'https://keycloak.staging-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
 
+  object-storage:
+    gcp:
+      sid:
+        bucket: ssb-dev-dapla-pseudo-service-data-export
+
 endpoints:
   info:
     enabled: true
@@ -49,6 +54,16 @@ logger:
   levels:
     io.micronaut.security: INFO
     no.ssb.dlp.pseudo.service: DEBUG
+
+gcp:
+  kms:
+    credentials-path: private/gcp/sa-keys/dev-dapla-pseudo-service-test-sa-key.json
+    key-uris:
+      - gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1
+      - gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/crypto-keyring/cryptoKeys/crypto-key
+
+sid:
+  filename: "freg-snr/freg_snrkat.txt"
 
 services:
   secrets:
@@ -79,9 +94,3 @@ app-roles:
   admins:
     - kons_schu@ssb.no
 
-gcp:
-  kms:
-    credentials-path: private/gcp/sa-keys/dev-dapla-pseudo-service-test-sa-key.json
-    key-uris:
-      - gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1
-      - gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/crypto-keyring/cryptoKeys/crypto-key
