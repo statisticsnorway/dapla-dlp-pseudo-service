@@ -1,6 +1,7 @@
 
 steps:
 
+  # Pull jar-file from Artifact Registry instead building from source
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
