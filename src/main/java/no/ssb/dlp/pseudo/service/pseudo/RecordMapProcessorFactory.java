@@ -12,6 +12,7 @@ import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadataPublisher;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataEvent;
 
 import javax.inject.Singleton;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -23,19 +24,33 @@ public class RecordMapProcessorFactory {
 
     private final ApplicationEventPublisher<PseudoMetadataEvent> pseudoMetadataPublisher;
 
-    public RecordMapProcessor newPseudonymizeRecordProcessor(PseudoConfig pseudoConfig) {
-        return new RecordMapProcessor(
-                new ValueInterceptorChain()
-                        .register(new FieldMetadataPublisher(UUID.randomUUID().toString(), pseudoMetadataPublisher))
-                        .register((f, v) -> newFieldPseudonymizer(pseudoConfig.getRules(), pseudoKeysetsOf(pseudoConfig.getKeysets())).pseudonymize(f, v))
-        );
+    public RecordMapProcessor newPseudonymizeRecordProcessor(PseudoConfig... pseudoConfigs) {
+        return newPseudonymizeRecordProcessor(Arrays.asList(pseudoConfigs));
     }
 
-    public RecordMapProcessor newDepseudonymizeRecordProcessor(PseudoConfig pseudoConfig) {
-        return new RecordMapProcessor(
-                new ValueInterceptorChain()
-                        .register((f, v) -> newFieldPseudonymizer(pseudoConfig.getRules(), pseudoKeysetsOf(pseudoConfig.getKeysets())).depseudonymize(f, v))
-        );
+    public RecordMapProcessor newPseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs) {
+        ValueInterceptorChain chain = new ValueInterceptorChain()
+                .register(new FieldMetadataPublisher(UUID.randomUUID().toString(), pseudoMetadataPublisher));
+
+        for (PseudoConfig config : pseudoConfigs) {
+            chain.register((f, v) -> newFieldPseudonymizer(config.getRules(), pseudoKeysetsOf(config.getKeysets())).pseudonymize(f, v));
+        }
+
+        return new RecordMapProcessor(chain);
+    }
+
+    public RecordMapProcessor newDepseudonymizeRecordProcessor(PseudoConfig... pseudoConfigs) {
+        return newDepseudonymizeRecordProcessor(Arrays.asList(pseudoConfigs));
+    }
+
+    public RecordMapProcessor newDepseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs) {
+        ValueInterceptorChain chain = new ValueInterceptorChain();
+
+        for (PseudoConfig config : pseudoConfigs) {
+            chain.register((f, v) -> newFieldPseudonymizer(config.getRules(), pseudoKeysetsOf(config.getKeysets())).depseudonymize(f, v));
+        }
+
+        return new RecordMapProcessor(chain);
     }
 
     public RecordMapProcessor newRepseudonymizeRecordProcessor(PseudoConfig sourcePseudoConfig, PseudoConfig targetPseudoConfig) {

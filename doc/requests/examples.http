@@ -95,6 +95,65 @@ Content-Type: application/json
 < ../../src/test/resources/data/15k.json
 --separator--
 
+### Pseudonymize using SID mapping
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "fnr",
+        "pattern": "**/fnr",
+        "func": "map-sid(ssb-common-key-1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/person_3_sid.json
+--separator--
+
+### Depseudonymize using SID mapping
+
+POST {{base_url}}/depseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "fnr",
+        "pattern": "**/fnr",
+        "func": "map-sid(ssb-common-key-1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/person_3_sid_deid.json
+--separator--
+
+
 ### Pseudonymize 1 000 000 records (zipped) using DAEAD
 
 POST {{base_url}}/pseudonymize/file
@@ -493,3 +552,17 @@ Authorization: Bearer {{keycloak_token}}
 {
   "kekUri": "{{kek_uri}}"
 }
+
+
+
+### Reload SID cache
+
+POST {{base_url}}/sid/cache
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+### Get SID cache info
+
+GET {{base_url}}/sid/cache
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}

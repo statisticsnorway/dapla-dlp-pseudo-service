@@ -47,6 +47,8 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -62,6 +64,7 @@ public class PseudoController {
     private final StreamProcessorFactory streamProcessorFactory;
     private final RecordMapProcessorFactory recordProcessorFactory;
     private final GoogleCloudStorageBackend storageBackend;
+    private final PseudoConfigSplitter pseudoConfigSplitter;
 
     @Operation(
             summary = "Pseudonymize file",
@@ -95,7 +98,8 @@ public class PseudoController {
         log.debug("User: {}\n{}", principal.getName(), request);
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
-            RecordMapProcessor recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(req.getPseudoConfig());
+            List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
+            RecordMapProcessor recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs);
             ProcessFileResult res = processFile(data, PseudoOperation.PSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Flowable file = res.getFlowable();
             if (req.getTargetUri() != null) {
@@ -151,7 +155,9 @@ public class PseudoController {
 
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
-            RecordMapProcessor recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(req.getPseudoConfig());
+            List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
+            //Collections.reverse(pseudoConfigs);
+            RecordMapProcessor recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs);
             ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Flowable file = res.getFlowable();
             if (req.getTargetUri() != null) {
