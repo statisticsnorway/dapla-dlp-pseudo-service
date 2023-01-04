@@ -1,6 +1,10 @@
 
 steps:
   - name: 'gcr.io/cloud-builders/mvn:gcloud'
+    entrypoint: 'bash'
+    args: ['gcloud auth list']
+ 
+  - name: 'gcr.io/cloud-builders/mvn'
     entrypoint: 'mvn'
     args: ['package','-Dmaven.test.skip=true', '-P ssb-bip']
 
