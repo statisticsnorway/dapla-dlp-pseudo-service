@@ -566,3 +566,15 @@ Authorization: Bearer {{keycloak_token}}
 GET {{base_url}}/sid/cache
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
+
+### Get SID for fnr
+
+GET {{base_url}}/sid/fnr/01810849092
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+### Get SID for snr
+
+GET {{base_url}}/sid/snr/1234567
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}

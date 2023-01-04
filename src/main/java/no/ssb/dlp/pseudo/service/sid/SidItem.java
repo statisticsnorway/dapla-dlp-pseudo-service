@@ -54,4 +54,16 @@ public class SidItem {
     @Parsed(field = "rdato_snr")
     private String snrRegistrationDate;
 
+    /**
+     * Kjønn (1=mann, 2=kvinne)
+     */
+    @Parsed(field = "kjoenn")
+    private String gender;
+
+    /**
+     * Fødselsdato
+     */
+    @Parsed(field = "fdato")
+    private String birthDate;
+
 }

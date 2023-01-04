@@ -19,15 +19,15 @@ import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import java.time.Instant;
 
 @RequiredArgsConstructor
-@Controller("/sid")
+@Controller("/sid/cache")
 @Slf4j
 @Secured(SecurityRule.IS_AUTHENTICATED)
-@Tag(name = "Admin operations")
-public class SidAdminController {
+@Tag(name = "SID operations")
+public class SidCacheController {
 
     private final SidCacheLoader sidCacheLoader;
 
-    @Get("/cache")
+    @Get
     public HttpResponse<SidCacheInfo> getCacheInfo() {
         return HttpResponse.ok(SidCacheInfo.builder()
                 .size(sidCacheLoader.getSidCache().size())
@@ -39,7 +39,7 @@ public class SidAdminController {
 
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
-    @Post("/cache")
+    @Post("/reload")
     public HttpResponse<String> reloadSidCache() {
         sidCacheLoader.loadSidData(null);
         return HttpResponse.ok();

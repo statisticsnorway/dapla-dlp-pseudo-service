@@ -11,38 +11,47 @@ import java.util.Optional;
 @Singleton
 class SidCache {
 
-    private final Map<String, SidItem> fnrToSid = new HashMap<>();
-    private final Map<String, SidItem> snrToSid = new HashMap<>();
+    private final Map<String, SidItem> fnrToSidItem = new HashMap<>();
+    private final Map<String, SidItem> snrToSidItem = new HashMap<>();
 
     private Instant lastUpdated = Instant.now();
 
     public void clearAll() {
-        fnrToSid.clear();
-        snrToSid.clear();
+        fnrToSidItem.clear();
+        snrToSidItem.clear();
         lastUpdated = Instant.now();
     }
 
     public void register(SidItem sidItem) {
-        fnrToSid.put(sidItem.getFnr(), sidItem);
-        snrToSid.put(sidItem.getSnr(), sidItem);
+        fnrToSidItem.put(sidItem.getFnr(), sidItem);
+        snrToSidItem.put(sidItem.getSnr(), sidItem);
         lastUpdated = Instant.now();
     }
 
-    public Optional<String> getSidForFnr(String fnr) {
-        SidItem sidItem = fnrToSid.get(fnr);
-        return sidItem == null ? Optional.empty() : Optional.of(sidItem.getSnr());
+    public Optional<SidItem> getSidItemForFnr(String fnr) {
+        return Optional.ofNullable(fnrToSidItem.get(fnr));
     }
 
-    public Optional<String> getFnrForSnr(String snr) {
-        SidItem sidItem = snrToSid.get(snr);
-        return sidItem == null ? Optional.empty() : Optional.of(sidItem.getFnr());
+    public Optional<String> getSidForFnr(String fnr) {
+        return getSidItemForFnr(fnr)
+                .map(s -> s.getSnr());
+    }
+
+    public Optional<SidItem> getSidItemForSnr(String snr) {
+        return Optional.ofNullable(snrToSidItem.get(snr));
+    }
+
+    public Optional<String> getSidForSnr(String sid) {
+        return getSidItemForSnr(sid)
+                .map(s -> s.getSnr());
     }
 
     public int size() {
-        return fnrToSid.size();
+        return fnrToSidItem.size();
     }
 
     public Instant getLastUpdated() {
         return lastUpdated;
     }
+
 }
