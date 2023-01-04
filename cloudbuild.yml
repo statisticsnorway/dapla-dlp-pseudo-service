@@ -1,6 +1,6 @@
 
 steps:
-  - name: 'gcr.io/cloud-builders/mvn:gcloud'
+  - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
       - "-c"
