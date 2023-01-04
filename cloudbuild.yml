@@ -1,6 +1,6 @@
 
 steps:
-  - name: 'gcr.io/cloud-builders/mvn'
+  - name: 'gcr.io/cloud-builders/mvn:gcloud'
     entrypoint: 'mvn'
     args: ['package','-Dmaven.test.skip=true', '-P ssb-bip']
 
