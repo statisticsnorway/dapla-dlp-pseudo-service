@@ -36,12 +36,16 @@ public class SidReader {
     public void readSidsFromFile(InputStream inputStream, SidCache sidCache) {
         FixedWidthFields fieldLengths = new FixedWidthFields(FNR, FNR_NAA, SNR_UTGATT, SNR, DATO_FNR, DATO_FNRNAA, DATO_SNR, RDATO_SNR, KJOENN, FDATO);
         FixedWidthParserSettings settings = new FixedWidthParserSettings(fieldLengths);
+        settings.setSkipTrailingCharsUntilNewline(true);
+        settings.setRecordEndsOnNewline(true);
+        settings.setNumberOfRowsToSkip(1);
         settings.setHeaders("fnr", "fnr_naa", "snr_utgatt", "snr", "dato_fnr", "dato_fnrnaa", "dato_snr", "rdato_snr", "kjoenn", "fdato");
 
         FixedWidthRoutines routines = new FixedWidthRoutines(settings);
         for (SidItem sidItem : routines.iterate(SidItem.class, inputStream, "UTF-8")) {
-            sidCache.register(sidItem);
+            sidCache.register(sidItem, true);
         }
+        sidCache.markAsInitialized();
     }
 
 }

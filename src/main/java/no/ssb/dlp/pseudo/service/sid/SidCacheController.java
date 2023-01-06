@@ -33,6 +33,7 @@ public class SidCacheController {
                 .size(sidCacheLoader.getSidCache().size())
                 .lastUpdated(sidCacheLoader.getSidCache().getLastUpdated())
                 .source(sidCacheLoader.getSource())
+                .state(sidCacheLoader.getSidCache().getState().name())
                 .build()
         );
     }
@@ -49,11 +50,10 @@ public class SidCacheController {
     @Builder
     public static class SidCacheInfo {
         private final int size;
-
         @JsonFormat(shape = JsonFormat.Shape.STRING)
         private final Instant lastUpdated;
-
         private final String source;
+        private final String state;
     }
 
 }

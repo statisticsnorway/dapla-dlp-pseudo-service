@@ -40,7 +40,7 @@ public class SidItem {
      * Dato for nåværende fnr/Dnr
      */
     @Parsed(field = "dato_fnrnaa")
-    private String  fnrCurrentDate;
+    private String fnrCurrentDate;
 
     /**
      * Dato for Snr

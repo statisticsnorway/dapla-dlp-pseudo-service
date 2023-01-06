@@ -15,6 +15,7 @@ class SidCache {
     private final Map<String, SidItem> snrToSidItem = new HashMap<>();
 
     private Instant lastUpdated = Instant.now();
+    private State state = State.NOT_INITIALIZED;
 
     public void clearAll() {
         fnrToSidItem.clear();
@@ -23,8 +24,20 @@ class SidCache {
     }
 
     public void register(SidItem sidItem) {
+        register(sidItem, false);
+    }
+
+    void register(SidItem sidItem, boolean hasMoreUpdates) {
         fnrToSidItem.put(sidItem.getFnr(), sidItem);
         snrToSidItem.put(sidItem.getSnr(), sidItem);
+
+        if (! hasMoreUpdates) {
+            this.lastUpdated = Instant.now();
+        }
+    }
+
+    void markAsInitialized() {
+        lastUpdated = Instant.now();
         lastUpdated = Instant.now();
     }
 
@@ -54,4 +67,11 @@ class SidCache {
         return lastUpdated;
     }
 
+    public State getState() {
+        return state;
+    }
+
+    public enum State {
+        NOT_INITIALIZED, INITIALIZED;
+    }
 }
