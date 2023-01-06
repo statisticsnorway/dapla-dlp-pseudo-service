@@ -47,7 +47,7 @@ class SidCache {
 
     public Optional<String> getSidForFnr(String fnr) {
         return getSidItemForFnr(fnr)
-                .map(s -> s.getSnr());
+                .map(s -> s.getCurrentSnr());
     }
 
     public Optional<SidItem> getSidItemForSnr(String snr) {
