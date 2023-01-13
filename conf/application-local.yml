@@ -63,7 +63,7 @@ gcp:
       - gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/crypto-keyring/cryptoKeys/crypto-key
 
 sid:
-  filename: "freg-snr/freg_snrkat.txt"
+  filename: "freg-snr/snr-kat-latest"
 
 services:
   secrets:
