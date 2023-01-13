@@ -8,7 +8,7 @@ class SidReaderTest {
 
     @Test
     void testReadSidsFromFile() {
-        String filePath = "src/test/resources/freg/freg_snrkat.txt";
+        String filePath = "private/sid/staging/snr-kat-latest";
         SidCache sidCache = new SidCache();
         SidReader sidReader = new SidReader();
         sidReader.readSidsFromFile(filePath, sidCache);
