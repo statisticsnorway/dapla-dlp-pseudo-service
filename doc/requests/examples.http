@@ -553,11 +553,9 @@ Authorization: Bearer {{keycloak_token}}
   "kekUri": "{{kek_uri}}"
 }
 
-
-
 ### Reload SID cache
 
-POST {{base_url}}/sid/cache
+POST {{base_url}}/sid/cache/reload
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
@@ -569,12 +567,19 @@ Authorization: Bearer {{keycloak_token}}
 
 ### Get SID for fnr
 
-GET {{base_url}}/sid/fnr/01810849092
+GET {{base_url}}/sid/fnr/20902188836
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
+### Get SID for fnr
+
+GET {{base_url}}/sid/fnr/21902196908
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+
 ### Get SID for snr
 
-GET {{base_url}}/sid/snr/1234567
+GET {{base_url}}/sid/snr/h26ka5j
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
