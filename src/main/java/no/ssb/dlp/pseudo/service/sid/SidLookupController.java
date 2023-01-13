@@ -50,12 +50,12 @@ public class SidLookupController {
     @Data
     @Builder
     public static class SidInfo {
-        private final String sid;
+        private final String currentSnr;
         private final String currentFnr;
 
         public static SidInfo from(SidItem sidItem) {
             return SidInfo.builder()
-                    .sid(sidItem.getSnr())
+                    .currentSnr(sidItem.getCurrentSnr())
                     .currentFnr(sidItem.getFnrCurrent())
                     .build();
         }

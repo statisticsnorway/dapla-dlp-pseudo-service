@@ -20,6 +20,7 @@ class SidCache {
     public void clearAll() {
         fnrToSidItem.clear();
         snrToSidItem.clear();
+        state = State.REINITIALIZING;
         lastUpdated = Instant.now();
     }
 
@@ -38,11 +39,15 @@ class SidCache {
 
     void markAsInitialized() {
         lastUpdated = Instant.now();
-        lastUpdated = Instant.now();
+        state = State.INITIALIZED;
     }
 
     public Optional<SidItem> getSidItemForFnr(String fnr) {
-        return Optional.ofNullable(fnrToSidItem.get(fnr));
+        SidItem sidItem = fnrToSidItem.get(fnr);
+        if (sidItem == null) {
+            validateCacheReady();
+        }
+        return Optional.ofNullable(sidItem);
     }
 
     public Optional<String> getSidForFnr(String fnr) {
@@ -51,12 +56,22 @@ class SidCache {
     }
 
     public Optional<SidItem> getSidItemForSnr(String snr) {
-        return Optional.ofNullable(snrToSidItem.get(snr));
+        SidItem sidItem = snrToSidItem.get(snr);
+        if (sidItem == null) {
+            validateCacheReady();
+        }
+        return Optional.ofNullable(sidItem);
     }
 
     public Optional<String> getSidForSnr(String sid) {
         return getSidItemForSnr(sid)
-                .map(s -> s.getSnr());
+                .map(s -> s.getCurrentSnr());
+    }
+
+    private void validateCacheReady() throws SidIndexUnavailableException {
+        if (state != State.INITIALIZED) {
+            throw new SidIndexUnavailableException("SID index is not currently available. Wait a minute and retry. State=" + state);
+        }
     }
 
     public int size() {
@@ -72,6 +87,7 @@ class SidCache {
     }
 
     public enum State {
-        NOT_INITIALIZED, INITIALIZED;
+        NOT_INITIALIZED, REINITIALIZING, INITIALIZED;
     }
+
 }
