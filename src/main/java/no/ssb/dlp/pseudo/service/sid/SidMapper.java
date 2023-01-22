@@ -26,13 +26,13 @@ public class SidMapper implements Mapper {
         }
 
         String fnr = String.valueOf(data);
-        Optional<String> sid = sidCache.getSidForFnr(fnr);
-        if (sid.isEmpty()) {
+        Optional<String> snr = sidCache.getCurrentSnrForFnr(fnr);
+        if (snr.isEmpty()) {
             log.warn("No SID-mapping found for fnr starting with " + Strings.padEnd(fnr, 6, ' ').substring(0,6));
             return data;
         }
 
-        return sid.get();
+        return snr.get();
     }
 
     @Override

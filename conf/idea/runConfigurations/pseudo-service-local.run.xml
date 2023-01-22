@@ -7,7 +7,7 @@
     <option name="mainClass" value="no.ssb.dlp.pseudo.service.Application" />
     <option name="passParentEnvs" value="true" />
     <option name="programParameters" value="" />
-    <option name="shortenCommandLine" />
+    <option name="shortenCommandLine" value="NONE" />
     <option name="vmParameters" value="" />
     <option name="workingDirectory" value="$MODULE_DIR$" />
     <envs>

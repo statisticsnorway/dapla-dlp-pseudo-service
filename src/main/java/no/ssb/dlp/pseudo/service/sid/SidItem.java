@@ -1,69 +1,80 @@
 package no.ssb.dlp.pseudo.service.sid;
 
+import com.univocity.parsers.annotations.Format;
 import com.univocity.parsers.annotations.Parsed;
 import lombok.Data;
 
+import java.io.Serializable;
+import java.util.Date;
+
 @Data
-public class SidItem {
+public class SidItem implements Serializable {
+
+    private final static String YYYYMMDD_DATE_FORMAT = "yyyyMMdd";
 
     /**
      * Fødselsnr/Dnr, alle som har eksistert
      */
-    @Parsed(field = "fnr")
+    @Parsed(field = SidMappingFileField.Name.FNR)
     private String fnr;
 
     /**
      * Nåværende fnr/Dnr
      */
-    @Parsed(field = "fnr_naa")
-    private String fnrCurrent;
+    @Parsed(field = SidMappingFileField.Name.CURRENT_FNR)
+    private String currentFnr;
 
     /**
      * SNR, alle som har eksistert
      */
-    @Parsed(field = "snr_utgatt")
+    @Parsed(field = SidMappingFileField.Name.SNR)
     private String snr;
 
     /**
      * Nåværende Snr
      */
-    @Parsed(field = "snr")
+    @Parsed(field = SidMappingFileField.Name.CURRENT_SNR)
     private String currentSnr;
 
     /**
      * Dato for fnr/Dnr
      */
-    @Parsed(field = "dato_fnr")
-    private String fnrDate;
+    @Parsed(field = SidMappingFileField.Name.FNR_DATE)
+    @Format(formats = {YYYYMMDD_DATE_FORMAT})
+    private Date fnrDate;
 
     /**
      * Dato for nåværende fnr/Dnr
      */
-    @Parsed(field = "dato_fnrnaa")
-    private String fnrCurrentDate;
+    @Format(formats = {YYYYMMDD_DATE_FORMAT})
+    @Parsed(field = SidMappingFileField.Name.CURRENT_FNR_DATE)
+    private Date currentFnrDate;
 
     /**
      * Dato for Snr
      */
-    @Parsed(field = "dato_snr")
-    private String snrDate;
+    @Parsed(field = SidMappingFileField.Name.SNR_DATE)
+    @Format(formats = {YYYYMMDD_DATE_FORMAT})
+    private Date snrDate;
 
     /**
      * Registreringsdato for Snr
      */
-    @Parsed(field = "rdato_snr")
-    private String snrRegistrationDate;
+    @Parsed(field = SidMappingFileField.Name.SNR_REGISTRATION_DATE)
+    @Format(formats = {YYYYMMDD_DATE_FORMAT})
+    private Date snrRegistrationDate;
 
     /**
      * Kjønn (1=mann, 2=kvinne)
      */
-    @Parsed(field = "kjoenn")
+    @Parsed(field = SidMappingFileField.Name.GENDER)
     private String gender;
 
     /**
      * Fødselsdato
      */
-    @Parsed(field = "fdato")
-    private String birthDate;
+    @Parsed(field = SidMappingFileField.Name.BIRTH_DATE)
+    @Format(formats = {YYYYMMDD_DATE_FORMAT})
+    private Date birthDate;
 
 }

@@ -11,15 +11,16 @@ import java.util.Optional;
 @Singleton
 class SidCache {
 
-    private final Map<String, SidItem> fnrToSidItem = new HashMap<>();
-    private final Map<String, SidItem> snrToSidItem = new HashMap<>();
+    private final Map<String, String> fnrToCurrentSnr = new HashMap<>();
+    private final Map<String, String> snrToCurrentFnr = new HashMap<>();
 
-    private Instant lastUpdated = Instant.now();
+    private Instant lastUpdated;
     private State state = State.NOT_INITIALIZED;
 
     public void clearAll() {
-        fnrToSidItem.clear();
-        snrToSidItem.clear();
+        fnrToCurrentSnr.clear();
+        snrToCurrentFnr.clear();
+        state = State.NOT_INITIALIZED;
         lastUpdated = Instant.now();
     }
 
@@ -28,39 +29,45 @@ class SidCache {
     }
 
     void register(SidItem sidItem, boolean hasMoreUpdates) {
-        fnrToSidItem.put(sidItem.getFnr(), sidItem);
-        snrToSidItem.put(sidItem.getSnr(), sidItem);
+        fnrToCurrentSnr.put(sidItem.getFnr(), sidItem.getCurrentSnr());
+        snrToCurrentFnr.put(sidItem.getSnr(), sidItem.getCurrentFnr());
 
         if (! hasMoreUpdates) {
-            this.lastUpdated = Instant.now();
+            markAsInitialized();
         }
     }
 
     void markAsInitialized() {
         lastUpdated = Instant.now();
-        lastUpdated = Instant.now();
+        state = State.INITIALIZED;
     }
 
-    public Optional<SidItem> getSidItemForFnr(String fnr) {
-        return Optional.ofNullable(fnrToSidItem.get(fnr));
+    public Optional<String> getCurrentSnrForFnr(String fnr) {
+        String currentSnr = fnrToCurrentSnr.get(fnr);
+        if (currentSnr == null) {
+            validateCacheReady();
+        }
+
+        return Optional.ofNullable(currentSnr);
     }
 
-    public Optional<String> getSidForFnr(String fnr) {
-        return getSidItemForFnr(fnr)
-                .map(s -> s.getCurrentSnr());
+    public Optional<String> getCurrentFnrForSnr(String snr) {
+        String currentFnr = snrToCurrentFnr.get(snr);
+        if (currentFnr == null) {
+            validateCacheReady();
+        }
+
+        return Optional.ofNullable(currentFnr);
     }
 
-    public Optional<SidItem> getSidItemForSnr(String snr) {
-        return Optional.ofNullable(snrToSidItem.get(snr));
-    }
-
-    public Optional<String> getSidForSnr(String sid) {
-        return getSidItemForSnr(sid)
-                .map(s -> s.getSnr());
+    private void validateCacheReady() throws SidIndexUnavailableException {
+        if (state != State.INITIALIZED) {
+            throw new SidIndexUnavailableException("SID index is not currently available. Wait a minute and retry. State=" + state);
+        }
     }
 
     public int size() {
-        return fnrToSidItem.size();
+        return fnrToCurrentSnr.size();
     }
 
     public Instant getLastUpdated() {
@@ -74,4 +81,5 @@ class SidCache {
     public enum State {
         NOT_INITIALIZED, INITIALIZED;
     }
+
 }

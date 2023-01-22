@@ -37,6 +37,7 @@ import no.ssb.dlp.pseudo.core.util.HumanReadableBytes;
 import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.core.util.Zips;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
+import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
@@ -397,6 +398,13 @@ public class PseudoController {
         JsonError error = new JsonError(e.getMessage())
                 .link(Link.SELF, Link.of(request.getUri()));
         return HttpResponse.<JsonError>badRequest().body(error);
+    }
+
+    @Error
+    public HttpResponse<JsonError> sidIndexUnavailable(HttpRequest request, SidIndexUnavailableException e) {
+        JsonError error = new JsonError(e.getMessage())
+                .link(Link.SELF, Link.of(request.getUri()));
+        return HttpResponse.<JsonError>serverError().status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
 
 }

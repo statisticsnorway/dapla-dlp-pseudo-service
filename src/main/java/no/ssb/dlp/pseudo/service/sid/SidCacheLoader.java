@@ -13,20 +13,26 @@ import jakarta.inject.Singleton;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.TimeUnit;
+
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
+
 @Singleton
 @Slf4j
 @Requires(property = "micronaut.object-storage.gcp.sid.bucket")
 public class SidCacheLoader {
     private final SidReader sidReader;
     private final String sidFile;
-
     @Getter
     private final SidCache sidCache;
 
-    @Named("sid")
     private final GoogleCloudStorageOperations objectStorage;
 
-    public SidCacheLoader(SidReader sidReader, @Property(name = "sid.filename") String sidFile, GoogleCloudStorageOperations objectStorage, SidCache sidCache) {
+    // TODO: Check if we can omit this explicit constructor by annotating the fields instead?
+    public SidCacheLoader(SidReader sidReader,
+                          @Property(name = "sid.mapping.filename") String sidFile,
+                          @Named("sid") GoogleCloudStorageOperations objectStorage,
+                          SidCache sidCache) {
         this.sidReader = sidReader;
         this.sidFile = sidFile;
         this.objectStorage = objectStorage;
@@ -46,8 +52,28 @@ public class SidCacheLoader {
 
         Stopwatch stopwatch = Stopwatch.createStarted();
         sidCache.clearAll();
-        sidReader.readSidsFromFile(item.getInputStream(), sidCache);
-        log.info("Read %s sid mappings in %s".formatted(sidCache.size(), stopwatch.stop().elapsed()));
+
+        sidReader.readSidsFromFile(item.getInputStream()).subscribe(
+                // onNext
+                sidItem -> {
+                    sidCache.register(sidItem, true);
+                },
+
+                // onError
+                e -> {
+                    throw new SidCacheInitException("Unable to read SID mappings from " + sidFile, e);
+                },
+
+                // onComplete
+                () -> {
+                    sidCache.markAsInitialized();
+                }
+        );
+
+        log.info("Read %s sid mappings in %s".formatted(
+                sidCache.size(),
+                formatDurationWords(stopwatch.elapsed(TimeUnit.MILLISECONDS), true, true))
+        );
     }
 
     public String getSource() {
@@ -63,6 +89,5 @@ public class SidCacheLoader {
             super(message, cause);
         }
     }
-
 
 }
