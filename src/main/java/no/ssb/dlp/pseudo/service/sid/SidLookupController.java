@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @Controller("/sid")
 @Slf4j
@@ -31,20 +33,30 @@ public class SidLookupController {
     @ExecuteOn(TaskExecutors.IO)
     @Get("/fnr/{fnr}")
     public HttpResponse<SidInfo> lookupFnr(@PathVariable String fnr) {
-        SidItem sidItem = sidCache.getSidItemForFnr(fnr)
+        String currentSnr = sidCache.getCurrentSnrForFnr(fnr)
                 .orElseThrow(() -> new NoSidMappingFoundException("No SID matching fnr=" + fnr));
+        String currentFnr = sidCache.getCurrentFnrForSnr(currentSnr).orElse(null);
 
-        return HttpResponse.ok(SidInfo.from(sidItem));
+        return HttpResponse.ok(SidInfo.builder()
+                .currentSnr(currentSnr)
+                .currentFnr(currentFnr)
+                .build()
+        );
     }
 
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     @Get("/snr/{snr}")
     public HttpResponse<SidInfo> lookupSnr(@PathVariable String snr) {
-        SidItem sidItem = sidCache.getSidItemForSnr(snr)
+        String currentFnr = sidCache.getCurrentFnrForSnr(snr)
                 .orElseThrow(() -> new NoSidMappingFoundException("No SID matching snr=" + snr));
+        String currentSnr = sidCache.getCurrentSnrForFnr(currentFnr).orElse(null);
 
-        return HttpResponse.ok(SidInfo.from(sidItem));
+        return HttpResponse.ok(SidInfo.builder()
+                .currentSnr(currentSnr)
+                .currentFnr(currentFnr)
+                .build()
+        );
     }
 
     @Data
@@ -52,13 +64,6 @@ public class SidLookupController {
     public static class SidInfo {
         private final String currentSnr;
         private final String currentFnr;
-
-        public static SidInfo from(SidItem sidItem) {
-            return SidInfo.builder()
-                    .currentSnr(sidItem.getCurrentSnr())
-                    .currentFnr(sidItem.getFnrCurrent())
-                    .build();
-        }
     }
 
     @Error
