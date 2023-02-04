@@ -159,7 +159,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.2.11</version>
+      <version>1.4.5</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -222,7 +222,7 @@
                   <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                     <mainClass>${exec.mainClass}</mainClass>
                   </transformer>
-                  <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 </transformers>
                 <filters>
                   <filter>
