@@ -6,7 +6,7 @@ build-all: build-mvn build-docker ## Build all and create docker image
 
 .PHONY: build-mvn
 build-mvn: ## Build project and install to you local maven repo
-	./mvnw clean install
+	./mvnw clean install -P ssb-bip
 
 .PHONY: build-docker
 build-docker: ## Build dev docker image

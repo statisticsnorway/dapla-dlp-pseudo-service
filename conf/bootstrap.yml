@@ -1,0 +1,5 @@
+micronaut:
+  application:
+    name: pseudo-service
+  config-client:
+    enabled: true
