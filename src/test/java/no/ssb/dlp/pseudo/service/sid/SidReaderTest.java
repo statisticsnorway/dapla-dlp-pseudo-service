@@ -10,7 +10,7 @@ class SidReaderTest {
 
     @Test
     void testReadSidsFromFile() {
-        String filePath = "src/test/resources/freg/freg_snrkat.txt";
+        String filePath = "src/test/resources/freg/snr-kat-sample";
         SidReader sidReader = new SidReader();
         final AtomicInteger count = new AtomicInteger();
         sidReader.readSidsFromFile(filePath).subscribe(
@@ -28,7 +28,7 @@ class SidReaderTest {
                 // onComplete
                 () -> {
                     System.out.println("Done");
-                    assertThat(count.get()).isEqualTo(13);
+                    assertThat(count.get()).isEqualTo(11);
                 }
         );
     }

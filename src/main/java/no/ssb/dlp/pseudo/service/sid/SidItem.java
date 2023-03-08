@@ -11,6 +11,7 @@ import java.util.Date;
 public class SidItem implements Serializable {
 
     private final static String YYYYMMDD_DATE_FORMAT = "yyyyMMdd";
+    private final static String NULL_DATE_FORMAT = ".";
 
     /**
      * Fødselsnr/Dnr, alle som har eksistert
@@ -40,28 +41,28 @@ public class SidItem implements Serializable {
      * Dato for fnr/Dnr
      */
     @Parsed(field = SidMappingFileField.Name.FNR_DATE)
-    @Format(formats = {YYYYMMDD_DATE_FORMAT})
+    @Format(formats = {YYYYMMDD_DATE_FORMAT, NULL_DATE_FORMAT})
     private Date fnrDate;
 
     /**
      * Dato for nåværende fnr/Dnr
      */
-    @Format(formats = {YYYYMMDD_DATE_FORMAT})
     @Parsed(field = SidMappingFileField.Name.CURRENT_FNR_DATE)
+    @Format(formats = {YYYYMMDD_DATE_FORMAT, NULL_DATE_FORMAT})
     private Date currentFnrDate;
 
     /**
      * Dato for Snr
      */
     @Parsed(field = SidMappingFileField.Name.SNR_DATE)
-    @Format(formats = {YYYYMMDD_DATE_FORMAT})
+    @Format(formats = {YYYYMMDD_DATE_FORMAT, NULL_DATE_FORMAT})
     private Date snrDate;
 
     /**
      * Registreringsdato for Snr
      */
     @Parsed(field = SidMappingFileField.Name.SNR_REGISTRATION_DATE)
-    @Format(formats = {YYYYMMDD_DATE_FORMAT})
+    @Format(formats = {YYYYMMDD_DATE_FORMAT, NULL_DATE_FORMAT})
     private Date snrRegistrationDate;
 
     /**
@@ -74,7 +75,7 @@ public class SidItem implements Serializable {
      * Fødselsdato
      */
     @Parsed(field = SidMappingFileField.Name.BIRTH_DATE)
-    @Format(formats = {YYYYMMDD_DATE_FORMAT})
+    @Format(formats = {YYYYMMDD_DATE_FORMAT, NULL_DATE_FORMAT})
     private Date birthDate;
 
 }
