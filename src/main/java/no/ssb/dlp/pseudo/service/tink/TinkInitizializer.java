@@ -4,6 +4,8 @@ import com.google.crypto.tink.daead.DeterministicAeadConfig;
 import com.google.crypto.tink.integration.gcpkms.GcpKmsClient;
 import io.micronaut.context.annotation.Context;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.crypto.tink.fpe.FpeConfig;
+import no.ssb.dapla.dlp.pseudo.func.tink.fpe.TinkFpeFuncConfig;
 import no.ssb.dlp.pseudo.core.PseudoException;
 
 import javax.inject.Singleton;
@@ -18,8 +20,12 @@ public class TinkInitizializer {
     public TinkInitizializer(KmsConfig kmsConfig) {
         try {
             // Register DAEAD config
-            log.info("Initialize Tink config");
+            log.info("Initialize Tink DAEAD");
             DeterministicAeadConfig.register();
+
+            // Register DAEAD config
+            log.info("Initialize Tink FPE");
+            FpeConfig.register();
 
             // Register Key Encryption Keys
             for (URI keyUri : kmsConfig.getKeyUris()) {

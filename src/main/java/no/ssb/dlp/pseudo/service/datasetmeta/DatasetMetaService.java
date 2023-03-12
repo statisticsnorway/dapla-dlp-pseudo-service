@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dataset.api.DatasetMeta;
 import no.ssb.dapla.dataset.uri.DatasetUri;
 import no.ssb.dapla.storage.client.backend.BinaryBackend;
-import no.ssb.dlp.pseudo.core.PseudoFuncRule;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.service.pseudo.PseudoConfig;
 
 import javax.inject.Singleton;

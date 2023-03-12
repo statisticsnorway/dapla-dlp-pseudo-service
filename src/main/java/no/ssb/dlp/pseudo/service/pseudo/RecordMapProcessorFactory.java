@@ -2,10 +2,10 @@ package no.ssb.dlp.pseudo.service.pseudo;
 
 import io.micronaut.context.event.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
-import no.ssb.dlp.pseudo.core.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.PseudoKeyset;
 import no.ssb.dlp.pseudo.core.field.FieldPseudonymizer;
 import no.ssb.dlp.pseudo.core.field.ValueInterceptorChain;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadataPublisher;

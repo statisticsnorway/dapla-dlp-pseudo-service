@@ -1,12 +1,12 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
-import no.ssb.dlp.pseudo.core.PseudoFuncRule;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 
 import javax.inject.Singleton;
 import java.util.List;
 
 /**
- * Splits a PseudoConfig into mulitple PseudoConfig objects to support chaining of SID Mapping functions
+ * Split a PseudoConfig into multiple PseudoConfig objects to support chaining of SID Mapping functions.
  *
  * Disclaimer: This is a stop gap "solution", used to support chaining of SID Mapping with pseudonymization.
  * The API contract could be changed to support multiple PseudoConfig transformations, but we need to think more aobut
@@ -22,7 +22,7 @@ public class PseudoConfigSplitter {
             return List.of(pseudoConfig);
         }
         else {
-            PseudoConfig replacedSidMappingRules = replaceSidMappingRules(pseudoConfig, "tink-daead");
+            PseudoConfig replacedSidMappingRules = replaceSidMappingRules(pseudoConfig, "ff31");
             return List.of(configWithOnlyMappingRules, replacedSidMappingRules);
         }
     }

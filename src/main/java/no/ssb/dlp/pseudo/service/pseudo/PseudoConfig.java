@@ -1,7 +1,7 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
 import lombok.Data;
-import no.ssb.dlp.pseudo.core.PseudoFuncRule;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 
 import java.util.ArrayList;
