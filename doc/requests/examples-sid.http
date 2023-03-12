@@ -1,0 +1,93 @@
+### Reload SID cache
+
+POST {{base_url}}/sid/cache/reload
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+
+### Get SID cache info
+
+GET {{base_url}}/sid/cache
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+
+### Get SID for fnr
+
+GET {{base_url}}/sid/fnr/20902188836
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+
+### Get SID for fnr
+
+GET {{base_url}}/sid/fnr/21902196908
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+
+### Get SID for snr
+
+GET {{base_url}}/sid/snr/h26ka5j
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+
+### Pseudonymize using SID mapping
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "fnr",
+        "pattern": "**/fnr",
+        "func": "map-sid(keyId=papis-key-1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/person_3_sid.json
+--separator--
+
+
+### Depseudonymize using SID mapping
+
+POST {{base_url}}/depseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "fnr",
+        "pattern": "**/fnr",
+        "func": "map-sid(keyId=papis-key-1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/person_3_sid_deid.json
+--separator--

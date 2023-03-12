@@ -1,0 +1,21 @@
+### Generate AES256_SIV data encryption key (for DAEAD)
+
+POST {{base_url}}/keys
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "keyTemplateName": "AES256_SIV",
+  "kekUri": "{{kek_uri}}"
+}
+
+### Generate FPE_FF31_256_ALPHANUMERIC data encryption key (for FPE)
+
+POST {{base_url}}/keys
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "keyTemplateName": "FPE_FF31_256_ALPHANUMERIC",
+  "kekUri": "{{kek_uri}}"
+}

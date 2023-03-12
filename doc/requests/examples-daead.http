@@ -1,159 +1,3 @@
-### Pseudonymize json file
-
-POST {{base_url}}/pseudonymize/file
-Content-Type: multipart/form-data; boundary=separator
-Authorization: Bearer {{keycloak_token}}
-
---separator
-Content-Disposition: form-data; name="request"
-Content-Type: application/json
-
-{
-  "targetContentType": "application/json",
-  "pseudoConfig": {
-    "rules": [
-      {
-        "name": "allthenumbers",
-        "pattern": "**/*nummer",
-        "func": "fpe-digits(secret1)"
-      },
-      {
-        "name": "navn",
-        "pattern": "**/navn",
-        "func": "fpe-anychar(secret1)"
-      }
-    ]
-  }
-}
---separator
-Content-Disposition: form-data; name="data"; filename="data.json"
-Content-Type: application/json
-
-< ../../src/test/resources/data/15k.json
---separator--
-
-### Pseudonymize zipped archive with multiple json files. Return csv file.
-
-POST {{base_url}}/pseudonymize/file
-Content-Type: multipart/form-data; boundary=separator
-Authorization: Bearer {{keycloak_token}}
-
---separator
-Content-Disposition: form-data; name="request"
-Content-Type: application/json
-
-{
-  "targetContentType": "text/csv",
-  "pseudoConfig": {
-    "rules": [
-      {
-        "name": "allthenumbers",
-        "pattern": "**/*nummer",
-        "func": "fpe-digits(secret1)"
-      },
-      {
-        "name": "navn",
-        "pattern": "**/navn",
-        "func": "fpe-alphanumeric(secret1)"
-      }
-    ]
-  }
-}
---separator
-Content-Disposition: form-data; name="data"; filename="data.zip"
-Content-Type: application/zip
-
-< ../../src/test/resources/data/multiple-json-files.zip
---separator--
-
-### Pseudonymize using mapping database
-
-POST {{base_url}}/pseudonymize/file
-Content-Type: multipart/form-data; boundary=separator
-Authorization: Bearer {{keycloak_token}}
-
---separator
-Content-Disposition: form-data; name="request"
-Content-Type: application/json
-
-{
-  "targetContentType": "application/json",
-  "pseudoConfig": {
-    "rules": [
-      {
-        "name": "navn",
-        "pattern": "**/navn",
-        "func": "map-db(ssb-1)"
-      }
-    ]
-  }
-}
---separator
-Content-Disposition: form-data; name="data"; filename="data.json"
-Content-Type: application/json
-
-< ../../src/test/resources/data/15k.json
---separator--
-
-### Pseudonymize using SID mapping
-
-POST {{base_url}}/pseudonymize/file
-Content-Type: multipart/form-data; boundary=separator
-Authorization: Bearer {{keycloak_token}}
-
---separator
-Content-Disposition: form-data; name="request"
-Content-Type: application/json
-
-{
-  "targetContentType": "application/json",
-  "pseudoConfig": {
-    "rules": [
-      {
-        "name": "fnr",
-        "pattern": "**/fnr",
-        "func": "map-sid(ssb-common-key-1)"
-      }
-    ]
-  }
-}
---separator
-Content-Disposition: form-data; name="data"; filename="data.json"
-Content-Type: application/json
-
-< ../../src/test/resources/data/person_3_sid.json
---separator--
-
-### Depseudonymize using SID mapping
-
-POST {{base_url}}/depseudonymize/file
-Content-Type: multipart/form-data; boundary=separator
-Authorization: Bearer {{keycloak_token}}
-
---separator
-Content-Disposition: form-data; name="request"
-Content-Type: application/json
-
-{
-  "targetContentType": "application/json",
-  "pseudoConfig": {
-    "rules": [
-      {
-        "name": "fnr",
-        "pattern": "**/fnr",
-        "func": "map-sid(ssb-common-key-1)"
-      }
-    ]
-  }
-}
---separator
-Content-Disposition: form-data; name="data"; filename="data.json"
-Content-Type: application/json
-
-< ../../src/test/resources/data/person_3_sid_deid.json
---separator--
-
-
 ### Pseudonymize 1 000 000 records (zipped) using DAEAD
 
 POST {{base_url}}/pseudonymize/file
@@ -199,6 +43,7 @@ Content-Type: application/zip
 
 < ../../src/test/resources/data/kontaktopplysninger_1000000.json.zip
 --separator--
+
 
 ### Pseudonymize using DAEAD
 
@@ -261,6 +106,7 @@ Content-Type: application/json
 < ../../src/test/resources/data/somedata.json
 --separator--
 
+
 ### Depseudonymize using DAEAD
 
 POST {{base_url}}/depseudonymize/file
@@ -307,6 +153,7 @@ Content-Type: application/json
 < ../../src/test/resources/data/somedatata-daead-encrypted.json
 --separator--
 
+
 ### Pseudonymize using DAEAD - person
 
 POST {{base_url}}/pseudonymize/file
@@ -351,6 +198,7 @@ Content-Type: application/json
 
 < ../../src/test/resources/data/person_3.json
 --separator--
+
 
 ### Pseudonymize using DAEAD - kontaktopplysninger
 
@@ -401,39 +249,6 @@ Content-Type: application/json
 < ../../src/test/resources/data/kontaktopplysninger_3.json
 --separator--
 
-### Redact data
-
-POST {{base_url}}/pseudonymize/file
-Content-Type: multipart/form-data; boundary=separator
-Authorization: Bearer {{keycloak_token}}
-
---separator
-Content-Disposition: form-data; name="request"
-Content-Type: application/json
-
-{
-  "targetContentType": "application/json",
-  "pseudoConfig": {
-    "rules": [
-      {
-        "name": "navn",
-        "pattern": "**/{navn,postnummer}",
-        "func": "redact(***)"
-      },
-      {
-        "name": "poststed",
-        "pattern": "**/poststed",
-        "func": "redact-regex(9999, ^[A|b]|bu$)"
-      }
-    ]
-  }
-}
---separator
-Content-Disposition: form-data; name="data"; filename="data.json"
-Content-Type: application/json
-
-< ../../src/test/resources/data/15k.json
---separator--
 
 ### Repseudonymize using DAEAD - kontaktopplysninger
 
@@ -535,51 +350,3 @@ Content-Type: application/json
 
 < ../../src/test/resources/data/person_3.json
 --separator--
-
-
-### Get all metadata
-
-GET {{base_url}}/metadata
-Authorization: Bearer {{keycloak_token}}
-
-
-### Generate data encryption key
-
-POST {{base_url}}/keys
-Content-Type: application/json
-Authorization: Bearer {{keycloak_token}}
-
-{
-  "kekUri": "{{kek_uri}}"
-}
-
-### Reload SID cache
-
-POST {{base_url}}/sid/cache/reload
-Content-Type: application/json
-Authorization: Bearer {{keycloak_token}}
-
-### Get SID cache info
-
-GET {{base_url}}/sid/cache
-Content-Type: application/json
-Authorization: Bearer {{keycloak_token}}
-
-### Get SID for fnr
-
-GET {{base_url}}/sid/fnr/20902188836
-Content-Type: application/json
-Authorization: Bearer {{keycloak_token}}
-
-### Get SID for fnr
-
-GET {{base_url}}/sid/fnr/21902196908
-Content-Type: application/json
-Authorization: Bearer {{keycloak_token}}
-
-
-### Get SID for snr
-
-GET {{base_url}}/sid/snr/h26ka5j
-Content-Type: application/json
-Authorization: Bearer {{keycloak_token}}
