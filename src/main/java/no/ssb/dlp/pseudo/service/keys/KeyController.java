@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.security.Principal;
 
@@ -32,26 +34,36 @@ public class KeyController {
     private final KeyService keyService;
 
     @Operation(
-            summary = "Generate DEK",
+            summary = "Generate Wrapped DEK",
             description = """
-            Generate a custom Data Encryption Key (DEK) that can be used for pseudonymization.
+            Generate a custom Wrapped Data Encryption Key (WDEK) that can be used for pseudonymization.
             
             The generated key will be encrypted (a process known as "wrapping") by the user-specified KEK
-            (Key Encryption Key). If a `kekUri` is not specified, then the default KEK used. This is the
-            preferred default usage when generating new DEKs.
+            (Key Encryption Key). If a `kekUri` is not specified, then the default KEK used. Relying on the
+            default KEK is the preferred default usage when generating new DEKs.
             """
     )
     @Post
-    public HttpResponse<EncryptedKeysetWrapper> generateDataEncryptionKey(KeyGenerationRequest request, Principal principal) {
+    public HttpResponse<EncryptedKeysetWrapper> generateWrappedDataEncryptionKey(@Valid KeyGenerationRequest request, Principal principal) {
         log.info(Strings.padEnd(String.format("*** Generate data encryption key ***"), 80, '*'));
         log.debug("User: {}", principal.getName());
-        EncryptedKeysetWrapper keyset = keyService.createNewDataEncryptionKey(request.getKekUri());
+        EncryptedKeysetWrapper keyset = keyService.createNewDataEncryptionKey(request.getKekUri(), request.getKeyTemplateName());
         log.debug("Generated key:\n{}", keyset.toJson());
         return HttpResponse.ok(keyset);
     }
 
     @Data
+    @Introspected
     static class KeyGenerationRequest {
+        /**
+         * Name of the key template to use when generating key material.
+         * <p>
+         * E.g. AES256_SIV or FPE_FF31_256_ALPHANUMERIC, or see {@link no.ssb.crypto.tink.fpe.FpeFfxKeyType}) for more.
+         * </p>
+         */
+        @NotNull
+        private String keyTemplateName;
+
         /**
          * URI to the key encryption key stored in KMS.
          * <p>

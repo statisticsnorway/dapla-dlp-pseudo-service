@@ -2,12 +2,12 @@ package no.ssb.dlp.pseudo.service.pseudo;
 
 import io.micronaut.http.MediaType;
 import lombok.RequiredArgsConstructor;
-import no.ssb.dlp.pseudo.core.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.PseudoKeyset;
 import no.ssb.dlp.pseudo.core.StreamPseudonymizer;
 import no.ssb.dlp.pseudo.core.csv.CsvStreamPseudonymizer;
 import no.ssb.dlp.pseudo.core.field.FieldPseudonymizer;
 import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.json.JsonStreamPseudonymizer;
 import no.ssb.dlp.pseudo.core.map.RecordMapPseudonymizer;
 

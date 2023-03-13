@@ -1,0 +1,33 @@
+### Redact data
+
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "navn",
+        "pattern": "**/{navn,postnummer}",
+        "func": "redact()"
+      },
+      {
+        "name": "poststed",
+        "pattern": "**/poststed",
+        "func": "redact(placeholder=#, regex=^[A|b]|bu$)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/15k.json
+--separator--

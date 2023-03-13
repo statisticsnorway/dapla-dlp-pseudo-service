@@ -1,0 +1,7 @@
+### Get all metadata
+
+GET {{base_url}}/metadata
+Authorization: Bearer {{keycloak_token}}
+
+
+

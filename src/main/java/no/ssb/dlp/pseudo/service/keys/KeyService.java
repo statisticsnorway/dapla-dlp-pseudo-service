@@ -15,11 +15,11 @@ public class KeyService {
 
     private final KmsConfig kmsConfig;
 
-    public EncryptedKeysetWrapper createNewDataEncryptionKey(URI kekUri) {
+    public EncryptedKeysetWrapper createNewDataEncryptionKey(URI kekUri, String keyTemplateName) {
         kekUri = validateOrGetDefaultKekUri(kekUri);
 
         try {
-            String keysetJson = TinkUtil.newWrappedKeyJson(kekUri.toString());
+            String keysetJson = TinkUtil.newWrappedKeyJson(kekUri.toString(), keyTemplateName);
             EncryptedKeysetWrapper keyset = Json.toObject(EncryptedKeysetWrapper.class, keysetJson);
             keyset.setKekUri(kekUri);
             return keyset;

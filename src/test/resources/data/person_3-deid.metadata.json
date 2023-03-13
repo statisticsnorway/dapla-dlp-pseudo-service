@@ -3,7 +3,7 @@
     "rules": [
       {
         "pattern": "**/{fnr,fornavn,etternavn}",
-        "func": "tink-daead(145765263)"
+        "func": "daead(keyId=145765263)"
       },
       {
         "pattern": "**/fodselsdato}",
