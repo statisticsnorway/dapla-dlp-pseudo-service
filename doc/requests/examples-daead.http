@@ -13,26 +13,26 @@ Content-Type: application/json
   "pseudoConfig": {
     "keysets": [
 {
-  "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
+  "encryptedKeyset": "CiQAp91NBuNVCGWtVTE2FAhoRcbbcp+uXgolonL0ojTstS/UKcMStwEAZ30rtXO/8lcBShpbcZ9/pouaX3tgJNxZiy1U1cykPrhhqzpFzCAsrJJNkzwgniqGDOLq+9KzOkj7xoP2V7xKBco/ySzyl0gCpnovBRLCUgq5OMNh/rpKqIr7lMVZfsCVLNPupacSaLoPM+F5DMijAkk7NDTBGwkrRNO34Ev0Kkv/drt+G4DUfdBKLe2QUrEUE0vVfsBw+EZzTC8G3CYemYXC5GYdpTglk0oFDMDs25lBL65SfVQ=",
   "keysetInfo": {
-    "primaryKeyId": 361269912,
+    "primaryKeyId": 1403797237,
     "keyInfo": [
       {
         "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
         "status": "ENABLED",
-        "keyId": 361269912,
+        "keyId": 1403797237,
         "outputPrefixType": "TINK"
       }
     ]
-  },
-  "kekUri": "{{kek_uri}}"
+  }
 }
     ],
     "rules": [
       {
         "name": "fnr",
         "pattern": "**/foedselsnummer",
-        "func": "tink-daead(361269912)"
+        "func": "daead(keyId=1403797237)"
       }
     ]
   }
@@ -60,41 +60,26 @@ Content-Type: application/json
   "pseudoConfig": {
     "keysets": [
 {
-  "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
+  "encryptedKeyset": "CiQAp91NBuNVCGWtVTE2FAhoRcbbcp+uXgolonL0ojTstS/UKcMStwEAZ30rtXO/8lcBShpbcZ9/pouaX3tgJNxZiy1U1cykPrhhqzpFzCAsrJJNkzwgniqGDOLq+9KzOkj7xoP2V7xKBco/ySzyl0gCpnovBRLCUgq5OMNh/rpKqIr7lMVZfsCVLNPupacSaLoPM+F5DMijAkk7NDTBGwkrRNO34Ev0Kkv/drt+G4DUfdBKLe2QUrEUE0vVfsBw+EZzTC8G3CYemYXC5GYdpTglk0oFDMDs25lBL65SfVQ=",
   "keysetInfo": {
-    "primaryKeyId": 361269912,
+    "primaryKeyId": 1403797237,
     "keyInfo": [
       {
         "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
         "status": "ENABLED",
-        "keyId": 361269912,
+        "keyId": 1403797237,
         "outputPrefixType": "TINK"
       }
     ]
-  },
-  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/crypto-keyring/cryptoKeys/crypto-key"
-},
-{
-  "encryptedKeyset": "CiQA5zQ3ay3sF1bLfNV5ZWnUudjj3J0aEv5lZ7jX1ooOmxP/kswStQEAXU6Lz9haQG61iXKg386s+ZwxIzyJ3NxXCHk2zNShkBZfN0gTI53gzgpBySVRN1GVFKPhF/7CO+YM9GVCXa1DcbyRULtiZ4IStxE0B6rabQYMprSnG0MqL2YLUGHPbe3r+k8RZG5zDs9O0zsq5sCP+KNP1fuGi8HVGTC2unxJ+sdZ4aOYtoo1qZNbZGbSj1V+4vxCpK4o4XOWz5KI2fH/zQm1XPP/BgynHRcwqnr3fHxUvxeO",
-  "keysetInfo": {
-    "primaryKeyId": 145765263,
-    "keyInfo": [
-      {
-        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
-        "status": "ENABLED",
-        "keyId": 145765263,
-        "outputPrefixType": "TINK"
-      }
-    ]
-  },
-  "kekUri": "{{kek_uri}}"
+  }
 }
     ],
     "rules": [
       {
         "name": "navn",
         "pattern": "**/navn",
-        "func": "tink-daead(361269912)"
+        "func": "daead(keyId=1403797237)"
       }
     ]
   }
@@ -122,26 +107,26 @@ Content-Type: application/json
   "pseudoConfig": {
     "keysets": [
 {
-  "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
+  "encryptedKeyset": "CiQAp91NBuNVCGWtVTE2FAhoRcbbcp+uXgolonL0ojTstS/UKcMStwEAZ30rtXO/8lcBShpbcZ9/pouaX3tgJNxZiy1U1cykPrhhqzpFzCAsrJJNkzwgniqGDOLq+9KzOkj7xoP2V7xKBco/ySzyl0gCpnovBRLCUgq5OMNh/rpKqIr7lMVZfsCVLNPupacSaLoPM+F5DMijAkk7NDTBGwkrRNO34Ev0Kkv/drt+G4DUfdBKLe2QUrEUE0vVfsBw+EZzTC8G3CYemYXC5GYdpTglk0oFDMDs25lBL65SfVQ=",
   "keysetInfo": {
-    "primaryKeyId": 361269912,
+    "primaryKeyId": 1403797237,
     "keyInfo": [
       {
         "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
         "status": "ENABLED",
-        "keyId": 361269912,
+        "keyId": 1403797237,
         "outputPrefixType": "TINK"
       }
     ]
-  },
-  "kekUri": "{{kek_uri}}"
+  }
 }
     ],
     "rules": [
       {
         "name": "navn",
         "pattern": "**/navn",
-        "func": "tink-daead(361269912)"
+        "func": "daead(keyId=1403797237)"
       }
     ]
   }
@@ -150,7 +135,8 @@ Content-Type: application/json
 Content-Disposition: form-data; name="data"; filename="data.json"
 Content-Type: application/json
 
-< ../../src/test/resources/data/somedatata-daead-encrypted.json
+< ../../src/test/resources/data/somedata-daead-encrypted.json
+
 --separator--
 
 
@@ -169,25 +155,25 @@ Content-Type: application/json
   "pseudoConfig": {
     "keysets": [
 {
-  "encryptedKeyset": "CiQA5zQ3ay3sF1bLfNV5ZWnUudjj3J0aEv5lZ7jX1ooOmxP/kswStQEAXU6Lz9haQG61iXKg386s+ZwxIzyJ3NxXCHk2zNShkBZfN0gTI53gzgpBySVRN1GVFKPhF/7CO+YM9GVCXa1DcbyRULtiZ4IStxE0B6rabQYMprSnG0MqL2YLUGHPbe3r+k8RZG5zDs9O0zsq5sCP+KNP1fuGi8HVGTC2unxJ+sdZ4aOYtoo1qZNbZGbSj1V+4vxCpK4o4XOWz5KI2fH/zQm1XPP/BgynHRcwqnr3fHxUvxeO",
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
+  "encryptedKeyset": "CiQAp91NBuNVCGWtVTE2FAhoRcbbcp+uXgolonL0ojTstS/UKcMStwEAZ30rtXO/8lcBShpbcZ9/pouaX3tgJNxZiy1U1cykPrhhqzpFzCAsrJJNkzwgniqGDOLq+9KzOkj7xoP2V7xKBco/ySzyl0gCpnovBRLCUgq5OMNh/rpKqIr7lMVZfsCVLNPupacSaLoPM+F5DMijAkk7NDTBGwkrRNO34Ev0Kkv/drt+G4DUfdBKLe2QUrEUE0vVfsBw+EZzTC8G3CYemYXC5GYdpTglk0oFDMDs25lBL65SfVQ=",
   "keysetInfo": {
-    "primaryKeyId": 145765263,
+    "primaryKeyId": 1403797237,
     "keyInfo": [
       {
         "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
         "status": "ENABLED",
-        "keyId": 145765263,
+        "keyId": 1403797237,
         "outputPrefixType": "TINK"
       }
     ]
-  },
-  "kekUri": "{{kek_uri}}"
+  }
 }
     ],
     "rules": [
       {
         "pattern": "**/{fnr,fornavn,etternavn}",
-        "func": "tink-daead(145765263)"
+        "func": "daead(keyId=1403797237)"
       }
     ]
   }
@@ -215,29 +201,29 @@ Content-Type: application/json
   "pseudoConfig": {
     "keysets": [
 {
-  "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
+  "encryptedKeyset": "CiQAp91NBuNVCGWtVTE2FAhoRcbbcp+uXgolonL0ojTstS/UKcMStwEAZ30rtXO/8lcBShpbcZ9/pouaX3tgJNxZiy1U1cykPrhhqzpFzCAsrJJNkzwgniqGDOLq+9KzOkj7xoP2V7xKBco/ySzyl0gCpnovBRLCUgq5OMNh/rpKqIr7lMVZfsCVLNPupacSaLoPM+F5DMijAkk7NDTBGwkrRNO34Ev0Kkv/drt+G4DUfdBKLe2QUrEUE0vVfsBw+EZzTC8G3CYemYXC5GYdpTglk0oFDMDs25lBL65SfVQ=",
   "keysetInfo": {
-    "primaryKeyId": 361269912,
+    "primaryKeyId": 1403797237,
     "keyInfo": [
       {
         "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
         "status": "ENABLED",
-        "keyId": 361269912,
+        "keyId": 1403797237,
         "outputPrefixType": "TINK"
       }
     ]
-  },
-  "kekUri": "{{kek_uri}}"
+  }
 }
     ],
     "rules": [
       {
         "pattern": "/{foedselsnummer,gateadresse,telefonnummer}",
-        "func": "tink-daead(361269912)"
+        "func": "daead(keyId=1403797237)"
       },
       {
         "pattern": "/email",
-        "func": "redact(***)"
+        "func": "redact(placeholder=***)"
       }
     ]
   }
@@ -264,53 +250,53 @@ Content-Type: application/json
   "targetContentType": "application/json",
   "sourcePseudoConfig": {
     "keysets": [
+{
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
+  "encryptedKeyset": "CiQAp91NBuNVCGWtVTE2FAhoRcbbcp+uXgolonL0ojTstS/UKcMStwEAZ30rtXO/8lcBShpbcZ9/pouaX3tgJNxZiy1U1cykPrhhqzpFzCAsrJJNkzwgniqGDOLq+9KzOkj7xoP2V7xKBco/ySzyl0gCpnovBRLCUgq5OMNh/rpKqIr7lMVZfsCVLNPupacSaLoPM+F5DMijAkk7NDTBGwkrRNO34Ev0Kkv/drt+G4DUfdBKLe2QUrEUE0vVfsBw+EZzTC8G3CYemYXC5GYdpTglk0oFDMDs25lBL65SfVQ=",
+  "keysetInfo": {
+    "primaryKeyId": 1403797237,
+    "keyInfo": [
       {
-        "encryptedKeyset": "CiQA5zQ3a65jFKyXV6yFsvALeJaltai9MmigpNHuhJKFJPKphWsStwEAXU6Lz8ugKIdDRIHaI2zAtedbKzKRe2MC/GVl2bYwc9OYOqCBSNgaWe/aFcd4iZGbM1u1rMCZ2tpGJAPa4UnA5JjbD0O++OlV0puJakxJnDfBR7/eW41XXtWFSh+Q/imuVkulz2w/jRyQ6F6FO7V1RuMsbR7SHPRwSdW2IZ55JBSBwpTUaykFGu3z8DV2LluI5SVkkhjLEqeD860yky82iYiZxwhHNbsiCpDzO8BfGckc1W6OrSQ=",
-        "keysetInfo": {
-          "primaryKeyId": 361269912,
-          "keyInfo": [
-            {
-              "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
-              "status": "ENABLED",
-              "keyId": 361269912,
-              "outputPrefixType": "TINK"
-            }
-          ]
-        },
-        "kekUri": "{{kek_uri}}"
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 1403797237,
+        "outputPrefixType": "TINK"
       }
+    ]
+  }
+}
     ],
     "rules": [
       {
         "name": "rule-1",
         "pattern": "**/{foedselsnummer,gateadresse,telefonnummer}",
-        "func": "tink-daead(361269912)"
+        "func": "daead(keyId=1403797237)"
       }
     ]
   },
   "targetPseudoConfig": {
     "keysets": [
+{
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
+  "encryptedKeyset": "CiQAp91NBn/O1GqfVvpNwLrDTTocNzhieGklCwrY57Zub+yvV9YStQEAZ30rtXy4WuEfBZMgKhuSbbcqqbnfuXoSAqpQXBcy+d8z9k7V9/xag6/sUCP/+e2NVd7PIumpFXqnRdBUw3YbSTITbGiP05MdE0cSyX+XvI41yTLa/bHddQojX7D2ls9Pei8+T6ZCAbtmPwrkyMbxWahU60A2HNmq2qvCmM5Hyaej6EHSf007nbxch004Uwi1FpI/6Am0Z9M7uJ+hRVF0YIv1nEf0lmoXiJDfC4GGDh+BbGBJ",
+  "keysetInfo": {
+    "primaryKeyId": 208741162,
+    "keyInfo": [
       {
-        "encryptedKeyset": "CiQA5zQ3ay3sF1bLfNV5ZWnUudjj3J0aEv5lZ7jX1ooOmxP/kswStQEAXU6Lz9haQG61iXKg386s+ZwxIzyJ3NxXCHk2zNShkBZfN0gTI53gzgpBySVRN1GVFKPhF/7CO+YM9GVCXa1DcbyRULtiZ4IStxE0B6rabQYMprSnG0MqL2YLUGHPbe3r+k8RZG5zDs9O0zsq5sCP+KNP1fuGi8HVGTC2unxJ+sdZ4aOYtoo1qZNbZGbSj1V+4vxCpK4o4XOWz5KI2fH/zQm1XPP/BgynHRcwqnr3fHxUvxeO",
-        "keysetInfo": {
-          "primaryKeyId": 145765263,
-          "keyInfo": [
-            {
-              "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
-              "status": "ENABLED",
-              "keyId": 145765263,
-              "outputPrefixType": "TINK"
-            }
-          ]
-        },
-        "kekUri": "{{kek_uri}}"
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 208741162,
+        "outputPrefixType": "TINK"
       }
+    ]
+  }
+}
     ],
     "rules": [
       {
         "name": "rule-1",
         "pattern": "**/{foedselsnummer,gateadresse,telefonnummer,email}",
-        "func": "tink-daead(145765263)"
+        "func": "daead(keyId=208741162)"
       }
     ]
   }
@@ -339,7 +325,7 @@ Content-Type: application/json
     "rules": [
       {
         "pattern": "**/{fnr,fornavn,etternavn}",
-        "func": "tink-daead(ssb-common-key-1)"
+        "func": "daead(keyId=ssb-common-key-1)"
       }
     ]
   }

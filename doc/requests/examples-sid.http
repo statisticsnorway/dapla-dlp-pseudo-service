@@ -28,7 +28,7 @@ Authorization: Bearer {{keycloak_token}}
 
 ### Get SID for snr
 
-GET {{base_url}}/sid/snr/h26ka5j
+GET {{base_url}}/sid/snr/k5fcp3b
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
