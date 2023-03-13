@@ -48,8 +48,8 @@ class PseudoConfigProcessorTest {
                 """);
         List<PseudoConfig> configs = pseudoConfigProcessor.splitIfNecessary(pseudoConfig);
         assertThat(configs).hasSize(2);
-        assertThat(configs.get(0).getRules().get(0)).isEqualTo(new PseudoFuncRule("fnr", "**/fnr", "map-sid(123456789)"));
-        assertThat(configs.get(1).getRules().get(0)).isEqualTo(new PseudoFuncRule("fnr", "**/fnr", "tink-daead(123456789)"));
+        assertThat(configs.get(0).getRules().get(0)).isEqualTo(new PseudoFuncRule("fnr", "**/fnr", "map-sid(keyId=123456789)"));
+        assertThat(configs.get(1).getRules().get(0)).isEqualTo(new PseudoFuncRule("fnr", "**/fnr", "ff31(keyId=123456789, strategy=SKIP)"));
     }
 
     @Test
@@ -89,8 +89,8 @@ class PseudoConfigProcessorTest {
         assertThat(sidMappingPseudoConfig.getRules().get(1)).isEqualTo(new PseudoFuncRule("spouse", "**/spouse_id", "map-sid(keyId=ssb-common-key-2)"));
         assertThat(encryptionPseudoConfig.getRules()).hasSize(4);
         assertThat(encryptionPseudoConfig.getRules().get(0)).isEqualTo(new PseudoFuncRule("navn", "**/navn", "daead(keyId=123456789)"));
-        assertThat(encryptionPseudoConfig.getRules().get(1)).isEqualTo(new PseudoFuncRule("fnr", "**/fnr", "daead(keyId=ssb-common-key-1)"));
-        assertThat(encryptionPseudoConfig.getRules().get(2)).isEqualTo(new PseudoFuncRule("spouse", "**/spouse_id", "daead(keyId=ssb-common-key-2)"));
+        assertThat(encryptionPseudoConfig.getRules().get(1)).isEqualTo(new PseudoFuncRule("fnr", "**/fnr", "ff31(keyId=ssb-common-key-1, strategy=SKIP)"));
+        assertThat(encryptionPseudoConfig.getRules().get(2)).isEqualTo(new PseudoFuncRule("spouse", "**/spouse_id", "ff31(keyId=ssb-common-key-2, strategy=SKIP)"));
         assertThat(encryptionPseudoConfig.getRules().get(3)).isEqualTo(new PseudoFuncRule("foo", "**/foo", "daead(keyId=123456789)"));
     }
 
