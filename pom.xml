@@ -113,7 +113,7 @@
     <dependency>
       <groupId>no.ssb.dapla.dlp.pseudo</groupId>
       <artifactId>dapla-dlp-pseudo-core</artifactId>
-      <version>1.2.0</version>
+      <version>1.2.1</version>
     </dependency>
     <dependency>
       <groupId>no.ssb.avro.convert.core</groupId>
