@@ -11,7 +11,7 @@
     <option name="vmParameters" value="" />
     <option name="workingDirectory" value="$MODULE_DIR$" />
     <envs>
-      <env name="MICRONAUT_ENVIRONMENTS" value="local" />
+      <env name="MICRONAUT_ENVIRONMENTS" value="local,local-sid" />
       <env name="MICRONAUT_CONFIG_FILES" value="conf/application-local.yml" />
     </envs>
     <RunnerSettings />

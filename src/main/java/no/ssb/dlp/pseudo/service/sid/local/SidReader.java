@@ -1,4 +1,4 @@
-package no.ssb.dlp.pseudo.service.sid;
+package no.ssb.dlp.pseudo.service.sid.local;
 
 import com.univocity.parsers.fixed.FixedWidthFields;
 import com.univocity.parsers.fixed.FixedWidthParserSettings;
@@ -17,20 +17,6 @@ import java.io.InputStream;
 @Singleton
 @Slf4j
 public class SidReader {
-
-    @SneakyThrows
-    public void readSidsFromFile(String filePath, SidCache sidCache) {
-        FileInputStream fis = new FileInputStream(filePath);
-        readSidsFromFile(fis, sidCache);
-    }
-
-    public void readSidsFromFile(InputStream inputStream, SidCache sidCache) {
-        FixedWidthRoutines routines = new FixedWidthRoutines(fixedWidthParserSettings());
-        for (SidItem sidItem : routines.iterate(SidItem.class, inputStream, "UTF-8")) {
-            sidCache.register(sidItem, true);
-        }
-        sidCache.markAsInitialized();
-    }
 
     @SneakyThrows
     public Flowable<SidItem> readSidsFromFile(String filePath) {

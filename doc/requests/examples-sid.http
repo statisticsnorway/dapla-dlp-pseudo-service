@@ -1,34 +1,27 @@
-### Reload SID cache
-
-POST {{base_url}}/sid/cache/reload
+POST {{base_url}}/local-sid/sid/map
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
-
-### Get SID cache info
-
-GET {{base_url}}/sid/cache
-Content-Type: application/json
-Authorization: Bearer {{keycloak_token}}
-
+{
+  "fnr": "11854898347"
+}
 
 ### Get SID for fnr
 
-GET {{base_url}}/sid/fnr/20902188836
+GET {{base_url}}/sid/fnr/11854898347
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
-
 ### Get SID for fnr
 
-GET {{base_url}}/sid/fnr/21902196908
+GET {{base_url}}/sid/fnr/01839899544
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
 
 ### Get SID for snr
 
-GET {{base_url}}/sid/snr/k5fcp3b
+GET {{base_url}}/sid/snr/0001ha3
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
@@ -91,3 +84,4 @@ Content-Type: application/json
 
 < ../../src/test/resources/data/person_3_sid_deid.json
 --separator--
+
