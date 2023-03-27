@@ -1,8 +1,6 @@
 package no.ssb.dlp.pseudo.service.sid;
 
-import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.async.publisher.Publishers;
-import jakarta.inject.Singleton;
 import no.ssb.dlp.pseudo.service.sid.local.SidReader;
 import org.reactivestreams.Publisher;
 
@@ -10,9 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Singleton
-@Requires(property = SidServiceConfig.PREFIX + ".impl", value = "LOCAL")
-class LocalSidService implements SidService {
+class LocalSidService {
 
     private final Map<String, String> fnrToCurrentSnr = new HashMap<>();
     private final Map<String, String> snrToCurrentFnr = new HashMap<>();
@@ -33,7 +29,7 @@ class LocalSidService implements SidService {
         String currentSnr = getCurrentSnrForFnr(fnr)
                 .orElseThrow(() -> new NoSidMappingFoundException("No SID matching fnr=" + fnr));
         return Publishers.just(getCurrentFnrForSnr(currentSnr).map(currentFnr ->
-                new SidInfo.SidInfoBuilder().currentFnr(currentFnr).currentSnr(currentSnr).build())
+                        new SidInfo.SidInfoBuilder().currentFnr(currentFnr).currentSnr(currentSnr).build())
                 .orElse(null));
     }
 
@@ -41,7 +37,7 @@ class LocalSidService implements SidService {
         String currentFnr = getCurrentFnrForSnr(snr)
                 .orElseThrow(() -> new NoSidMappingFoundException("No SID matching snr=" + snr));
         return Publishers.just(getCurrentSnrForFnr(currentFnr).map(currentSnr ->
-                new SidInfo.SidInfoBuilder().currentFnr(currentFnr).currentSnr(currentSnr).build())
+                        new SidInfo.SidInfoBuilder().currentFnr(currentFnr).currentSnr(currentSnr).build())
                 .orElse(null));
     }
 

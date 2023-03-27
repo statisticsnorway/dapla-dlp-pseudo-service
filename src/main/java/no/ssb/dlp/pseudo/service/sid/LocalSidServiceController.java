@@ -20,7 +20,7 @@ import org.reactivestreams.Publisher;
 @Controller("/local-sid")
 @Slf4j
 @Secured(SecurityRule.IS_AUTHENTICATED)
-@Tag(name = "SID operations")
+@Tag(name = "Look up SIDs locally. This controller is only enabled for local-sid environment")
 @Requirements({
         @Requires(
                 env = {"local-sid"}

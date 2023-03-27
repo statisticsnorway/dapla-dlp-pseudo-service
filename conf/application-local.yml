@@ -78,8 +78,6 @@ sid:
   index.filename: "sid/index"
 
 services:
-  sid:
-    impl: GCP
   secrets:
     impl: LOCAL
     overrides:
