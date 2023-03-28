@@ -4,7 +4,6 @@ import io.micronaut.context.annotation.Requirements;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
@@ -32,7 +31,7 @@ public class LocalSidServiceController {
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     @Post("/sid/map")
-    public Publisher<SidInfo> lookup(@Body SidRequest sidRequest, @Header("Authorization") String auth) {
+    public Publisher<SidInfo> lookup(@Body SidRequest sidRequest) {
         if (sidRequest.getFnr() != null) {
             return sidService.lookupFnr(sidRequest.getFnr());
         }

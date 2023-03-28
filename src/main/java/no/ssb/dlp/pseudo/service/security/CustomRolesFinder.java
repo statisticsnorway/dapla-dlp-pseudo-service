@@ -1,6 +1,8 @@
 package no.ssb.dlp.pseudo.service.security;
 
 import io.micronaut.context.annotation.Replaces;
+import io.micronaut.context.annotation.Requires;
+import io.micronaut.context.env.Environment;
 import io.micronaut.security.token.DefaultRolesFinder;
 import io.micronaut.security.token.RolesFinder;
 import io.micronaut.security.token.config.TokenConfiguration;
@@ -14,6 +16,10 @@ import java.util.Map;
 @Singleton
 @Replaces(bean = DefaultRolesFinder.class)
 @RequiredArgsConstructor
+@Requires(notEnv = {
+        Environment.TEST,
+        Environment.GOOGLE_COMPUTE
+})
 public class CustomRolesFinder implements RolesFinder {
 
     private final TokenConfiguration tokenConfiguration;

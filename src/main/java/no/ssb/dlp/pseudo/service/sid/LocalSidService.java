@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * This class implements a local SID service, and should only be used for local end-to-end testing.
+ */
 class LocalSidService {
 
     private final Map<String, String> fnrToCurrentSnr = new HashMap<>();

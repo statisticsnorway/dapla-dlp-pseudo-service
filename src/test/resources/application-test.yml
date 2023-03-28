@@ -4,11 +4,28 @@ micronaut:
   server:
     port: 18080
 
+  http:
+    services:
+      sid-service:
+        url: 'http://localhost:18080'
+        path: '/local-sid'
+
+  security:
+    authentication: bearer
+    token:
+      propagation:
+        enabled: true
+        service-id-regex: "sid-service"
+
 services:
   secrets:
     impl: LOCAL
     overrides:
       foo: bar
+
+logger:
+  levels:
+    io.micronaut.security: DEBUG
 
 gcp:
   kms:
