@@ -1,6 +1,5 @@
 package no.ssb.dlp.pseudo.service.sid;
 
-import io.micronaut.context.annotation.Requirements;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
@@ -20,11 +19,7 @@ import org.reactivestreams.Publisher;
 @Slf4j
 @Secured(SecurityRule.IS_AUTHENTICATED)
 @Tag(name = "Look up SIDs locally. This controller is only enabled for local-sid environment")
-@Requirements({
-        @Requires(
-                env = {"local-sid"}
-        )
-})
+@Requires(env = "local-sid")
 public class LocalSidServiceController {
     private final LocalSidService sidService = new LocalSidService();
 
