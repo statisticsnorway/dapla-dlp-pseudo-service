@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import org.reactivestreams.Publisher;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @Controller("/local-sid")
 @Slf4j
@@ -21,17 +23,17 @@ import org.reactivestreams.Publisher;
 @Tag(name = "Look up SIDs locally. This controller is only enabled for local-sid environment")
 @Requires(env = "local-sid")
 public class LocalSidServiceController {
-    private final LocalSidService sidService = new LocalSidService();
+    private final SidService sidService;
 
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     @Post("/sid/map")
     public Publisher<SidInfo> lookup(@Body SidRequest sidRequest) {
         if (sidRequest.getFnr() != null) {
-            return sidService.lookupFnr(sidRequest.getFnr());
+            return sidService.lookupFnr(sidRequest.getFnr(), Optional.ofNullable(null));
         }
         if (sidRequest.getSnr() != null) {
-            return sidService.lookupSnr(sidRequest.getSnr());
+            return sidService.lookupSnr(sidRequest.getSnr(), Optional.ofNullable(null));
         }
         return null;
     }

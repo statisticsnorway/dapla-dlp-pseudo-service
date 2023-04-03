@@ -8,7 +8,7 @@ Authorization: Bearer {{keycloak_token}}
 
 ### Get SID for fnr
 
-GET {{base_url}}/sid/fnr/11854898347
+GET {{base_url}}/sid/fnr/11854898347?snapshot=423243224
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 

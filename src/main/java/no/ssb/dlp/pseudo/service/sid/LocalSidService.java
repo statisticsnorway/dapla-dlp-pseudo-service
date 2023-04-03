@@ -1,9 +1,11 @@
 package no.ssb.dlp.pseudo.service.sid;
 
+import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.async.publisher.Publishers;
 import no.ssb.dlp.pseudo.service.sid.local.SidReader;
 import org.reactivestreams.Publisher;
 
+import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -11,7 +13,9 @@ import java.util.Optional;
 /**
  * This class implements a local SID service, and should only be used for local end-to-end testing.
  */
-class LocalSidService {
+@Singleton
+@Requires(env = "local-sid")
+class LocalSidService implements SidService {
 
     private final Map<String, String> fnrToCurrentSnr = new HashMap<>();
     private final Map<String, String> snrToCurrentFnr = new HashMap<>();
@@ -28,17 +32,19 @@ class LocalSidService {
         );
     }
 
-    public Publisher<SidInfo> lookupFnr(String fnr) {
+    @Override
+    public Publisher<SidInfo> lookupFnr(String fnr, Optional<String> snapshot) {
         String currentSnr = getCurrentSnrForFnr(fnr)
-                .orElseThrow(() -> new NoSidMappingFoundException("No SID matching fnr=" + fnr));
+                .orElseThrow(() -> new LocalSidService.NoSidMappingFoundException("No SID matching fnr=" + fnr));
         return Publishers.just(getCurrentFnrForSnr(currentSnr).map(currentFnr ->
                         new SidInfo.SidInfoBuilder().currentFnr(currentFnr).currentSnr(currentSnr).build())
                 .orElse(null));
     }
 
-    public Publisher<SidInfo> lookupSnr(String snr) {
+    @Override
+    public Publisher<SidInfo> lookupSnr(String snr, Optional<String> snapshot) {
         String currentFnr = getCurrentFnrForSnr(snr)
-                .orElseThrow(() -> new NoSidMappingFoundException("No SID matching snr=" + snr));
+                .orElseThrow(() -> new LocalSidService.NoSidMappingFoundException("No SID matching snr=" + snr));
         return Publishers.just(getCurrentSnrForFnr(currentFnr).map(currentSnr ->
                         new SidInfo.SidInfoBuilder().currentFnr(currentFnr).currentSnr(currentSnr).build())
                 .orElse(null));
