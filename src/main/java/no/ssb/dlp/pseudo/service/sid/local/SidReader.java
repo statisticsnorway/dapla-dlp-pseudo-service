@@ -19,6 +19,20 @@ import java.io.InputStream;
 public class SidReader {
 
     @SneakyThrows
+    public void readSidsFromFile(String filePath, SidCache sidCache) {
+        FileInputStream fis = new FileInputStream(filePath);
+        readSidsFromFile(fis, sidCache);
+    }
+
+    public void readSidsFromFile(InputStream inputStream, SidCache sidCache) {
+        FixedWidthRoutines routines = new FixedWidthRoutines(fixedWidthParserSettings());
+        for (SidItem sidItem : routines.iterate(SidItem.class, inputStream, "UTF-8")) {
+            sidCache.register(sidItem, true);
+        }
+        sidCache.markAsInitialized();
+    }
+
+    @SneakyThrows
     public Flowable<SidItem> readSidsFromFile(String filePath) {
         FileInputStream fis = new FileInputStream(filePath);
         return readSidsFromFile(fis);

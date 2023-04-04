@@ -7,6 +7,9 @@ import io.micronaut.security.token.generator.TokenGenerator;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.restassured.specification.RequestSpecification;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
+import no.ssb.dlp.pseudo.service.sid.local.SidCache;
+import no.ssb.dlp.pseudo.service.sid.local.SidReader;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
@@ -28,9 +31,19 @@ public class SidLookupControllerE2ETest {
     @Inject
     TokenGenerator tokenGenerator;
     @Inject
+    SidCache sidCache;
+    @Inject
+    SidReader sidReader;
+    @Inject
     @Client("/")
     HttpClient client;
 
+    @BeforeEach
+    public void setUp() {
+        if (sidCache.getState() == SidCache.State.NOT_INITIALIZED) {
+            sidReader.readSidsFromFile("src/test/resources/freg/snr-kat-sample", sidCache);
+        }
+    }
     @Test
     public void testLookupFnr(RequestSpecification spec) {
         Authentication user = Authentication.build("sherlock", Set.of(PseudoServiceRole.ADMIN));
