@@ -1,7 +1,9 @@
-package no.ssb.dlp.pseudo.service.sid;
+package no.ssb.dlp.pseudo.service.sid.local;
 
 
+import io.micronaut.context.annotation.Requires;
 import jakarta.inject.Singleton;
+import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -9,7 +11,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @Singleton
-class SidCache {
+@Requires(env = "local-sid")
+public class SidCache {
 
     private final Map<String, String> fnrToCurrentSnr = new HashMap<>();
     private final Map<String, String> snrToCurrentFnr = new HashMap<>();
@@ -22,10 +25,6 @@ class SidCache {
         snrToCurrentFnr.clear();
         state = State.NOT_INITIALIZED;
         lastUpdated = Instant.now();
-    }
-
-    public void register(SidItem sidItem) {
-        register(sidItem, false);
     }
 
     void register(SidItem sidItem, boolean hasMoreUpdates) {

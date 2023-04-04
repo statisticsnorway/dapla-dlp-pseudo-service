@@ -1,9 +1,9 @@
 package no.ssb.dlp.pseudo.service.sid;
 
+import io.micronaut.context.annotation.Requires;
+import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.Get;
-import io.micronaut.http.annotation.PathVariable;
-import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.http.annotation.Post;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
@@ -17,27 +17,25 @@ import org.reactivestreams.Publisher;
 import java.util.Optional;
 
 @RequiredArgsConstructor
-@Controller("/sid")
+@Controller("/local-sid")
 @Slf4j
 @Secured(SecurityRule.IS_AUTHENTICATED)
-@Tag(name = "SID operations")
-public class SidLookupController {
-
+@Tag(name = "Look up SIDs locally. This controller is only enabled for local-sid environment")
+@Requires(env = "local-sid")
+public class LocalSidServiceController {
     private final SidService sidService;
 
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
-    @Get("/fnr/{fnr}")
-    public Publisher<SidInfo> lookupFnr(@PathVariable String fnr, @QueryValue Optional<String> snapshot) {
-        return sidService.lookupFnr(fnr, snapshot);
+    @Post("/sid/map")
+    public Publisher<SidInfo> lookup(@Body SidRequest sidRequest) {
+        if (sidRequest.getFnr() != null) {
+            return sidService.lookupFnr(sidRequest.getFnr(), Optional.ofNullable(null));
+        }
+        if (sidRequest.getSnr() != null) {
+            return sidService.lookupSnr(sidRequest.getSnr(), Optional.ofNullable(null));
+        }
+        return null;
     }
-
-    @Secured({PseudoServiceRole.ADMIN})
-    @ExecuteOn(TaskExecutors.IO)
-    @Get("/snr/{snr}")
-    public Publisher<SidInfo> lookupSnr(@PathVariable String snr, @QueryValue Optional<String> snapshot) {
-        return sidService.lookupSnr(snr, snapshot);
-    }
-
 
 }

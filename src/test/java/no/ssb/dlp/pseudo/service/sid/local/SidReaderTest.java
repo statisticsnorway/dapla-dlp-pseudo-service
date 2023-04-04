@@ -1,4 +1,4 @@
-package no.ssb.dlp.pseudo.service.sid;
+package no.ssb.dlp.pseudo.service.sid.local;
 
 import org.junit.jupiter.api.Test;
 

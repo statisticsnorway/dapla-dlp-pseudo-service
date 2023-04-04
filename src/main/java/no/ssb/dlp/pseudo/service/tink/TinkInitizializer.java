@@ -3,9 +3,10 @@ package no.ssb.dlp.pseudo.service.tink;
 import com.google.crypto.tink.daead.DeterministicAeadConfig;
 import com.google.crypto.tink.integration.gcpkms.GcpKmsClient;
 import io.micronaut.context.annotation.Context;
+import io.micronaut.context.annotation.Requires;
+import io.micronaut.context.env.Environment;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.crypto.tink.fpe.FpeConfig;
-import no.ssb.dapla.dlp.pseudo.func.tink.fpe.TinkFpeFuncConfig;
 import no.ssb.dlp.pseudo.core.PseudoException;
 
 import javax.inject.Singleton;
@@ -15,6 +16,7 @@ import java.util.Optional;
 @Context
 @Singleton
 @Slf4j
+@Requires(notEnv = Environment.TEST)
 public class TinkInitizializer {
 
     public TinkInitizializer(KmsConfig kmsConfig) {

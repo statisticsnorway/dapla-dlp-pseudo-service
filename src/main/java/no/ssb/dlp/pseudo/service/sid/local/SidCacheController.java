@@ -1,6 +1,7 @@
-package no.ssb.dlp.pseudo.service.sid;
+package no.ssb.dlp.pseudo.service.sid.local;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.micronaut.context.annotation.Requires;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
@@ -23,6 +24,7 @@ import java.time.Instant;
 @Slf4j
 @Secured(SecurityRule.IS_AUTHENTICATED)
 @Tag(name = "SID operations")
+@Requires(env = "local-sid")
 public class SidCacheController {
 
     private final SidCacheLoader sidCacheLoader;

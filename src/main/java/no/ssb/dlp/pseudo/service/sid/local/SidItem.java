@@ -1,4 +1,4 @@
-package no.ssb.dlp.pseudo.service.sid;
+package no.ssb.dlp.pseudo.service.sid.local;
 
 import com.univocity.parsers.annotations.Format;
 import com.univocity.parsers.annotations.Parsed;

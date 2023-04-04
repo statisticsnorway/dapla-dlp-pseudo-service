@@ -1,7 +1,8 @@
-package no.ssb.dlp.pseudo.service.sid;
+package no.ssb.dlp.pseudo.service.sid.local;
 
 import com.google.common.base.Stopwatch;
 import io.micronaut.context.annotation.Property;
+import io.micronaut.context.annotation.Requirements;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.objectstorage.googlecloud.GoogleCloudStorageEntry;
 import io.micronaut.objectstorage.googlecloud.GoogleCloudStorageOperations;
@@ -19,7 +20,10 @@ import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWo
 
 @Singleton
 @Slf4j
-@Requires(property = "micronaut.object-storage.gcp.sid.bucket")
+@Requirements({
+        @Requires(env = "local-sid"),
+        @Requires(property = "micronaut.object-storage.gcp.sid.bucket")
+})
 public class SidCacheLoader {
     private final SidReader sidReader;
     private final String sidFile;
