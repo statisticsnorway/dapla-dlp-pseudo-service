@@ -40,21 +40,11 @@ micronaut:
           jwks:
             keycloak-staging:
               url: 'https://keycloak.staging-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
-      propagation:
-        enabled: true
-        service-id-regex: "sid-service"
-
 
   object-storage:
     gcp:
       sid:
         bucket: ssb-dev-dapla-pseudo-service-data-export
-
-  http:
-    services:
-      sid-service:
-        url: 'http://localhost:10210'
-        path: '/local-sid'
 
 endpoints:
   info:
