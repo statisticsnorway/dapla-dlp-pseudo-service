@@ -1,6 +1,7 @@
 package no.ssb.dlp.pseudo.service.security;
 
 import io.micronaut.context.annotation.Replaces;
+import io.micronaut.context.annotation.Requirements;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.env.Environment;
 import io.micronaut.security.token.DefaultRolesFinder;
@@ -16,8 +17,9 @@ import java.util.Map;
 @Singleton
 @Replaces(bean = DefaultRolesFinder.class)
 @RequiredArgsConstructor
-@Requires(notEnv = {
-        Environment.TEST
+@Requirements({
+        @Requires(notEnv = Environment.TEST),
+        @Requires(notEquals = "endpoints.cloud-run.enabled", value = "true")
 })
 public class CustomRolesFinder implements RolesFinder {
 
