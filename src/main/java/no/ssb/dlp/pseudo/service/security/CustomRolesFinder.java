@@ -17,8 +17,7 @@ import java.util.Map;
 @Replaces(bean = DefaultRolesFinder.class)
 @RequiredArgsConstructor
 @Requires(notEnv = {
-        Environment.TEST,
-        Environment.GOOGLE_COMPUTE
+        Environment.TEST
 })
 public class CustomRolesFinder implements RolesFinder {
 
