@@ -1,10 +1,4 @@
 micronaut:
-  security:
-    token:
-      propagation:
-        enabled: true
-        service-id-regex: "sid-service"
-
   http:
     services:
       sid-service:

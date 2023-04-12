@@ -6,6 +6,7 @@ import io.micronaut.http.client.annotation.Client;
 import org.reactivestreams.Publisher;
 
 @Client(id="sid-service")
+@IdTokenFilterMatcher()
 public interface SidClient {
 
     @Post( "/sid/map")
