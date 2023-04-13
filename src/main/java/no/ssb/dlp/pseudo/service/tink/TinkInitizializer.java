@@ -25,7 +25,7 @@ public class TinkInitizializer {
             log.info("Initialize Tink DAEAD");
             DeterministicAeadConfig.register();
 
-            // Register DAEAD config
+            // Register FPE config
             log.info("Initialize Tink FPE");
             FpeConfig.register();
 
