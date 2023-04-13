@@ -1,0 +1,11 @@
+### Health
+
+GET {{base_url}}/health
+
+### Readiness
+
+GET {{base_url}}/health/readiness
+
+### Liveness
+
+GET {{base_url}}/health/liveness
