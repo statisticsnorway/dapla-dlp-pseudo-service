@@ -248,7 +248,9 @@ public class PseudoController {
             log.info("Target content type: {}", targetContentType);
 
             StreamProcessor streamProcessor = streamProcessorFactory.newStreamProcessor(fileSource.getMediaType(), recordMapProcessor);
-            Flowable<String> res = processStream(fileSource.getInputStream(), streamProcessor, operation, targetContentType);
+            Flowable<String> res = processStream(fileSource.getInputStream(), streamProcessor, targetContentType)
+                    .doOnError(throwable -> log.error("Response failed", throwable))
+                    .doOnComplete(() -> log.info("{} took {}", operation, stopwatch.stop().elapsed()));
 
             if (targetCompression != null) {
                 log.info("Applying target compression: " + MoreMediaTypes.APPLICATION_ZIP_TYPE);
@@ -261,7 +263,6 @@ public class PseudoController {
                 ));
             }
 
-            log.info("{} took {}", operation, stopwatch.stop().elapsed());
             return new ProcessFileResult(targetContentType, res);
         }
         finally {
@@ -295,7 +296,7 @@ public class PseudoController {
         return recordStream;
     }
 
-    private Flowable<String> processStream(InputStream is, StreamProcessor streamProcessor, PseudoOperation operation, MediaType targetContentType) {
+    private Flowable<String> processStream(InputStream is, StreamProcessor streamProcessor, MediaType targetContentType) {
         return streamProcessor.process(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
     }
 
