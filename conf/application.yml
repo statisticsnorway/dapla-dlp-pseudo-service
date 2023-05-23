@@ -4,10 +4,10 @@ micronaut:
   server:
     port: 10210
     cors.enabled: true
-  thread-selection: AUTO
-  max-request-size: 2gb
-  multipart:
-    max-file-size: 2gb
+    thread-selection: AUTO
+    max-request-size: 2gb
+    multipart:
+      max-file-size: 2gb
   caches:
     secrets:
       expire-after-access: 15m
