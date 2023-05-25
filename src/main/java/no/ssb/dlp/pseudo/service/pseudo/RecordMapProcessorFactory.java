@@ -33,7 +33,8 @@ public class RecordMapProcessorFactory {
                 .register(new FieldMetadataPublisher(UUID.randomUUID().toString(), pseudoMetadataPublisher));
 
         for (PseudoConfig config : pseudoConfigs) {
-            chain.register((f, v) -> newFieldPseudonymizer(config.getRules(), pseudoKeysetsOf(config.getKeysets())).pseudonymize(f, v));
+            FieldPseudonymizer nfp = newFieldPseudonymizer(config.getRules(), pseudoKeysetsOf(config.getKeysets()));
+            chain.register((f, v) -> nfp.pseudonymize(f, v));
         }
 
         return new RecordMapProcessor(chain);
