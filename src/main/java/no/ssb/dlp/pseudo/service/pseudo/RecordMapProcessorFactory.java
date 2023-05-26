@@ -33,8 +33,8 @@ public class RecordMapProcessorFactory {
                 .register(new FieldMetadataPublisher(UUID.randomUUID().toString(), pseudoMetadataPublisher));
 
         for (PseudoConfig config : pseudoConfigs) {
-            FieldPseudonymizer nfp = newFieldPseudonymizer(config.getRules(), pseudoKeysetsOf(config.getKeysets()));
-            chain.register((f, v) -> nfp.pseudonymize(f, v));
+            final FieldPseudonymizer fieldPseudonymizer = newFieldPseudonymizer(config.getRules(), pseudoKeysetsOf(config.getKeysets()));
+            chain.register((f, v) -> fieldPseudonymizer.pseudonymize(f, v));
         }
 
         return new RecordMapProcessor(chain);
@@ -48,17 +48,20 @@ public class RecordMapProcessorFactory {
         ValueInterceptorChain chain = new ValueInterceptorChain();
 
         for (PseudoConfig config : pseudoConfigs) {
-            chain.register((f, v) -> newFieldPseudonymizer(config.getRules(), pseudoKeysetsOf(config.getKeysets())).depseudonymize(f, v));
+            final FieldPseudonymizer fieldPseudonymizer = newFieldPseudonymizer(config.getRules(), pseudoKeysetsOf(config.getKeysets()));
+            chain.register((f, v) -> fieldPseudonymizer.depseudonymize(f, v));
         }
 
         return new RecordMapProcessor(chain);
     }
 
     public RecordMapProcessor newRepseudonymizeRecordProcessor(PseudoConfig sourcePseudoConfig, PseudoConfig targetPseudoConfig) {
+        final FieldPseudonymizer fieldDepseudonymizer = newFieldPseudonymizer(sourcePseudoConfig.getRules(), pseudoKeysetsOf(sourcePseudoConfig.getKeysets()));
+        final FieldPseudonymizer fieldPseudonymizer = newFieldPseudonymizer(targetPseudoConfig.getRules(), pseudoKeysetsOf(targetPseudoConfig.getKeysets()));
         return new RecordMapProcessor(
                 new ValueInterceptorChain()
-                        .register((f, v) -> newFieldPseudonymizer(sourcePseudoConfig.getRules(), pseudoKeysetsOf(sourcePseudoConfig.getKeysets())).depseudonymize(f, v))
-                        .register((f, v) -> newFieldPseudonymizer(targetPseudoConfig.getRules(), pseudoKeysetsOf(targetPseudoConfig.getKeysets())).pseudonymize(f, v))
+                        .register((f, v) -> fieldDepseudonymizer.depseudonymize(f, v))
+                        .register((f, v) -> fieldPseudonymizer.pseudonymize(f, v))
         );
     }
 
