@@ -47,6 +47,7 @@ public class SidMapper implements Mapper {
             @Override
             public void onError(Throwable throwable) {
                 log.warn("No SID-mapping found for fnr starting with " + Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                log.debug("Error was", throwable);
                 result[0] = data;
             }
 
