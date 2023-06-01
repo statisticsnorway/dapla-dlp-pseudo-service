@@ -13,6 +13,9 @@ import org.reactivestreams.Publisher;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This filter will obtain an {@link com.google.auth.oauth2.IdToken} and add it to the request. It uses Google's
@@ -23,20 +26,50 @@ import java.net.URI;
 @Singleton
 @Slf4j
 public class IdTokenFilter implements HttpClientFilter {
+
+    private final GoogleCredentials credentials;
+    private final Map<String, IdToken> tokenCache = new HashMap<>();
+    private final Duration expirationMargin = Duration.ofMinutes(5);
+    public IdTokenFilter() {
+        log.info("Using Google Credentials from Application Default Credentials");
+        try {
+            this.credentials = GoogleCredentials.getApplicationDefault();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public Publisher<? extends HttpResponse<?>> doFilter(MutableHttpRequest<?> request, ClientFilterChain chain) {
         try {
-            log.info("Using Google Credentials from Application Default Credentials");
-            GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
-            if (!(credentials instanceof IdTokenProvider)) {
-                throw new IllegalArgumentException("Credentials are not an instance of IdTokenProvider.");
-            }
-            IdToken idToken = ((IdTokenProvider) credentials).idTokenWithAudience(getAudienceFromRequest(request), null);
-            request.bearerAuth(idToken.getTokenValue());
+            request.bearerAuth(getIdToken(request).getTokenValue());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return chain.proceed(request);
+    }
+
+    private IdToken getIdToken(MutableHttpRequest<?> request) throws IOException {
+        final String audience = getAudienceFromRequest(request);
+        IdToken token = tokenCache.computeIfAbsent(audience, this::newIdToken);
+        Duration remaining = Duration.ofMillis(token.getExpirationTime().getTime() - System.currentTimeMillis());
+        if (remaining.compareTo(expirationMargin) <= 0) {
+            token = newIdToken(audience);
+            tokenCache.replace(audience, token);
+        }
+        return token;
+    }
+
+    private IdToken newIdToken(String audience) {
+        if (!(credentials instanceof IdTokenProvider)) {
+            throw new IllegalArgumentException("Credentials are not an instance of IdTokenProvider.");
+        }
+        try {
+            log.info("Getting IdToken for audience: " + audience);
+            return ((IdTokenProvider) credentials).idTokenWithAudience(audience, null);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String getAudienceFromRequest(final MutableHttpRequest<?> request) {
