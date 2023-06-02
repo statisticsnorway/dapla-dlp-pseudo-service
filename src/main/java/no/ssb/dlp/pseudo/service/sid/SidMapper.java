@@ -2,6 +2,8 @@ package no.ssb.dlp.pseudo.service.sid;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Strings;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
@@ -37,9 +39,10 @@ public class SidMapper implements Mapper {
         sidService.lookupFnr(fnr, Optional.ofNullable(null)).subscribe(subscriber);
         SidInfo result = subscriber.awaitResult();
         if (result == null) {
-            log.warn("No SID-mapping found for fnr starting with " + Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+            log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
             return fnr;
         } else {
+            log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
             return result.getCurrentSnr();
         }
     }
@@ -57,10 +60,11 @@ public class SidMapper implements Mapper {
     class ObservableSubscriber<T> implements Subscriber<T> {
         private final CountDownLatch latch = new CountDownLatch(1);
         private volatile T result;
+        private volatile Subscription subscription;
 
         @Override
         public void onSubscribe(Subscription subscription) {
-            subscription.request(1);
+            this.subscription = subscription;
         }
 
         @Override
@@ -70,7 +74,13 @@ public class SidMapper implements Mapper {
 
         @Override
         public void onError(Throwable throwable) {
-            log.debug("Error was", throwable);
+            HttpClientResponseException exception = (HttpClientResponseException) throwable;
+            if (exception.getStatus() == HttpStatus.NOT_FOUND) {
+                // This may happen more frequently, so log at debug level
+                log.debug("Error was", exception);
+            } else {
+                log.warn("Unexpected error", exception);
+            }
             onComplete();
         }
 
@@ -84,6 +94,7 @@ public class SidMapper implements Mapper {
         }
 
         private ObservableSubscriber<T> await() {
+            subscription.request(1);
             try {
                 if (!latch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS)) {
                     throw new RuntimeException("Publisher onComplete timed out");
