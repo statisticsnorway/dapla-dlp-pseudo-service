@@ -14,8 +14,8 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This filter will obtain an {@link com.google.auth.oauth2.IdToken} and add it to the request. It uses Google's
@@ -28,7 +28,7 @@ import java.util.Map;
 public class IdTokenFilter implements HttpClientFilter {
 
     private final GoogleCredentials credentials;
-    private final Map<String, IdToken> tokenCache = new HashMap<>();
+    private final Map<String, IdToken> tokenCache = new ConcurrentHashMap<>();
     private final Duration expirationMargin = Duration.ofMinutes(5);
     public IdTokenFilter() {
         log.info("Using Google Credentials from Application Default Credentials");
