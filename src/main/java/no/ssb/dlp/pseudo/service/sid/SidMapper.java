@@ -10,6 +10,8 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Service Provider class that implements the {@link Mapper} pseudo function. This class will be invoked by the JDK's
@@ -30,36 +32,66 @@ public class SidMapper implements Mapper {
         if (data == null) {
             return null;
         }
-
         String fnr = String.valueOf(data);
-        final Object[] result = new Object[1];
-        sidService.lookupFnr(fnr, Optional.ofNullable(null)).subscribe(new Subscriber<>() {
-            @Override
-            public void onSubscribe(Subscription subscription) {
-                subscription.request(1);
-            }
-
-            @Override
-            public void onNext(SidInfo sidInfo) {
-                result[0] = sidInfo.getCurrentSnr();
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                log.warn("No SID-mapping found for fnr starting with " + Strings.padEnd(fnr, 6, ' ').substring(0, 6));
-                log.debug("Error was", throwable);
-                result[0] = data;
-            }
-
-            @Override
-            public void onComplete() {
-            }
-        });
-        return result[0];
+        ObservableSubscriber<SidInfo> subscriber = new ObservableSubscriber<>();
+        sidService.lookupFnr(fnr, Optional.ofNullable(null)).subscribe(subscriber);
+        SidInfo result = subscriber.awaitResult();
+        if (result == null) {
+            log.warn("No SID-mapping found for fnr starting with " + Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+            return fnr;
+        } else {
+            return result.getCurrentSnr();
+        }
     }
 
     @Override
     public Object restore(Object mapped) {
         return mapped;
+    }
+
+    /**
+     * A Subscriber that stores the publishers results and provides a latch so can block on completion.
+     *
+     * @param <T> The publishers result type
+     */
+    class ObservableSubscriber<T> implements Subscriber<T> {
+        private final CountDownLatch latch = new CountDownLatch(1);
+        private volatile T result;
+
+        @Override
+        public void onSubscribe(Subscription subscription) {
+            subscription.request(1);
+        }
+
+        @Override
+        public void onNext(T sidInfo) {
+            result = sidInfo;
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            log.debug("Error was", throwable);
+            onComplete();
+        }
+
+        @Override
+        public void onComplete() {
+            latch.countDown();
+        }
+
+        public T awaitResult() {
+            return await().result;
+        }
+
+        private ObservableSubscriber<T> await() {
+            try {
+                if (!latch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                    throw new RuntimeException("Publisher onComplete timed out");
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            return this;
+        }
     }
 }
