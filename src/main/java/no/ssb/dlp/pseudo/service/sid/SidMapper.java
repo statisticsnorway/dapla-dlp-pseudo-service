@@ -35,15 +35,20 @@ public class SidMapper implements Mapper {
             return null;
         }
         String fnr = String.valueOf(data);
-        ObservableSubscriber<SidInfo> subscriber = new ObservableSubscriber<>();
-        sidService.lookupFnr(fnr, Optional.ofNullable(null)).subscribe(subscriber);
-        SidInfo result = subscriber.awaitResult();
-        if (result == null) {
+        try {
+            ObservableSubscriber<SidInfo> subscriber = new ObservableSubscriber<>();
+            sidService.lookupFnr(fnr, Optional.ofNullable(null)).subscribe(subscriber);
+            SidInfo result = subscriber.awaitResult();
+            if (result == null) {
+                log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                return fnr;
+            } else {
+                log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                return result.getCurrentSnr();
+            }
+        } catch (LocalSidService.NoSidMappingFoundException e) {
             log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
             return fnr;
-        } else {
-            log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
-            return result.getCurrentSnr();
         }
     }
 
