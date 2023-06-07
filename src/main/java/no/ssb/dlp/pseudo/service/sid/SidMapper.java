@@ -43,7 +43,16 @@ public class SidMapper implements Mapper {
                 log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                 return fnr;
             } else {
-                log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                if (fnr.equals(result.getCurrentSnr())) {
+                    log.warn("Incorrect SID-mapping for fnr starting with {}. Mapping returned the original fnr!",
+                            Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                } else {
+                    log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                }
+                if (result.getCurrentFnr() != null && !fnr.equals(result.getCurrentFnr())) {
+                    log.debug("The fnr starting with {} was mapped to a different (current) fnr",
+                            Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                }
                 return result.getCurrentSnr();
             }
         } catch (LocalSidService.NoSidMappingFoundException e) {
