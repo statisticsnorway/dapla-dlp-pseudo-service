@@ -48,7 +48,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -96,6 +95,7 @@ public class PseudoController {
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable> pseudonymizeFile(@Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data) {
         log.info(Strings.padEnd(String.format("*** Pseudonymize file: %s", data.getFilename()), 80, '*'));
+        log.debug("PseudoRequest {}", request);
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
             List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
