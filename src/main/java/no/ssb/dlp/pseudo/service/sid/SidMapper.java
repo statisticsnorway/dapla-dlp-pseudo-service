@@ -49,7 +49,7 @@ public class SidMapper implements Mapper {
                 } else {
                     log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                 }
-                return result.getFnr();
+                return result.getSnr();
             }
         } catch (LocalSidService.NoSidMappingFoundException e) {
             log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
