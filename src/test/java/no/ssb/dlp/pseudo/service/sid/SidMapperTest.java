@@ -30,7 +30,7 @@ public class SidMapperTest {
     @Test
     public void testInvokeMapperFunc() {
         when(sidService.lookupFnr(anyString(), any(Optional.class))).thenReturn(Publishers.just(
-                new SidInfo.SidInfoBuilder().currentSnr("0001ha3").build())
+                new SidInfo.SidInfoBuilder().fnr("0001ha3").build())
         );
         // Use static mocking to override the application context
         try (var application = mockStatic(Application.class)) {
