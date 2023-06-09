@@ -14,7 +14,7 @@ Authorization: Bearer {{keycloak_token}}
 
 ### Get SID for fnr
 
-GET {{base_url}}/sid/fnr/01839899544
+GET {{base_url}}/sid/fnr/08896298179
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
@@ -55,19 +55,6 @@ Content-Type: application/json
 < ../../src/test/resources/data/person_3_sid.json
 --separator--
 
-### Pseudonymize field usin SID mapping
-
-POST {{base_url}}/pseudonymize/field/sid
-Content-Type: application/json
-Authorization: Bearer {{keycloak_token}}
-
-{
-  "request": {
-    "name": "fnr",
-    "value": "09898597080"
-  }
-}
-
 ### Pseudonymize field using SID mapping
 
 POST {{base_url}}/pseudonymize/field/sid
@@ -77,7 +64,7 @@ Authorization: Bearer {{keycloak_token}}
 {
   "request": {
     "name" : "name",
-    "value": "09898597080"
+    "value": "02812289295"
   }
 }
 
