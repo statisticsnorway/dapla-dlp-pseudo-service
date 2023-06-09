@@ -52,7 +52,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -85,7 +85,7 @@ public class PseudoController {
 
         PseudoField pseudoField = new PseudoField(req.name, req.value, req.getKeyset(), defaultFieldPseudoConfig);
         FieldPseudonymizer fieldPseudonymizer = recordProcessorFactory.newFieldPseudonymizer(pseudoField.getPseudoConfig().getRules(),
-                recordProcessorFactory.pseudoKeysetsOf(pseudoField.getPseudoConfig().getKeysets()));
+                RecordMapProcessorFactory.pseudoKeysetsOf(pseudoField.getPseudoConfig().getKeysets()));
 
         String encryptedValue = fieldPseudonymizer.pseudonymize(new FieldDescriptor(pseudoField.getName()), pseudoField.getValue());
 
@@ -111,7 +111,7 @@ public class PseudoController {
         pseudoSIDField.mapValueToSid(sidService);
 
         FieldPseudonymizer fieldPseudonymizer = recordProcessorFactory.newFieldPseudonymizer(pseudoSIDField.getPseudoConfig().getRules(),
-                recordProcessorFactory.pseudoKeysetsOf(pseudoSIDField.getPseudoConfig().getKeysets()));
+                RecordMapProcessorFactory.pseudoKeysetsOf(pseudoSIDField.getPseudoConfig().getKeysets()));
 
         String encryptedValue = fieldPseudonymizer.pseudonymize(new FieldDescriptor(pseudoSIDField.getName()), pseudoSIDField.getSidValue());
         ResponsePseudoSIDField responseField = pseudoSIDField.getResponseField(encryptedValue);
