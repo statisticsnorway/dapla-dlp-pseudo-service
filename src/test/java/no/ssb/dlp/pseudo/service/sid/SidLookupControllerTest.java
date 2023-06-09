@@ -43,7 +43,7 @@ public class SidLookupControllerTest {
         assertTrue(accessToken.isPresent());
 
         when(sidClient.lookup(any(SidRequest.class))).thenReturn(Publishers.just(
-                new SidInfo.SidInfoBuilder().currentFnr("11854898347").currentSnr("0001ha3").build())
+                new SidInfo.SidInfoBuilder().snr("11854898347").fnr("0001ha3").build())
         );
         spec.when().auth().oauth2(accessToken.get())
             .get("/sid/fnr/{fnr}", "11854898347")
@@ -60,7 +60,7 @@ public class SidLookupControllerTest {
         assertTrue(accessToken.isPresent());
 
         when(sidClient.lookup(any(SidRequest.class))).thenReturn(Publishers.just(
-                new SidInfo.SidInfoBuilder().currentFnr("11854898347").currentSnr("0001ha3").build())
+                new SidInfo.SidInfoBuilder().snr("11854898347").fnr("0001ha3").build())
         );
 
         spec.when().auth().oauth2(accessToken.get())

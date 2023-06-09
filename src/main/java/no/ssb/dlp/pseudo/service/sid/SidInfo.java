@@ -8,6 +8,6 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class SidInfo {
-    private final String currentSnr;
-    private final String currentFnr;
+    private final String fnr;
+    private final String snr;
 }
