@@ -41,6 +41,7 @@ import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.core.util.Zips;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
+import no.ssb.dlp.pseudo.service.sid.SidMapper;
 import no.ssb.dlp.pseudo.service.sid.SidService;
 
 import javax.validation.constraints.Min;
@@ -70,10 +71,11 @@ public class PseudoController {
     private final GoogleCloudStorageBackend storageBackend;
     private final PseudoConfigSplitter pseudoConfigSplitter;
     private final DefaultFieldPseudoConfig defaultFieldPseudoConfig;
-    private final SidService sidService;
+    private final SidMapper sidMapper;
 
     /**
      * Pseudonymizes a single value.
+     *
      * @param request JSON string representing a {@link PseudoFieldRequest} object.
      * @return HTTP response containing a {@link Flowable} emitting a single {@link ResponsePseudoField} object.
      */
@@ -83,12 +85,14 @@ public class PseudoController {
     public HttpResponse<Flowable> pseudonymizeField(@Schema(implementation = PseudoFieldRequest.class) String request) {
         PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
 
-        PseudoField pseudoField = new PseudoField(req.name, req.value, req.getKeyset(), defaultFieldPseudoConfig);
+        log.info("Pseudonymize field starting with {}.",
+                Strings.padEnd(req.getValue(), 6, ' ').substring(0, 6));
+
+        PseudoField pseudoField = new PseudoField(req.getName(), req.getValue(), req.getKeyset(), defaultFieldPseudoConfig);
         FieldPseudonymizer fieldPseudonymizer = recordProcessorFactory.newFieldPseudonymizer(pseudoField.getPseudoConfig().getRules(),
                 RecordMapProcessorFactory.pseudoKeysetsOf(pseudoField.getPseudoConfig().getKeysets()));
 
         String encryptedValue = fieldPseudonymizer.pseudonymize(new FieldDescriptor(pseudoField.getName()), pseudoField.getValue());
-
         ResponsePseudoField responseField = pseudoField.getResponseField(encryptedValue);
 
         Flowable<ResponsePseudoField> response = Flowable.just(responseField);
@@ -97,6 +101,7 @@ public class PseudoController {
 
     /**
      * Maps a single field to SID and pseudonymizes it.
+     *
      * @param request JSON string representing a {@link PseudoFieldRequest} object.
      * @return HTTP response containing a {@link Flowable} emitting a single {@link ResponsePseudoSIDField} object.
      */
@@ -106,13 +111,14 @@ public class PseudoController {
     public HttpResponse<Flowable> pseudonymizeFieldSid(@Schema(implementation = PseudoFieldRequest.class) String request) {
         PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
 
-        PseudoSIDField pseudoSIDField = new PseudoSIDField(req.name, req.value, req.getKeyset(), defaultFieldPseudoConfig);
+        log.info("Pseudonymize SID field starting with {}.",
+                Strings.padEnd(req.getValue(), 6, ' ').substring(0, 6));
 
-        pseudoSIDField.mapValueToSid(sidService);
+        PseudoSIDField pseudoSIDField = new PseudoSIDField(req.getName(), req.getValue(), req.getKeyset(), defaultFieldPseudoConfig);
+        pseudoSIDField.mapValueToSid(sidMapper);
 
         FieldPseudonymizer fieldPseudonymizer = recordProcessorFactory.newFieldPseudonymizer(pseudoSIDField.getPseudoConfig().getRules(),
                 RecordMapProcessorFactory.pseudoKeysetsOf(pseudoSIDField.getPseudoConfig().getKeysets()));
-
         String encryptedValue = fieldPseudonymizer.pseudonymize(new FieldDescriptor(pseudoSIDField.getName()), pseudoSIDField.getSidValue());
         ResponsePseudoSIDField responseField = pseudoSIDField.getResponseField(encryptedValue);
 

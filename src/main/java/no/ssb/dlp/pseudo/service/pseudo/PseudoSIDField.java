@@ -1,16 +1,12 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
-import com.google.common.base.Strings;
-import io.reactivex.Single;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
-import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
-import no.ssb.dlp.pseudo.service.sid.SidInfo;
+import no.ssb.dlp.pseudo.service.sid.SidMapper;
 import no.ssb.dlp.pseudo.service.sid.SidService;
-import org.reactivestreams.Publisher;
-import java.util.Optional;
+
 /**
  * Represents a SID field to be pseudonymized.
  */
@@ -22,13 +18,15 @@ public class PseudoSIDField {
     private String stableIDSnapshot;
 
     private String sidValue;
+
     /**
-     * Constructs a {@code PseudoSIDField} object with the specified name, value, keyset, and defaultFieldPseudoConfig.
+     * Constructs a {@code PseudoSIDField} object with the specified name, value, keyset, and pseudoConfig.
      * If no keyset is supplied the default SID field pseudo configuration is used.
-     * @param name                      The name of the SID field.
-     * @param value                     The value of the SID field.
-     * @param keyset                    The encrypted keyset to be used for pseudonymization.
-     * @param defaultFieldPseudoConfig  The default SID field pseudo configuration.
+     *
+     * @param name                     The name of the SID field.
+     * @param value                    The value of the SID field.
+     * @param keyset                   The encrypted keyset to be used for pseudonymization.
+     * @param defaultFieldPseudoConfig The default SID field pseudo configuration.
      */
     public PseudoSIDField(String name, String value, EncryptedKeysetWrapper keyset, DefaultFieldPseudoConfig defaultFieldPseudoConfig) {
         this.name = name;
@@ -49,21 +47,14 @@ public class PseudoSIDField {
     /**
      * Maps the field value to SID using the provided {@link SidService}.
      *
-     * @param sidService The {@link SidService} used to lookup and map the value to a SID.
+     * @param sidMapper The {@link SidService} used to look up and map the value to a SID.
      */
-    public void mapValueToSid(SidService sidService) {
-
-        Publisher<SidInfo> sidInfoPublisher = sidService.lookupFnr(value, Optional.ofNullable(stableIDSnapshot));
-
-        SidInfo sidInfo = Single.fromPublisher(sidInfoPublisher)
-                .doOnError(throwable -> {
-                    // Handle the error and raise an appropriate response
-                    throw new SidIndexUnavailableException("No SID-mapping found for fnr starting with " + Strings.padEnd(value, 6, ' ').substring(0, 6));
-                })
-                .blockingGet();
-        this.sidValue = sidInfo.getCurrentSnr();
-        //TODO: Set snapshot version
-        //this.stableIDSnapshot = sidInfo.getCurrentStabelIDSnapshot();
+    public void mapValueToSid(SidMapper sidMapper) {
+        sidValue = (String) sidMapper.map(this.value);
+        /*
+        TODO: Get and Set snapshot version
+        this.stableIDSnapshot = sidInfo.getCurrentStabelIDSnapshot();
+        */
     }
 
     /**

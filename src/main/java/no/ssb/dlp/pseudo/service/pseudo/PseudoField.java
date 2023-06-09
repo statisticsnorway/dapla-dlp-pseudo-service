@@ -16,7 +16,7 @@ public class PseudoField {
     private PseudoConfig pseudoConfig;
 
     /**
-     * Constructs a {@code PseudoField} object with the specified name, value, keyset, defaultFieldPseudoConfig. If no keyset is supplied
+     * Constructs a {@code PseudoField} object with the specified name, value, keyset, pseudoConfig. If no keyset is supplied
      * a default pseudo configuration is used.
      *
      * @param name                      The name of the field.
