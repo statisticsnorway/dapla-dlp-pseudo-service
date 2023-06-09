@@ -65,7 +65,7 @@ public class RecordMapProcessorFactory {
         );
     }
 
-    private FieldPseudonymizer newFieldPseudonymizer(Collection<PseudoFuncRule> rules, Collection<PseudoKeyset> keysets) {
+    protected FieldPseudonymizer newFieldPseudonymizer(Collection<PseudoFuncRule> rules, Collection<PseudoKeyset> keysets) {
         return new FieldPseudonymizer.Builder()
                 .secrets(pseudoSecrets.resolve())
                 .rules(rules)
