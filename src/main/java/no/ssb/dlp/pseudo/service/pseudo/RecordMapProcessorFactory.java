@@ -74,7 +74,7 @@ public class RecordMapProcessorFactory {
     }
 
     // TODO: This should not be needed
-    private static List pseudoKeysetsOf(List<EncryptedKeysetWrapper> encryptedKeysets) {
+    static List pseudoKeysetsOf(List<EncryptedKeysetWrapper> encryptedKeysets) {
         return encryptedKeysets.stream()
                 .map(e -> (PseudoKeyset) e)
                 .toList();
