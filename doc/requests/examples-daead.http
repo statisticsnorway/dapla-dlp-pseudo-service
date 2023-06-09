@@ -336,3 +336,16 @@ Content-Type: application/json
 
 < ../../src/test/resources/data/person_3.json
 --separator--
+
+### Pseudonymize field using DEAD
+
+POST {{base_url}}/pseudonymize/field
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "request": {
+    "name" : "name",
+    "value": "09898597080"
+  }
+}
