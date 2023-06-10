@@ -47,7 +47,7 @@ public abstract class AbstractPseudoField<T extends ResponsePseudoField> {
 
         values.stream().map(value -> fieldPseudonymizer.pseudonymize(new FieldDescriptor(this.getName()), value)).forEach(result -> encryptedValues.add(result));
 
-        Instant endTime = Instant.now(); // Record the end time
+        Instant endTime = Instant.now();
         Duration duration = Duration.between(startTime, endTime);
         log.info("Pseudonymizing field '{}' took {} milliseconds.", this.getName(), duration.toMillis());
 
