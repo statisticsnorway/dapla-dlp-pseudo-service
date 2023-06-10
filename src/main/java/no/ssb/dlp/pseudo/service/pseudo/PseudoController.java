@@ -388,7 +388,6 @@ public class PseudoController {
         /**
          * The pseudonymization config to apply
          */
-        private PseudoConfig pseudoConfig;
         private String name;
         private List<String> values;
         private String stableIDSnapshot;
