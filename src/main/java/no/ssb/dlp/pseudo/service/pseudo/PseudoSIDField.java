@@ -1,80 +1,102 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
-import lombok.AllArgsConstructor;
+import io.micronaut.http.annotation.Get;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.service.sid.SidMapper;
 import no.ssb.dlp.pseudo.service.sid.SidService;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents a SID field to be pseudonymized.
  */
-@Data
-public class PseudoSIDField {
-    private String name;
-    private String value;
-    private PseudoConfig pseudoConfig;
+@Getter
+@Setter
+public class PseudoSIDField extends AbstractPseudoField<ResponsePseudoSIDField> {
+    @Getter(AccessLevel.PROTECTED)
+    private static final PseudoConfig DEFAULT_SID_PSEUDO_CONFIG = new PseudoConfig(new PseudoFuncRule("default-sid", "**",
+            "ff31(keyId=papis-key-1, strategy=SKIP)"));
     private String stableIDSnapshot;
 
-    private String sidValue;
+    private List<String> sidValues;
 
     /**
-     * Constructs a {@code PseudoSIDField} object with the specified name, value, keyset, and pseudoConfig.
+     * Constructs a {@code PseudoSIDField} object with the specified name, values, keyset, and pseudoConfig.
      * If no keyset is supplied the default SID field pseudo configuration is used.
      *
-     * @param name                     The name of the SID field.
-     * @param value                    The value of the SID field.
-     * @param keyset                   The encrypted keyset to be used for pseudonymization.
-     * @param defaultFieldPseudoConfig The default SID field pseudo configuration.
+     * @param name   The name of the SID field.
+     * @param values The values of the SID field.
+     * @param keyset The encrypted keyset to be used for pseudonymization.
      */
-    public PseudoSIDField(String name, String value, EncryptedKeysetWrapper keyset, DefaultFieldPseudoConfig defaultFieldPseudoConfig) {
-        this.name = name;
-        this.value = value;
+    public PseudoSIDField(String name, List<String> values, EncryptedKeysetWrapper keyset) {
+        super(name, values);
 
         if (keyset == null) {
-            this.pseudoConfig = defaultFieldPseudoConfig.getDefualtSIDPseudoConfig();
+            pseudoConfig = DEFAULT_SID_PSEUDO_CONFIG;
 
         } else {
-            this.pseudoConfig = new PseudoConfig();
-            this.pseudoConfig.getRules().add(new PseudoFuncRule(PseudoSIDField.class.getName(), "**",
+            pseudoConfig = new PseudoConfig();
+            pseudoConfig.getRules().add(new PseudoFuncRule(PseudoSIDField.class.getName(), "**",
                     String.format("ff31(keyId=%s, strategy=SKIP)",
                             keyset.getKeysetInfo().getPrimaryKeyId())));
-            this.pseudoConfig.getKeysets().add(keyset);
+            pseudoConfig.getKeysets().add(keyset);
         }
     }
 
     /**
-     * Maps the field value to SID using the provided {@link SidService}.
+     * Maps the field values to SID using the provided {@link SidService}.
      *
-     * @param sidMapper The {@link SidService} used to look up and map the value to a SID.
+     * @param sidMapper The {@link SidService} used to look up and map the values to a SID.
      */
     public void mapValueToSid(SidMapper sidMapper) {
-        sidValue = (String) sidMapper.map(this.value);
         /*
         TODO: Get and Set snapshot version
         this.stableIDSnapshot = sidInfo.getCurrentStabelIDSnapshot();
         */
+        sidValues = new ArrayList<>();
+
+        values.stream()
+                .map(value -> (String) sidMapper.map(value))
+                .forEach(result -> sidValues.add(result));
     }
 
     /**
-     * Creates a {@link ResponsePseudoSIDField} object with the provided encrypted value.
+     * Pseudonymizes the SID field using the provided record processor factory and returns a {@link ResponsePseudoSIDField} object
+     * containing the encrypted values, field name, pseudo rules, and stable ID snapshot.
      *
-     * @param encryptedValue The encrypted value of the SID field.
-     * @return A {@link ResponsePseudoSIDField} object containing the encrypted value, field name, pseudo rules, and stable ID snapshot.
+     * @param recordProcessorFactory The record processor factory used to create a field pseudonymizer.
+     * @return A {@link ResponsePseudoSIDField} object containing the encrypted values, field name, pseudo rules, and stable ID snapshot.
      */
-    public ResponsePseudoSIDField getResponseField(String encryptedValue) {
-        return new ResponsePseudoSIDField(encryptedValue, name, pseudoConfig, stableIDSnapshot);
+    public ResponsePseudoSIDField pseudonymizeThenGetResponseField(RecordMapProcessorFactory recordProcessorFactory) {
+        List<String> encryptedValues = pseudonymize(sidValues, recordProcessorFactory);
+        return this.getResponseField(encryptedValues);
+    }
+
+
+    /**
+     * Creates a {@link ResponsePseudoSIDField} object with the provided encrypted values.
+     *
+     * @param encryptedValues The encrypted values of the SID field.
+     * @return A {@link ResponsePseudoSIDField} object containing the encrypted values, field name, pseudo rules, and stable ID snapshot.
+     */
+    public ResponsePseudoSIDField getResponseField(List<String> encryptedValues) {
+        return ResponsePseudoSIDField.builder()
+                .values(encryptedValues)
+                .fieldName(name)
+                .pseudoRules(pseudoConfig)
+                .stableIDSnapshot(stableIDSnapshot).build();
     }
 
 }
 
-@Data
-@AllArgsConstructor
-class ResponsePseudoSIDField {
-    private String value;
-    private String fieldName;
-    private PseudoConfig pseudoRules;
+@SuperBuilder
+class ResponsePseudoSIDField extends ResponsePseudoField {
     private String stableIDSnapshot;
-
 }
