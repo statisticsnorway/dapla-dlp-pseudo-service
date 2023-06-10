@@ -55,7 +55,7 @@ Content-Type: application/json
 < ../../src/test/resources/data/person_3_sid.json
 --separator--
 
-### Pseudonymize field using SID mapping
+### Pseudonymize field using SID mapping with default keyset
 
 POST {{base_url}}/pseudonymize/field/sid
 Content-Type: application/json

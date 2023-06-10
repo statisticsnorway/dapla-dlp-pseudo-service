@@ -337,7 +337,7 @@ Content-Type: application/json
 < ../../src/test/resources/data/person_3.json
 --separator--
 
-### Pseudonymize field using DEAD and custom keyset
+### Pseudonymize field using DEAD with default keyset
 
 POST {{base_url}}/pseudonymize/field
 Content-Type: application/json
