@@ -63,8 +63,8 @@ Authorization: Bearer {{keycloak_token}}
 
 {
   "request": {
-    "name" : "name",
-    "value": "02812289295"
+    "name" : "fnr",
+    "value": ["11854898347","01839899544","16910599481","03874398925"]
   }
 }
 
