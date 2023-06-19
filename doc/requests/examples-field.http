@@ -32,20 +32,40 @@ Authorization: Bearer {{keycloak_token}}
       "16910599481",
       "03874398925"
     ],
+    "pseudoFunc": "daead(keyId=1403797237)",
     "keyset": {
       "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
-      "encryptedKeyset": "CiQAp91NBn/O1GqfVvpNwLrDTTocNzhieGklCwrY57Zub+yvV9YStQEAZ30rtXy4WuEfBZMgKhuSbbcqqbnfuXoSAqpQXBcy+d8z9k7V9/xag6/sUCP/+e2NVd7PIumpFXqnRdBUw3YbSTITbGiP05MdE0cSyX+XvI41yTLa/bHddQojX7D2ls9Pei8+T6ZCAbtmPwrkyMbxWahU60A2HNmq2qvCmM5Hyaej6EHSf007nbxch004Uwi1FpI/6Am0Z9M7uJ+hRVF0YIv1nEf0lmoXiJDfC4GGDh+BbGBJ",
+      "encryptedKeyset": "CiQAp91NBuNVCGWtVTE2FAhoRcbbcp+uXgolonL0ojTstS/UKcMStwEAZ30rtXO/8lcBShpbcZ9/pouaX3tgJNxZiy1U1cykPrhhqzpFzCAsrJJNkzwgniqGDOLq+9KzOkj7xoP2V7xKBco/ySzyl0gCpnovBRLCUgq5OMNh/rpKqIr7lMVZfsCVLNPupacSaLoPM+F5DMijAkk7NDTBGwkrRNO34Ev0Kkv/drt+G4DUfdBKLe2QUrEUE0vVfsBw+EZzTC8G3CYemYXC5GYdpTglk0oFDMDs25lBL65SfVQ=",
       "keysetInfo": {
-        "primaryKeyId": 208741162,
+        "primaryKeyId": 1403797237,
         "keyInfo": [
           {
             "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
             "status": "ENABLED",
-            "keyId": 208741162,
+            "keyId": 1403797237,
             "outputPrefixType": "TINK"
           }
         ]
       }
     }
+  }
+}
+
+### Map field to SID and pseudonymize SID values
+
+POST {{base_url}}/pseudonymize/field
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "request": {
+    "name": "fnr",
+    "values": [
+      "11854898347",
+      "01839899544",
+      "16910599481",
+      "03874398925"
+    ],
+    "pseudoFunc": "map-sid(keyId=papis-common-key1)"
   }
 }
