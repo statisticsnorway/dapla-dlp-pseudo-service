@@ -17,6 +17,25 @@ Authorization: Bearer {{keycloak_token}}
   }
 }
 
+### Pseudonymize field using DEAD with ssb-common-key-2
+
+POST {{base_url}}/pseudonymize/field
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "request": {
+    "name": "fnr",
+    "values": [
+      "11854898347",
+      "01839899544",
+      "16910599481",
+      "03874398925"
+    ],
+    "pseudoFunc": "daead(keyId=ssb-common-key-2"
+  }
+}
+
 ### Pseudonymize field using DEAD and custom keyset
 
 POST {{base_url}}/pseudonymize/field
