@@ -88,21 +88,21 @@ public class PseudoController {
 
     @Operation(summary = "Pseudonymize file", description = """
             Pseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
-                        
+            
             Choose between streaming the pseudonymized result back, or storing it as a file in GCS (by providing a `targetUri`).
-                        
+            
             Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
             formats. E.g. your source could be a CSV file and the result could be a JSON file.
 
             Reduce transmission times by applying compression both to the source and target files.
             Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
-                        
+            
             Pseudonymization will be applied according to a list of "rules" that target the fields of the file being
             processed. Each rule defines a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
             that identifies one or multiple fields, and a `func` that will be applied to the matching fields. Rules are
             processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
             is important).
-                        
+            
             Pseudo rules will most times refer to crypto keys. You can provide your own keys to use (via the `keysets` param)
             or use one of the predefined keys: `ssb-common-key-1` or `ssb-common-key-2`.
             """
@@ -140,27 +140,27 @@ public class PseudoController {
     @Operation(
             summary = "Depseudonymize file",
             description = """
-                    Depseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
-                                
-                    Notice that only certain whitelisted users can depseudonymize data.
-                                
-                    Choose between streaming the result back, or storing it as a file in GCS (by providing a `targetUri`).
-                                
-                    Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
-                    formats. E.g. your source could be a CSV file and the result could be a JSON file.
+            Depseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
+            
+            Notice that only certain whitelisted users can depseudonymize data.
+            
+            Choose between streaming the result back, or storing it as a file in GCS (by providing a `targetUri`).
+            
+            Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
+            formats. E.g. your source could be a CSV file and the result could be a JSON file.
 
-                    Reduce transmission times by applying compression both to the source and target files.
-                    Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
-                                
-                    Depseudonymization will be applied according to a list of "rules" that target the fields of the file being
-                    processed. Each rule defines a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
-                    that identifies one or multiple fields, and a `func` that will be applied to the matching fields. Rules are
-                    processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
-                    is important).
-                                
-                    Pseudo rules will most times refer to crypto keys. You can provide your own keys to use (via the `keysets` param)
-                    or use one of the predefined keys: `ssb-common-key-1` or `ssb-common-key-2`.
-                    """
+            Reduce transmission times by applying compression both to the source and target files.
+            Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
+            
+            Depseudonymization will be applied according to a list of "rules" that target the fields of the file being
+            processed. Each rule defines a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
+            that identifies one or multiple fields, and a `func` that will be applied to the matching fields. Rules are
+            processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
+            is important).
+            
+            Pseudo rules will most times refer to crypto keys. You can provide your own keys to use (via the `keysets` param)
+            or use one of the predefined keys: `ssb-common-key-1` or `ssb-common-key-2`.
+            """
     )
     @Post("/depseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -199,27 +199,27 @@ public class PseudoController {
     @Operation(
             summary = "Repseudonymize file",
             description = """
-                    Repseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
-                    Repseudonymization is done by first applying depseudonuymization and then pseudonymization to fields of the file.
-                                
-                    Choose between streaming the result back, or storing it as a file in GCS (by providing a `targetUri`).
-                                
-                    Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
-                    formats. E.g. your source could be a CSV file and the result could be a JSON file.
+            Repseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
+            Repseudonymization is done by first applying depseudonuymization and then pseudonymization to fields of the file.
+            
+            Choose between streaming the result back, or storing it as a file in GCS (by providing a `targetUri`).
+            
+            Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
+            formats. E.g. your source could be a CSV file and the result could be a JSON file.
 
-                    Reduce transmission times by applying compression both to the source and target files.
-                    Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
-                                
-                    Repseudonymization will be applied according to a list of "rules" that target the fields of the file being
-                    processed. Each rule defines a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
-                    that identifies one or multiple fields, and a `func` that will be applied to the matching fields. Rules are
-                    processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
-                    is important). Two sets of rules are provided: one that defines how to depseudonymize and a second that defines
-                    how to pseudonymize. These sets of rules are linked to separate keysets.
-                                
-                    Pseudo rules will most times refer to crypto keys. You can provide your own keys to use (via the `keysets` param)
-                    or use one of the predefined keys: `ssb-common-key-1` or `ssb-common-key-2`.
-                    """
+            Reduce transmission times by applying compression both to the source and target files.
+            Specify `compression` if you want the result to be a zipped (and optionally) encrypted archive.
+            
+            Repseudonymization will be applied according to a list of "rules" that target the fields of the file being
+            processed. Each rule defines a `pattern` (according to [glob pattern matching](https://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob))
+            that identifies one or multiple fields, and a `func` that will be applied to the matching fields. Rules are
+            processed in the order they are defined, and only the first matching rule will be applied (thus: rule ordering
+            is important). Two sets of rules are provided: one that defines how to depseudonymize and a second that defines
+            how to pseudonymize. These sets of rules are linked to separate keysets.
+            
+            Pseudo rules will most times refer to crypto keys. You can provide your own keys to use (via the `keysets` param)
+            or use one of the predefined keys: `ssb-common-key-1` or `ssb-common-key-2`.
+            """
     )
     @Post("/repseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -282,7 +282,8 @@ public class PseudoController {
             }
 
             return new ProcessFileResult(targetContentType, res);
-        } finally {
+        }
+        finally {
             try {
                 if (fileSource != null) {
                     fileSource.cleanup();
@@ -290,7 +291,8 @@ public class PseudoController {
                 if (tempFile != null) {
                     Files.deleteIfExists(tempFile.toPath());
                 }
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 log.warn("Error cleaning up", e);
             }
         }
@@ -300,13 +302,13 @@ public class PseudoController {
         if (targetContentType.equals(MediaType.APPLICATION_JSON_TYPE)) {
             AtomicBoolean first = new AtomicBoolean(true);
             return recordStream
-                    .map(rec -> {
-                        if (first.getAndSet(false)) {
-                            return "[%s".formatted(rec);
-                        }
-                        return ",%s".formatted(rec);
-                    })
-                    .concatWith(Single.just("]"));
+              .map(rec -> {
+                  if (first.getAndSet(false)) {
+                      return "[%s".formatted(rec);
+                  }
+                  return ",%s".formatted(rec);
+              })
+              .concatWith(Single.just("]"));
         }
 
         return recordStream;
@@ -321,13 +323,14 @@ public class PseudoController {
         File tempFile = tempDir.resolve(data.getFilename()).toFile();
         log.debug("Receive file - stored temporarily at " + tempFile.getAbsolutePath());
         return Single.fromPublisher(data.transferTo(tempFile))
-                .map(success -> {
-                    if (Boolean.TRUE.equals(success)) {
-                        return tempFile;
-                    } else {
-                        throw new IOException("Error receiving file " + tempFile);
-                    }
-                });
+          .map(success -> {
+              if (Boolean.TRUE.equals(success)) {
+                  return tempFile;
+              }
+              else {
+                  throw new IOException("Error receiving file " + tempFile);
+              }
+          });
     }
 
     @Data
@@ -346,11 +349,9 @@ public class PseudoController {
         @Schema(implementation = String.class)
         private URI targetUri;
 
-        /**
-         * The content type of the resulting file.
-         */
+        /** The content type of the resulting file. */
         @Schema(implementation = String.class, allowableValues = {
-                MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV})
+          MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV})
         private MediaType targetContentType;
 
         /**
@@ -393,9 +394,7 @@ public class PseudoController {
         @Schema(implementation = String.class)
         private URI targetUri;
 
-        /**
-         * The content type of the resulting file.
-         */
+        /** The content type of the resulting file. */
         @Schema(implementation = String.class, allowableValues = {
                 MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV})
         private MediaType targetContentType;
@@ -417,9 +416,7 @@ public class PseudoController {
     @Data
     public static class TargetCompression {
 
-        /**
-         * The password on the resulting archive
-         */
+        /** The password on the resulting archive */
         @NotBlank
         @Schema(implementation = String.class)
         @Min(9)
