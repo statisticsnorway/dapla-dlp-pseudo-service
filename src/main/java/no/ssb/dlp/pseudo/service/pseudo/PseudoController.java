@@ -39,7 +39,6 @@ import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.core.util.Zips;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
-import no.ssb.dlp.pseudo.service.sid.SidMapper;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
@@ -67,47 +66,25 @@ public class PseudoController {
     private final RecordMapProcessorFactory recordProcessorFactory;
     private final GoogleCloudStorageBackend storageBackend;
     private final PseudoConfigSplitter pseudoConfigSplitter;
-    private final SidMapper sidMapper;
 
     /**
      * Pseudonymizes a field.
      *
      * @param request JSON string representing a {@link PseudoFieldRequest} object.
-     * @return HTTP response containing a {@link Flowable} emitting a single {@link ResponsePseudoField} object.
+     * @return HTTP response containing a {@link ResponsePseudoField} object.
      */
     @Operation(summary = "Pseudonymize field", description = "Pseudonymize a field.")
     @Post("/pseudonymize/field")
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Flowable<ResponsePseudoField>> pseudonymizeField(@Schema(implementation = PseudoFieldRequest.class) String request) {
+    public HttpResponse<ResponsePseudoField> pseudonymizeField(@Schema(implementation = PseudoFieldRequest.class) String request) {
         PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
 
         log.info("Pseudonymize field  '{}'.",req.getName());
         PseudoField pseudoField = new PseudoField(req.getName(), req.getValues(), req.getPseudoFunc(), req.getKeyset());
 
-        return HttpResponse.ok(Flowable.just(pseudoField
-                .pseudonymizeThenGetResponseField(recordProcessorFactory)));
+        return HttpResponse.ok(pseudoField
+                .pseudonymizeThenGetResponseField(recordProcessorFactory));
     }
-
-    /**
-     * Maps a field to SID and pseudonymizes it.
-     *
-     * @param request JSON string representing a {@link PseudoFieldRequest} object.
-     * @return HTTP response containing a {@link Flowable} emitting a single {@link ResponsePseudoSIDField} object.
-     */
-    @Operation(summary = "Pseudonymize SID field", description = "Pseudonymize a SID field.")
-    @Post("/pseudonymize/field/sid")
-    @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Flowable> pseudonymizeFieldSid(@Schema(implementation = PseudoFieldRequest.class) String request) {
-        PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
-
-        log.info("Pseudonymize SID field '{}'.",req.getName());
-        PseudoSIDField pseudoSIDField = new PseudoSIDField(req.getName(), req.getValues(), req.getKeyset());
-        pseudoSIDField.mapValueToSid(sidMapper);
-
-        return HttpResponse.ok(Flowable.just(pseudoSIDField
-                .pseudonymizeThenGetResponseField(recordProcessorFactory)));
-    }
-
 
     @Operation(summary = "Pseudonymize file", description = """
             Pseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
