@@ -65,7 +65,7 @@ public class RecordMapProcessorFactory {
         );
     }
 
-    private FieldPseudonymizer newFieldPseudonymizer(Collection<PseudoFuncRule> rules, Collection<PseudoKeyset> keysets) {
+    protected FieldPseudonymizer newFieldPseudonymizer(Collection<PseudoFuncRule> rules, Collection<PseudoKeyset> keysets) {
         return new FieldPseudonymizer.Builder()
                 .secrets(pseudoSecrets.resolve())
                 .rules(rules)
@@ -74,7 +74,7 @@ public class RecordMapProcessorFactory {
     }
 
     // TODO: This should not be needed
-    private static List pseudoKeysetsOf(List<EncryptedKeysetWrapper> encryptedKeysets) {
+    protected static List pseudoKeysetsOf(List<EncryptedKeysetWrapper> encryptedKeysets) {
         return encryptedKeysets.stream()
                 .map(e -> (PseudoKeyset) e)
                 .toList();

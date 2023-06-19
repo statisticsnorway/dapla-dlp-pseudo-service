@@ -11,6 +11,7 @@ import no.ssb.dlp.pseudo.service.Application;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
  * Service Provider class that implements the {@link Mapper} pseudo function. This class will be invoked by the JDK's
  * Service Loader mechanism for {@link no.ssb.dlp.pseudo.core.func.PseudoFuncNames.MAP_SID} pseudo functions.
  */
+@Singleton
 @AutoService(Mapper.class)
 @Slf4j
 public class SidMapper implements Mapper {

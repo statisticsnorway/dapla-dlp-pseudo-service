@@ -212,6 +212,12 @@
       <artifactId>google-api-services-cloudkms</artifactId>
       <version>v1-rev20221107-2.0.0</version>
     </dependency>
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.13.1</version>
+          <scope>test</scope>
+      </dependency>
   </dependencies>
 
   <build>

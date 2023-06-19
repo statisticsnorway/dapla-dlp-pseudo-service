@@ -33,6 +33,7 @@ import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
 import no.ssb.dlp.pseudo.core.file.PseudoFileSource;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.map.RecordMapSerializerFactory;
+import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.core.util.HumanReadableBytes;
 import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.core.util.Zips;
@@ -66,9 +67,26 @@ public class PseudoController {
     private final GoogleCloudStorageBackend storageBackend;
     private final PseudoConfigSplitter pseudoConfigSplitter;
 
-    @Operation(
-            summary = "Pseudonymize file",
-            description = """
+    /**
+     * Pseudonymizes a field.
+     *
+     * @param request JSON string representing a {@link PseudoFieldRequest} object.
+     * @return HTTP response containing a {@link ResponsePseudoField} object.
+     */
+    @Operation(summary = "Pseudonymize field", description = "Pseudonymize a field.")
+    @Post("/pseudonymize/field")
+    @ExecuteOn(TaskExecutors.IO)
+    public HttpResponse<ResponsePseudoField> pseudonymizeField(@Schema(implementation = PseudoFieldRequest.class) String request) {
+        PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
+
+        log.info("Pseudonymize field  '{}'.",req.getName());
+        PseudoField pseudoField = new PseudoField(req.getName(), req.getValues(), req.getPseudoFunc(), req.getKeyset());
+
+        return HttpResponse.ok(pseudoField
+                .pseudonymizeThenGetResponseField(recordProcessorFactory));
+    }
+
+    @Operation(summary = "Pseudonymize file", description = """
             Pseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
             
             Choose between streaming the pseudonymized result back, or storing it as a file in GCS (by providing a `targetUri`).
@@ -343,6 +361,19 @@ public class PseudoController {
     }
 
     @Data
+    public static class PseudoFieldRequest {
+
+        /**
+         * The pseudonymization config to apply
+         */
+        private String name;
+        private List<String> values;
+        private String pseudoFunc;
+        private String stableIDSnapshot;
+        private EncryptedKeysetWrapper keyset;
+    }
+
+    @Data
     public static class RepseudoRequest {
 
         /**
@@ -373,7 +404,6 @@ public class PseudoController {
          */
         private TargetCompression compression;
     }
-
 
     @Data
     public static class ProcessFileResult {

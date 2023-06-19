@@ -100,4 +100,6 @@ app-roles:
   admins:
     - kons_schu@ssb.no
     - kons-skaar@ssb.no
+    - kons-lunde@ssb.no
+    - mmw@ssb.no
 
