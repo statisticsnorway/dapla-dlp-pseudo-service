@@ -12,8 +12,7 @@ import java.util.List;
  */
 public class PseudoField extends AbstractPseudoField<ResponsePseudoField> {
     @Getter(AccessLevel.PROTECTED)
-    private static final PseudoConfig DEFAULT_PSEUDO_CONFIG = new PseudoConfig(new PseudoFuncRule("default", "**",
-            "daead(keyId=ssb-common-key-1)"));
+    private static final String DEFAULT_PSEUDO_FUNC = "daead(keyId=ssb-common-key-1)";
 
     /**
      * Constructs a {@code PseudoField} object with the specified name, values, keyset, pseudoConfig. If no keyset is supplied
@@ -21,22 +20,21 @@ public class PseudoField extends AbstractPseudoField<ResponsePseudoField> {
      *
      * @param name   The name of the field.
      * @param values The values of the field.
+     * @param pseudoFunc The pseudo function definition.
      * @param keyset The encrypted keyset to be used for pseudonymization.
      */
-    public PseudoField(String name, List<String> values, EncryptedKeysetWrapper keyset) {
+    public PseudoField(String name, List<String> values, String pseudoFunc, EncryptedKeysetWrapper keyset) {
         super(name, values);
 
         pseudoConfig = new PseudoConfig();
 
-        if (keyset == null) {
-            pseudoConfig = DEFAULT_PSEUDO_CONFIG;
-
-        } else {
-            pseudoConfig.getRules().add(new PseudoFuncRule(PseudoField.class.getSimpleName(), "**",
-                    String.format("daead(keyId=%s)",
-                            keyset.getKeysetInfo().getPrimaryKeyId())));
+        if (pseudoFunc == null) {
+            pseudoFunc = DEFAULT_PSEUDO_FUNC;
+        }
+        if (keyset != null) {
             pseudoConfig.getKeysets().add(keyset);
         }
+        pseudoConfig.getRules().add(new PseudoFuncRule(name, "**", pseudoFunc));
     }
 
     /**

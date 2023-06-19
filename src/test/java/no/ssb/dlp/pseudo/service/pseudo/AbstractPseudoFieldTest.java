@@ -23,7 +23,7 @@ class AbstractPseudoFieldTest {
 
         when(recordProcessorFactory.newFieldPseudonymizer(anyList(), any())).thenReturn(fieldPseudonymizer);
 
-        AbstractPseudoField pseudoField = new PseudoField(null, fieldValues, null);
+        AbstractPseudoField pseudoField = new PseudoField(null, fieldValues, null, null);
 
         ArrayList<String> encryptedValues = new ArrayList<>();
         when(fieldPseudonymizer.pseudonymize(any(), anyString()))

@@ -2,6 +2,7 @@ package no.ssb.dlp.pseudo.service.pseudo;
 
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import no.ssb.dlp.pseudo.core.field.FieldPseudonymizer;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.core.tink.model.KeysetInfo;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,8 @@ class PseudoFieldTest {
 
     @Test
     void UsesDefaultPseudoConfigWhenNoKeysetIsSupplied() {
-        PseudoField pseudoField = new PseudoField("name", List.of("testValue"), null);
-        assertEquals(pseudoField.getDEFAULT_PSEUDO_CONFIG(), pseudoField.getPseudoConfig());
+        PseudoField pseudoField = new PseudoField("name", List.of("testValue"), null, null);
+        assertEquals(List.of(new PseudoFuncRule("name", "**", pseudoField.getDEFAULT_PSEUDO_FUNC())), pseudoField.getPseudoConfig().getRules());
     }
 
 
@@ -29,7 +30,7 @@ class PseudoFieldTest {
         when(encryptedKeysetWrapper.getKeysetInfo()).thenReturn(keysetInfo);
         when(keysetInfo.getPrimaryKeyId()).thenReturn(keySetPrimaryKey);
 
-        PseudoField pseudoField = new PseudoField("name", List.of("testValue"), encryptedKeysetWrapper);
+        PseudoField pseudoField = new PseudoField("name", List.of("testValue"), String.format("daead(keyId=%d)", keySetPrimaryKey), encryptedKeysetWrapper);
 
         assertEquals(String.format("daead(keyId=%d)", keySetPrimaryKey),
                 pseudoField.getPseudoConfig().getRules().get(0).getFunc());
@@ -45,7 +46,7 @@ class PseudoFieldTest {
         FieldPseudonymizer fieldPseudonymizer = mock(FieldPseudonymizer.class);
         when(recordProcessorFactory.newFieldPseudonymizer(anyList(), any())).thenReturn(fieldPseudonymizer);
 
-        PseudoField pseudoField = spy(new PseudoField("name", fieldValues, null));
+        PseudoField pseudoField = spy(new PseudoField("name", fieldValues, null, null));
 
         // Mock away pseudonymize, already tested in AbstractPseudFieldTest
         when(pseudoField.pseudonymize(fieldValues, recordProcessorFactory)).thenReturn(expectedEncryptedFieldValues);

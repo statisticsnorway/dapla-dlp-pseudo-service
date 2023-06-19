@@ -82,7 +82,7 @@ public class PseudoController {
         PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
 
         log.info("Pseudonymize field  '{}'.",req.getName());
-        PseudoField pseudoField = new PseudoField(req.getName(), req.getValues(), req.getKeyset());
+        PseudoField pseudoField = new PseudoField(req.getName(), req.getValues(), req.getPseudoFunc(), req.getKeyset());
 
         return HttpResponse.ok(Flowable.just(pseudoField
                 .pseudonymizeThenGetResponseField(recordProcessorFactory)));
@@ -390,6 +390,7 @@ public class PseudoController {
          */
         private String name;
         private List<String> values;
+        private String pseudoFunc;
         private String stableIDSnapshot;
         private EncryptedKeysetWrapper keyset;
     }
