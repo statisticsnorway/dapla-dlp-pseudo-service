@@ -13,8 +13,4 @@ import java.util.List;
 public class PseudoConfig {
     private List<PseudoFuncRule> rules = new ArrayList<>();
     private List<EncryptedKeysetWrapper> keysets = new ArrayList<>();
-
-    public PseudoConfig(PseudoFuncRule pseudoFuncRule){
-        rules.add(pseudoFuncRule);
-    }
 }
