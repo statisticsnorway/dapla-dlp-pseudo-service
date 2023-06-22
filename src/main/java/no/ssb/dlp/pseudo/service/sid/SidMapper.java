@@ -11,7 +11,6 @@ import no.ssb.dlp.pseudo.service.Application;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +19,6 @@ import java.util.concurrent.TimeUnit;
  * Service Provider class that implements the {@link Mapper} pseudo function. This class will be invoked by the JDK's
  * Service Loader mechanism for {@link no.ssb.dlp.pseudo.core.func.PseudoFuncNames.MAP_SID} pseudo functions.
  */
-@Singleton
 @AutoService(Mapper.class)
 @Slf4j
 public class SidMapper implements Mapper {
@@ -86,12 +84,16 @@ public class SidMapper implements Mapper {
 
         @Override
         public void onError(Throwable throwable) {
-            HttpClientResponseException exception = (HttpClientResponseException) throwable;
-            if (exception.getStatus() == HttpStatus.NOT_FOUND) {
-                // This may happen more frequently, so log at debug level
-                log.debug("Error was", exception);
+            if (throwable instanceof HttpClientResponseException) {
+                HttpClientResponseException exception = (HttpClientResponseException) throwable;
+                if (exception.getStatus() == HttpStatus.NOT_FOUND) {
+                    // This may happen more frequently, so log at debug level
+                    log.debug("Error was", exception);
+                } else {
+                    log.warn("Unexpected error", exception);
+                }
             } else {
-                log.warn("Unexpected error", exception);
+                log.warn("Unexpected error", throwable);
             }
             onComplete();
         }
