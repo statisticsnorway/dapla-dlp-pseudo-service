@@ -76,14 +76,14 @@ public class PseudoController {
     @Operation(summary = "Pseudonymize field", description = "Pseudonymize a field.")
     @Post("/pseudonymize/field")
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<ResponsePseudoField> pseudonymizeField(@Schema(implementation = PseudoFieldRequest.class) String request) {
+    public HttpResponse<Flowable> pseudonymizeField(@Schema(implementation = PseudoFieldRequest.class) String request) {
         PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
 
         log.info("Pseudonymize field  '{}'.",req.getName());
         PseudoField pseudoField = new PseudoField(req.getName(), req.getValues(), req.getPseudoFunc(), req.getKeyset());
 
-        return HttpResponse.ok(pseudoField
-                .pseudonymizeThenGetResponseField(recordProcessorFactory));
+        return HttpResponse.ok(Flowable.just(pseudoField
+                .pseudonymizeThenGetResponseField(recordProcessorFactory)));
     }
 
     @Operation(summary = "Pseudonymize file", description = """
@@ -369,7 +369,7 @@ public class PseudoController {
         private String name;
         private List<String> values;
         private String pseudoFunc;
-        private String stableIDSnapshot;
+        private String stableIdSnapshot;
         private EncryptedKeysetWrapper keyset;
     }
 
