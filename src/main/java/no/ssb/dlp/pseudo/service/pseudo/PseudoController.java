@@ -266,6 +266,9 @@ public class PseudoController {
             log.info("Target content type: {}", targetContentType);
 
             StreamProcessor streamProcessor = streamProcessorFactory.newStreamProcessor(fileSource.getMediaType(), recordMapProcessor);
+            // Preprocess the file contents - if necessary
+            preprocessStream(fileSource.getInputStream(), streamProcessor, targetContentType).blockingLast();
+            // Do the actual proccessing/transformations
             Flowable<String> res = processStream(fileSource.getInputStream(), streamProcessor, targetContentType)
                     .doOnError(throwable -> log.error("Response failed", throwable))
                     .doOnComplete(() -> log.info("{} took {}", operation, stopwatch.stop().elapsed()));
@@ -314,6 +317,9 @@ public class PseudoController {
         return recordStream;
     }
 
+    private Flowable<String> preprocessStream(InputStream is, StreamProcessor streamProcessor, MediaType targetContentType) {
+        return streamProcessor.init(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
+    }
     private Flowable<String> processStream(InputStream is, StreamProcessor streamProcessor, MediaType targetContentType) {
         return streamProcessor.process(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
     }

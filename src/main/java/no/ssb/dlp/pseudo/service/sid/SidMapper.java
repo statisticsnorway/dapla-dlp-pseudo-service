@@ -8,12 +8,16 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
 import no.ssb.dlp.pseudo.service.Application;
+import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Service Provider class that implements the {@link Mapper} pseudo function. This class will be invoked by the JDK's
@@ -28,17 +32,25 @@ public class SidMapper implements Mapper {
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
     }
+    private AtomicLong counter = new AtomicLong(0);
+    private Map<String, ObservableSubscriber<SidInfo>> lookup = new ConcurrentHashMap<>();
 
     @Override
-    public Object map(@NonNull Object data) {
-        if (data == null) {
+    public void init(String fnr) {
+        log.info("SidMapper init count {}", counter.incrementAndGet());
+        ObservableSubscriber<SidInfo> subscriber = new ObservableSubscriber<>();
+        sidService.lookupFnr(fnr, Optional.ofNullable(null)).subscribe(subscriber);
+        lookup.put(fnr, subscriber);
+    }
+
+    @Override
+    public String map(String fnr) {
+        if (fnr == null) {
             return null;
         }
-        String fnr = String.valueOf(data);
+        log.info("SidMapper countdown {}", counter.decrementAndGet());
         try {
-            ObservableSubscriber<SidInfo> subscriber = new ObservableSubscriber<>();
-            sidService.lookupFnr(fnr, Optional.ofNullable(null)).subscribe(subscriber);
-            SidInfo result = subscriber.awaitResult();
+            SidInfo result = lookup.get(fnr).awaitResult();
             if (result == null || result.getSnr() == null) {
                 log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                 return fnr;
@@ -58,7 +70,7 @@ public class SidMapper implements Mapper {
     }
 
     @Override
-    public Object restore(Object mapped) {
+    public String restore(String mapped) {
         return mapped;
     }
 
