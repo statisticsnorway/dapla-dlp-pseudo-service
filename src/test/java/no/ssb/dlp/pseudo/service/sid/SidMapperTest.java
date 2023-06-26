@@ -37,6 +37,7 @@ public class SidMapperTest {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
+            mapper.init("11854898347");
             Object mappedSid = mapper.map("11854898347");
             verify(sidService, times(1)).lookupFnr(anyString(), any(Optional.class));
             Assertions.assertEquals("0001ha3", mappedSid);
