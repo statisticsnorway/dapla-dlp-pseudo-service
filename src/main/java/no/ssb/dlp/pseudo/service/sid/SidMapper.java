@@ -33,15 +33,17 @@ public class SidMapper implements Mapper {
     private Map<String, ObservableSubscriber<SidInfo>> lookup = new ConcurrentHashMap<>();
 
     @Override
-    public void init(String fnr) {
+    public void init(Object data) {
+        String fnr = String.valueOf(data);
         lookup.put(fnr, ObservableSubscriber.subscribe(sidService.lookupFnr(fnr, Optional.ofNullable(null))));
     }
 
     @Override
-    public String map(String fnr) {
-        if (fnr == null) {
+    public Object map(Object data) {
+        if (data == null) {
             return null;
         }
+        String fnr = String.valueOf(data);
         try {
             SidInfo result = lookup.get(fnr).awaitResult();
             if (result == null || result.getSnr() == null) {
