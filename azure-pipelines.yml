@@ -76,6 +76,19 @@ jobs:
           echo "##vso[task.setvariable variable=scan_image_tag]${SCAN_IMAGE_TAG}"
         displayName: 'Create image tag'
         failOnStderr: true
+      #Docker login
+      - task: Docker@2
+        displayName: 'Docker login'
+        inputs:
+          command: 'login'
+          containerRegistry: 'gcrServiceConnection'
+      - task: DownloadSecureFile@1
+        name: gcrJsonKey
+        inputs:
+          secureFile: 'gcr-key.json'
+      - script: |
+          echo "##vso[task.setvariable variable=GOOGLE_APPLICATION_CREDENTIALS]$(gcrJsonKey.secureFilePath)"
+        displayName: 'Set GCR Key'
       #Docker build
       - task: Docker@2
         displayName: 'Docker Build'
@@ -84,12 +97,6 @@ jobs:
           command: 'build'
           Dockerfile: 'Dockerfile'
           tags: $(IMAGE_TAG)
-      #Docker login
-      - task: Docker@2
-        displayName: 'Docker login'
-        inputs:
-          command: 'login'
-          containerRegistry: 'gcrServiceConnection'
       #Docker push
       - task: Docker@2
         displayName: 'Docker Push'
@@ -98,10 +105,3 @@ jobs:
           command: 'push'
           containerRegistry: 'gcrServiceConnection'
           tags: $(IMAGE_TAG)
-      - task: DownloadSecureFile@1
-        name: gcrJsonKey
-        inputs:
-          secureFile: 'gcr-key.json'
-      - script: |
-          echo "##vso[task.setvariable variable=GOOGLE_APPLICATION_CREDENTIALS]$(gcrJsonKey.secureFilePath)"
-        displayName: 'Set GCR Key'
