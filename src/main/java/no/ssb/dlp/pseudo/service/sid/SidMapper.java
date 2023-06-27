@@ -124,9 +124,11 @@ public class SidMapper implements Mapper {
             subscription.request(1);
             try {
                 if (!latch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                    log.error("Publisher onComplete timed out");
                     throw new RuntimeException("Publisher onComplete timed out");
                 }
             } catch (InterruptedException e) {
+                log.error("Thread was interrupted");
                 throw new RuntimeException(e);
             }
             return this;
