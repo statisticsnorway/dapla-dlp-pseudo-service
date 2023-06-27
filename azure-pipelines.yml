@@ -93,7 +93,7 @@ jobs:
       - task: Docker@2
         displayName: 'Docker Build'
         inputs:
-          repository: 'eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
+          repository: 'prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
           command: 'build'
           Dockerfile: 'Dockerfile'
           tags: $(IMAGE_TAG)
@@ -101,7 +101,7 @@ jobs:
       - task: Docker@2
         displayName: 'Docker Push'
         inputs:
-          repository: 'eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
+          repository: 'prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
           command: 'push'
           containerRegistry: 'gcrServiceConnection'
           tags: $(IMAGE_TAG)
