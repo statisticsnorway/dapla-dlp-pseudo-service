@@ -4,7 +4,6 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.Strings;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
 import no.ssb.dlp.pseudo.service.Application;
@@ -17,7 +16,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Service Provider class that implements the {@link Mapper} pseudo function. This class will be invoked by the JDK's
@@ -32,15 +30,11 @@ public class SidMapper implements Mapper {
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
     }
-    private AtomicLong counter = new AtomicLong(0);
     private Map<String, ObservableSubscriber<SidInfo>> lookup = new ConcurrentHashMap<>();
 
     @Override
     public void init(String fnr) {
-        log.info("SidMapper init count {}", counter.incrementAndGet());
-        ObservableSubscriber<SidInfo> subscriber = new ObservableSubscriber<>();
-        sidService.lookupFnr(fnr, Optional.ofNullable(null)).subscribe(subscriber);
-        lookup.put(fnr, subscriber);
+        lookup.put(fnr, ObservableSubscriber.subscribe(sidService.lookupFnr(fnr, Optional.ofNullable(null))));
     }
 
     @Override
@@ -48,7 +42,6 @@ public class SidMapper implements Mapper {
         if (fnr == null) {
             return null;
         }
-        log.info("SidMapper countdown {}", counter.decrementAndGet());
         try {
             SidInfo result = lookup.get(fnr).awaitResult();
             if (result == null || result.getSnr() == null) {
@@ -79,10 +72,16 @@ public class SidMapper implements Mapper {
      *
      * @param <T> The publishers result type
      */
-    class ObservableSubscriber<T> implements Subscriber<T> {
+    static class ObservableSubscriber<T> implements Subscriber<T> {
         private final CountDownLatch latch = new CountDownLatch(1);
         private volatile T result;
         private volatile Subscription subscription;
+
+        public static <T> ObservableSubscriber<T> subscribe(Publisher<T> publisher) {
+            ObservableSubscriber<T> instance = new ObservableSubscriber<T>();
+            publisher.subscribe(instance);
+            return instance;
+        }
 
         @Override
         public void onSubscribe(Subscription subscription) {
