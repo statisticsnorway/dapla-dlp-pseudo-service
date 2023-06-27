@@ -35,7 +35,9 @@ public class SidMapper implements Mapper {
     @Override
     public void init(Object data) {
         String fnr = String.valueOf(data);
-        lookup.put(fnr, ObservableSubscriber.subscribe(sidService.lookupFnr(fnr, Optional.ofNullable(null))));
+        if (!lookup.containsKey(fnr)) {
+            lookup.put(fnr, ObservableSubscriber.subscribe(sidService.lookupFnr(fnr, Optional.ofNullable(null))));
+        }
     }
 
     @Override
