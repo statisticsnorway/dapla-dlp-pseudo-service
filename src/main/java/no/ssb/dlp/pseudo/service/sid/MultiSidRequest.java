@@ -4,11 +4,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
 
+import java.util.Set;
+
 @Data
 @Builder
 @Jacksonized
-public class SidInfo {
-    private final String fnr;
-    private final String fnr_naa;
-    private final String snr;
+public class MultiSidRequest {
+    private final Set<String> fnrList;
+    private final String datasetExtractionSnapshotTime;
 }

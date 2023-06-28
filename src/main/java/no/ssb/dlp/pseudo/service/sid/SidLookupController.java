@@ -1,8 +1,10 @@
 package no.ssb.dlp.pseudo.service.sid;
 
+import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import org.reactivestreams.Publisher;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -24,6 +27,13 @@ import java.util.Optional;
 public class SidLookupController {
 
     private final SidService sidService;
+
+    @Secured({PseudoServiceRole.ADMIN})
+    @ExecuteOn(TaskExecutors.IO)
+    @Post("/map/batch")
+    public Publisher<Map<String, SidInfo>> lookupFnrs(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
+        return sidService.lookupFnr(req.getFnrList(), snapshot);
+    }
 
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)

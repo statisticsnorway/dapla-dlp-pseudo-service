@@ -13,9 +13,11 @@ import org.reactivestreams.Subscription;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Service Provider class that implements the {@link Mapper} pseudo function. This class will be invoked by the JDK's
@@ -30,14 +32,12 @@ public class SidMapper implements Mapper {
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
     }
-    private Map<String, ObservableSubscriber<SidInfo>> lookup = new ConcurrentHashMap<>();
+    private Set<String> initKeys = ConcurrentHashMap.newKeySet();
+    private AtomicReference<ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new AtomicReference<>();
 
     @Override
     public void init(Object data) {
-        String fnr = String.valueOf(data);
-        if (!lookup.containsKey(fnr)) {
-            lookup.put(fnr, ObservableSubscriber.subscribe(sidService.lookupFnr(fnr, Optional.ofNullable(null))));
-        }
+        initKeys.add(String.valueOf(data));
     }
 
     @Override
@@ -47,7 +47,12 @@ public class SidMapper implements Mapper {
         }
         String fnr = String.valueOf(data);
         try {
-            SidInfo result = lookup.get(fnr).awaitResult();
+            // Execute the bulk request if necessary
+            if (bulkRequest.get() == null) {
+                bulkRequest.set(ObservableSubscriber.subscribe(sidService.lookupFnr(initKeys,
+                        Optional.ofNullable(null))));
+            }
+            SidInfo result = bulkRequest.get().awaitResult().get(fnr);
             if (result == null || result.getSnr() == null) {
                 log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                 return fnr;

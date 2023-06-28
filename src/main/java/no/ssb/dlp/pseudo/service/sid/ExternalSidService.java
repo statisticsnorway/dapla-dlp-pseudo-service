@@ -5,7 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Singleton;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Singleton
 @RequiredArgsConstructor
@@ -23,6 +25,12 @@ public class ExternalSidService implements SidService {
     @Override
     public Publisher<SidInfo> lookupSnr(String snr, Optional<String> snapshot) {
         return sidClient.lookup(new SidRequest.SidRequestBuilder().snr(snr)
+                .datasetExtractionSnapshotTime(snapshot.orElse(null)).build());
+    }
+
+    @Override
+    public Publisher<Map<String, SidInfo>> lookupFnr(Set<String> fnrList, Optional<String> snapshot) {
+        return sidClient.lookup(new MultiSidRequest.MultiSidRequestBuilder().fnrList(fnrList)
                 .datasetExtractionSnapshotTime(snapshot.orElse(null)).build());
     }
 }
