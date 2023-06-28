@@ -9,5 +9,6 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 public class SidInfo {
     private final String fnr;
+    private final String fnr_naa;
     private final String snr;
 }
