@@ -267,11 +267,12 @@ public class PseudoController {
 
             StreamProcessor streamProcessor = streamProcessorFactory.newStreamProcessor(fileSource.getMediaType(), recordMapProcessor);
             // Preprocess the file contents - if necessary
-            preprocessStream(fileSource.getInputStream(), streamProcessor, targetContentType).blockingLast();
-            // Do the actual proccessing/transformations
-            Flowable<String> res = processStream(fileSource.getInputStream(), streamProcessor, targetContentType)
-                    .doOnError(throwable -> log.error("Response failed", throwable))
-                    .doOnComplete(() -> log.info("{} took {}", operation, stopwatch.stop().elapsed()));
+            Flowable<String> res = preprocessStream(fileSource.getInputStream(), streamProcessor, targetContentType)
+                // And then do the actual proccessing/transformations
+                .andThen(processStream(fileSource.getInputStream(), streamProcessor, targetContentType)
+                        .doOnError(throwable -> log.error("Response failed", throwable))
+                        .doOnComplete(() -> log.info("{} took {}", operation, stopwatch.stop().elapsed()))
+            );
 
             if (targetCompression != null) {
                 log.info("Applying target compression: " + MoreMediaTypes.APPLICATION_ZIP_TYPE);
@@ -317,8 +318,10 @@ public class PseudoController {
         return recordStream;
     }
 
-    private Flowable<String> preprocessStream(InputStream is, StreamProcessor streamProcessor, MediaType targetContentType) {
-        return streamProcessor.init(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
+    private Completable preprocessStream(InputStream is, StreamProcessor streamProcessor, MediaType targetContentType) {
+        return Completable.fromPublisher(streamProcessor.init(is, RecordMapSerializerFactory.newFromMediaType(targetContentType))
+                .doOnError(throwable -> log.error("Preprocessing failed", throwable))
+                .doOnComplete(() -> log.info("Preprocessing complete...")));
     }
     private Flowable<String> processStream(InputStream is, StreamProcessor streamProcessor, MediaType targetContentType) {
         return streamProcessor.process(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
