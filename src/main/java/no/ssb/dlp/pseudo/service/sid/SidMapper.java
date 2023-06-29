@@ -3,6 +3,7 @@ package no.ssb.dlp.pseudo.service.sid;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import lombok.extern.slf4j.Slf4j;
@@ -12,13 +13,13 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Service Provider class that implements the {@link Mapper} pseudo function. This class will be invoked by the JDK's
@@ -29,16 +30,17 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SidMapper implements Mapper {
 
     private final SidService sidService;
+    private static final int BULK_SIZE = 100000;
 
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
     }
-    private Set<String> initKeys = ConcurrentHashMap.newKeySet();
-    private AtomicReference<ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new AtomicReference<>();
+    private Set<String> fnrs = ConcurrentHashMap.newKeySet();
+    private ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
 
     @Override
     public void init(Object data) {
-        initKeys.add(String.valueOf(data));
+        fnrs.add(String.valueOf(data));
     }
 
     @Override
@@ -49,11 +51,18 @@ public class SidMapper implements Mapper {
         String fnr = String.valueOf(data);
         try {
             // Execute the bulk request if necessary
-            if (bulkRequest.get() == null) {
-                bulkRequest.set(ObservableSubscriber.subscribe(sidService.lookupFnr(initKeys,
-                        Optional.ofNullable(null))));
+            if (bulkRequest.isEmpty()) {
+                // Split fnrs into chunks of BULK_SIZE
+                for (List<String> bulkFnr: Lists.partition(List.copyOf(fnrs), BULK_SIZE)) {
+                    log.info("Execute SID-mapping bulk request");
+                    final ObservableSubscriber<Map<String, SidInfo>> subscriber = ObservableSubscriber.subscribe(
+                            sidService.lookupFnr(bulkFnr, Optional.ofNullable(null)));
+                    for (String f: bulkFnr) {
+                        bulkRequest.put(f, subscriber);
+                    }
+                }
             }
-            SidInfo result = bulkRequest.get().awaitResult().get(fnr);
+            SidInfo result = bulkRequest.get(fnr).awaitResult().get(fnr);
             if (result == null || result.getSnr() == null) {
                 log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                 return fnr;
@@ -125,6 +134,7 @@ public class SidMapper implements Mapper {
         @Override
         public void onComplete() {
             latch.countDown();
+            log.info("Thread completed after {} seconds", stopwatch.stop().elapsed(TimeUnit.SECONDS));
         }
 
         public T awaitResult() {
@@ -139,11 +149,7 @@ public class SidMapper implements Mapper {
                     throw new RuntimeException("Publisher onComplete timed out");
                 }
             } catch (InterruptedException e) {
-                log.error("Thread was interrupted after {} seconds", stopwatch.stop().elapsed(TimeUnit.SECONDS));
                 throw new RuntimeException(e);
-            }
-            if (stopwatch.isRunning()) {
-                log.info("Thread completed after {} seconds", stopwatch.stop().elapsed(TimeUnit.SECONDS));
             }
             return this;
         }

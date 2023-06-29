@@ -30,7 +30,7 @@ public class SidMapperTest {
 
     @Test
     public void testInvokeMapperFunc() {
-        when(sidService.lookupFnr(anySet(), any(Optional.class))).thenReturn(Publishers.just(
+        when(sidService.lookupFnr(anyList(), any(Optional.class))).thenReturn(Publishers.just(
                 Maps.of("11854898347", new SidInfo.SidInfoBuilder().snr("0001ha3").build()))
         );
         // Use static mocking to override the application context
@@ -40,7 +40,7 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.init("11854898347");
             Object mappedSid = mapper.map("11854898347");
-            verify(sidService, times(1)).lookupFnr(anySet(), any(Optional.class));
+            verify(sidService, times(1)).lookupFnr(anyList(), any(Optional.class));
             Assertions.assertEquals("0001ha3", mappedSid);
         }
     }

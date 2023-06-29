@@ -4,12 +4,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
 
-import java.util.Set;
+import java.util.List;
 
 @Data
 @Builder
 @Jacksonized
 public class MultiSidRequest {
-    private final Set<String> fnrList;
+    private final List<String> fnrList;
     private final String datasetExtractionSnapshotTime;
 }

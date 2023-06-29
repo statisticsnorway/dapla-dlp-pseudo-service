@@ -7,9 +7,9 @@ import no.ssb.dlp.pseudo.service.sid.local.SidCache;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Singleton;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -41,7 +41,7 @@ class LocalSidService implements SidService {
     }
 
     @Override
-    public Publisher<Map<String, SidInfo>> lookupFnr(Set<String> fnrList, Optional<String> snapshot) {
+    public Publisher<Map<String, SidInfo>> lookupFnr(List<String> fnrList, Optional<String> snapshot) {
         return Publishers.just(fnrList.stream().map(fnr -> {
                     String currentSnr = sidCache.getCurrentSnrForFnr(fnr).orElseThrow(() ->
                             new LocalSidService.NoSidMappingFoundException("No SID matching fnr=" + fnr));
