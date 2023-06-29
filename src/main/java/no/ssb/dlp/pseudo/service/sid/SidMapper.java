@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class SidMapper implements Mapper {
 
     private final SidService sidService;
-    private static final int BULK_SIZE = 100000;
+    private static final int BULK_SIZE = 50000;
 
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
