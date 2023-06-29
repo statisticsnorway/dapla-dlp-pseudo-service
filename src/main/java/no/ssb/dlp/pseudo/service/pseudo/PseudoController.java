@@ -321,7 +321,7 @@ public class PseudoController {
     }
 
     private Completable preprocessStream(InputStream is, StreamProcessor streamProcessor, MediaType targetContentType) {
-        return Completable.fromPublisher(streamProcessor.init(is, RecordMapSerializerFactory.newFromMediaType(targetContentType)));
+        return streamProcessor.init(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
     }
     private Flowable<String> processStream(InputStream is, StreamProcessor streamProcessor, MediaType targetContentType) {
         return streamProcessor.process(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
