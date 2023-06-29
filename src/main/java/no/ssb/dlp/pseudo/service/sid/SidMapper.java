@@ -30,10 +30,13 @@ import java.util.concurrent.TimeUnit;
 public class SidMapper implements Mapper {
 
     private final SidService sidService;
-    private static final int BULK_SIZE = 50000;
+    private static final int DEFAULT_PARTITION_SIZE = 50000;
+    private final int partitionSize;
 
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
+        partitionSize = Application.getContext().getProperty("sid.mapper.partition.size", Integer.class,
+                DEFAULT_PARTITION_SIZE).intValue();
     }
     private Set<String> fnrs = ConcurrentHashMap.newKeySet();
     private ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
@@ -53,7 +56,7 @@ public class SidMapper implements Mapper {
             // Execute the bulk request if necessary
             if (bulkRequest.isEmpty()) {
                 // Split fnrs into chunks of BULK_SIZE
-                for (List<String> bulkFnr: Lists.partition(List.copyOf(fnrs), BULK_SIZE)) {
+                for (List<String> bulkFnr: Lists.partition(List.copyOf(fnrs), partitionSize)) {
                     log.info("Execute SID-mapping bulk request");
                     final ObservableSubscriber<Map<String, SidInfo>> subscriber = ObservableSubscriber.subscribe(
                             sidService.lookupFnr(bulkFnr, Optional.ofNullable(null)));
