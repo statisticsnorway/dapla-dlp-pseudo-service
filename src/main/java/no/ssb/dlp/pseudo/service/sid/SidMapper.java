@@ -1,6 +1,7 @@
 package no.ssb.dlp.pseudo.service.sid;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
@@ -83,6 +84,8 @@ public class SidMapper implements Mapper {
      */
     static class ObservableSubscriber<T> implements Subscriber<T> {
         private final CountDownLatch latch = new CountDownLatch(1);
+        private final Stopwatch stopwatch = Stopwatch.createUnstarted();
+
         private volatile T result;
         private volatile Subscription subscription;
 
@@ -94,6 +97,7 @@ public class SidMapper implements Mapper {
 
         @Override
         public void onSubscribe(Subscription subscription) {
+            this.stopwatch.start();
             this.subscription = subscription;
         }
 
@@ -130,13 +134,16 @@ public class SidMapper implements Mapper {
         private ObservableSubscriber<T> await() {
             subscription.request(1);
             try {
-                if (!latch.await(Long.MAX_VALUE, TimeUnit.MILLISECONDS)) {
+                if (!latch.await(120, TimeUnit.SECONDS)) {
                     log.error("Publisher onComplete timed out");
                     throw new RuntimeException("Publisher onComplete timed out");
                 }
             } catch (InterruptedException e) {
-                log.error("Thread was interrupted");
+                log.error("Thread was interrupted after {} seconds", stopwatch.stop().elapsed(TimeUnit.SECONDS));
                 throw new RuntimeException(e);
+            }
+            if (stopwatch.isRunning()) {
+                log.info("Thread completed after {} seconds", stopwatch.stop().elapsed(TimeUnit.SECONDS));
             }
             return this;
         }
