@@ -142,7 +142,7 @@ jobs:
       - script: |
           set -e
           cat $(gcrJsonKey.secureFilePath) | docker login -u _json_key --password-stdin https://eu.gcr.io/
-          docker tag eu.gcr.io/prod-bip/ssb/${{ variables.gcrNamespace }}/${{ variables.artifactName }}:$(SCAN_IMAGE_TAG) eu.gcr.io/prod-bip/ssb/${{ variables.gcrNamespace }}/${{ variables.artifactName }}:$(IMAGE_TAG)
-          docker push eu.gcr.io/prod-bip/ssb/${{ variables.gcrNamespace }}/${{ variables.artifactName }}:$(IMAGE_TAG)
+          docker tag eu.gcr.io/prod-bip/ssb/${{ parameters.gcrNamespace }}/${{ parameters.artifactName }}:$(SCAN_IMAGE_TAG) eu.gcr.io/prod-bip/ssb/${{ parameters.gcrNamespace }}/${{ parameters.artifactName }}:$(IMAGE_TAG)
+          docker push eu.gcr.io/prod-bip/ssb/${{ parameters.gcrNamespace }}/${{ parameters.artifactName }}:$(IMAGE_TAG)
         displayName: 'Retag Image'
         condition: succeeded()
