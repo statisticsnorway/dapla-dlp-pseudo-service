@@ -33,7 +33,8 @@ public class CloudRunEndpointFilter implements HttpServerFilter {
      */
     @Override
     public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
-        if (request.getUri().getPath().equals("/pseudonymize/file")) {
+        String path = request.getUri().getPath();
+        if (path.equals("/pseudonymize/file") || path.equals("/pseudonymize/field")) {
             return chain.proceed(request);
         } else {
             return Flowable.just(HttpResponse.notFound());
