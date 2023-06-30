@@ -85,7 +85,7 @@ public class SidMapper implements Mapper {
     }
 
     @Override
-    public String restore(String mapped) {
+    public Object restore(Object mapped) {
         return mapped;
     }
 
