@@ -12,7 +12,6 @@ import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadataPublisher;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataEvent;
 
 import javax.inject.Singleton;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -24,24 +23,17 @@ public class RecordMapProcessorFactory {
 
     private final ApplicationEventPublisher<PseudoMetadataEvent> pseudoMetadataPublisher;
 
-    public RecordMapProcessor newPseudonymizeRecordProcessor(PseudoConfig... pseudoConfigs) {
-        return newPseudonymizeRecordProcessor(Arrays.asList(pseudoConfigs));
-    }
-
     public RecordMapProcessor newPseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs) {
         ValueInterceptorChain chain = new ValueInterceptorChain()
                 .register(new FieldMetadataPublisher(UUID.randomUUID().toString(), pseudoMetadataPublisher));
 
         for (PseudoConfig config : pseudoConfigs) {
             final FieldPseudonymizer fieldPseudonymizer = newFieldPseudonymizer(config.getRules(), pseudoKeysetsOf(config.getKeysets()));
+            chain.preprocessor((f, v) -> fieldPseudonymizer.init(f, v));
             chain.register((f, v) -> fieldPseudonymizer.pseudonymize(f, v));
         }
 
         return new RecordMapProcessor(chain);
-    }
-
-    public RecordMapProcessor newDepseudonymizeRecordProcessor(PseudoConfig... pseudoConfigs) {
-        return newDepseudonymizeRecordProcessor(Arrays.asList(pseudoConfigs));
     }
 
     public RecordMapProcessor newDepseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs) {

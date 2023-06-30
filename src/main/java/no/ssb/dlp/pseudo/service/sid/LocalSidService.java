@@ -7,7 +7,10 @@ import no.ssb.dlp.pseudo.service.sid.local.SidCache;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Singleton;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * This class implements a local SID service, and should only be used for local end-to-end testing.
@@ -36,6 +39,19 @@ class LocalSidService implements SidService {
                         new SidInfo.SidInfoBuilder().snr(currentSnr).fnr(currentFnr).build())
                 .orElse(null));
     }
+
+    @Override
+    public Publisher<Map<String, SidInfo>> lookupFnr(List<String> fnrList, Optional<String> snapshot) {
+        return Publishers.just(fnrList.stream().map(fnr -> {
+                    String currentSnr = sidCache.getCurrentSnrForFnr(fnr).orElseThrow(() ->
+                            new LocalSidService.NoSidMappingFoundException("No SID matching fnr=" + fnr));
+                    return sidCache.getCurrentFnrForSnr(currentSnr).map(currentFnr ->
+                                    new SidInfo.SidInfoBuilder().snr(currentSnr).fnr(currentFnr).build())
+                            .orElse(null);
+                }).collect(Collectors.toMap(SidInfo::getFnr, sidInfo -> sidInfo))
+        );
+    }
+
 
     public static class NoSidMappingFoundException extends RuntimeException {
         public NoSidMappingFoundException(String message) {

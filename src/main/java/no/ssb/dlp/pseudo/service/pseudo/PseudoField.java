@@ -1,13 +1,10 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import io.micronaut.http.MutableHttpHeaders;
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import lombok.*;
-import lombok.extern.jackson.Jacksonized;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
@@ -62,11 +59,22 @@ public class PseudoField {
         List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(this.getPseudoConfig());
 
         RecordMapProcessor recordMapProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs);
+        Completable preprocessor = getPreprocessor(values, recordMapProcessor);
 
-        return Flowable.fromIterable(() -> values.stream().iterator())
+        return preprocessor.andThen(Flowable.fromIterable(() -> values.stream().iterator())
                 .map(value -> recordMapProcessor.process(Map.of(this.getName(), value))
                         .get(this.getName()).toString())
-                .buffer(BUFFER_SIZE);
+                .buffer(BUFFER_SIZE));
+    }
+
+    private Completable getPreprocessor(List<String> values, RecordMapProcessor recordMapProcessor) {
+        if (recordMapProcessor.hasPreprocessors()) {
+            return Completable.fromPublisher(Flowable.fromIterable(() -> values.stream().iterator())
+                    .map(value -> recordMapProcessor.init(Map.of(this.getName(), value))
+                            .get(this.getName()).toString()));
+        } else {
+            return Completable.complete();
+        }
     }
 
 
