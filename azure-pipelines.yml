@@ -32,6 +32,33 @@ variables:
   - name: MAVEN_OPTS
     value: '-Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)'
 
+  # usually the same as the maven artifactId
+  - name: 'artifactName'
+    value: 'dapla-dlp-pseudo-service'
+  # The GCR namespace - used to group related container images, e.g. "dapla"
+  - name: 'gcrNamespace'
+    value: 'dapla'
+  # Default git branch can be overridden
+  - name: 'defaultBranch'
+    value: 'master'
+  # See https://hub.docker.com/_/maven
+  - name: 'mavenContainer'
+    value: 'maven:3.8-openjdk-17'
+  # Should the build perform checkstyle analysis? One of [true,false]
+  - name: 'checkStyleRunAnalysis'
+    value: false
+  # Should the build perform PMD analysis? One of [true,false]
+  - name: 'pmdRunAnalysis'
+    value: true
+  # Should the build perform Sonar analysis? One of [true,false]
+  - name: 'sonarQubeRunAnalysis'
+    value: false
+  # The Azure Pipeline Service connection used to connect to SonarCloud.
+  # This should typically be something like `bipSonarCloud-<project name>` (e.g. bipSonarCloud-Dapla)
+  # See https://docs.bip.ssb.no/develop/code-quality/sonarcloud_ci/#azure-pipelines
+  - name: 'sonarCloud'
+    value: 'bipSonarCloud-Dapla'
+
 # Job which will run mvn build, mvn install and Sonar Analysis (if branch is master)
 jobs:
 
@@ -54,7 +81,7 @@ jobs:
       - download: current
         displayName: 'Download pipeline artifact'
         patterns: |
-          **/dapla-dlp-pseudo-service-*.jar
+          **/${{ parameters.artifactName }}-*.jar
           **/logback*.xml
         artifact: target
 
@@ -80,10 +107,10 @@ jobs:
       - task: Docker@2
         displayName: 'Docker Build'
         inputs:
-          repository: 'eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
+          repository: 'eu.gcr.io/prod-bip/ssb/${{ parameters.gcrNamespace }}/${{ parameters.artifactName }}'
           command: 'build'
           Dockerfile: 'Dockerfile'
-          tags: $(IMAGE_TAG)
+          tags: $(SCAN_IMAGE_TAG)
       #Docker login
       - task: Docker@2
         displayName: 'Docker login'
@@ -94,10 +121,10 @@ jobs:
       - task: Docker@2
         displayName: 'Docker Push'
         inputs:
-          repository: 'eu.gcr.io/prod-bip/ssb/dapla/dapla-dlp-pseudo-service'
+          repository: 'prod-bip/ssb/${{ parameters.gcrNamespace }}/${{ parameters.artifactName }}'
           command: 'push'
           containerRegistry: 'gcrServiceConnection'
-          tags: $(IMAGE_TAG)
+          tags: $(SCAN_IMAGE_TAG)
       - task: DownloadSecureFile@1
         name: gcrJsonKey
         inputs:
@@ -105,3 +132,17 @@ jobs:
       - script: |
           echo "##vso[task.setvariable variable=GOOGLE_APPLICATION_CREDENTIALS]$(gcrJsonKey.secureFilePath)"
         displayName: 'Set GCR Key'
+      - task: gcr-vulneralbility-check@1
+        inputs:
+          projectId: 'prod-bip'
+          imageHost: 'https://eu.gcr.io/'
+          image: 'prod-bip/ssb/${{ parameters.gcrNamespace }}/${{ parameters.artifactName }}'
+          imageTag: $(SCAN_IMAGE_TAG)
+          timeBetweenRetries: '10000'
+      - script: |
+          set -e
+          cat $(gcrJsonKey.secureFilePath) | docker login -u _json_key --password-stdin https://eu.gcr.io/
+          docker tag eu.gcr.io/prod-bip/ssb/${{ variables.gcrNamespace }}/${{ variables.artifactName }}:$(SCAN_IMAGE_TAG) eu.gcr.io/prod-bip/ssb/${{ variables.gcrNamespace }}/${{ variables.artifactName }}:$(IMAGE_TAG)
+          docker push eu.gcr.io/prod-bip/ssb/${{ variables.gcrNamespace }}/${{ variables.artifactName }}:$(IMAGE_TAG)
+        displayName: 'Retag Image'
+        condition: succeeded()
