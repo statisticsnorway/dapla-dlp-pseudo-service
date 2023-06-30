@@ -32,7 +32,7 @@ Authorization: Bearer {{keycloak_token}}
       "16910599481",
       "03874398925"
     ],
-    "pseudoFunc": "daead(keyId=ssb-common-key-2"
+    "pseudoFunc": "daead(keyId=ssb-common-key-2)"
   }
 }
 
@@ -85,6 +85,6 @@ Authorization: Bearer {{keycloak_token}}
       "16910599481",
       "03874398925"
     ],
-    "pseudoFunc": "map-sid(keyId=papis-common-key1)"
+    "pseudoFunc": "map-sid(keyId=papis-key-1)"
   }
 }

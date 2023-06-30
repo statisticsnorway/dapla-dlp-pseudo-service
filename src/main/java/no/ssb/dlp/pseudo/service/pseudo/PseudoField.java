@@ -1,44 +1,43 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.micronaut.http.MutableHttpHeaders;
+import io.reactivex.Flowable;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
-import lombok.extern.log4j.Log4j2;
-import no.ssb.dlp.pseudo.core.field.FieldDescriptor;
-import no.ssb.dlp.pseudo.core.field.FieldPseudonymizer;
+import lombok.extern.jackson.Jacksonized;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
+import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a field to be pseudonymized.
  */
-@Log4j2
 @Data
 public class PseudoField {
+    @Getter(AccessLevel.PROTECTED)
+    private static final int BUFFER_SIZE = 10000;
     @Getter(AccessLevel.PROTECTED)
     private static final String DEFAULT_PSEUDO_FUNC = "daead(keyId=ssb-common-key-1)";
 
     protected String name;
-    protected List<String> values;
     protected PseudoConfig pseudoConfig;
-    private List<String> sidValues;
 
     /**
-     * Constructs a {@code PseudoField} object with the specified name, values, keyset, pseudoConfig. If no keyset is supplied
+     * Constructs a {@code PseudoField} object with the specified name, keyset, pseudoConfig. If no keyset is supplied
      * a default pseudo configuration is used.
      *
      * @param name       The name of the field.
-     * @param values     The values of the field.
      * @param pseudoFunc The pseudo function definition.
      * @param keyset     The encrypted keyset to be used for pseudonymization.
      */
-    public PseudoField(String name, List<String> values, String pseudoFunc, EncryptedKeysetWrapper keyset) {
+    public PseudoField(String name, String pseudoFunc, EncryptedKeysetWrapper keyset) {
         this.name = name;
-        this.values = values;
 
         pseudoConfig = new PseudoConfig();
 
@@ -49,56 +48,54 @@ public class PseudoField {
             pseudoConfig.getKeysets().add(keyset);
         }
         pseudoConfig.getRules().add(new PseudoFuncRule(name, "**", pseudoFunc));
+
     }
 
     /**
-     * Pseudonymizes the field using the provided record processor factory and returns a {@link ResponsePseudoField} object
-     * containing the encrypted values, field name, and pseudo rules.
+     * Creates a Flowable that processes each value of the field, by applying the configured pseudo rules using a recordMapProcessor.
      *
-     * @param recordProcessorFactory The record processor factory used to create a field pseudonymizer.
-     * @return A {@link ResponsePseudoField} object containing the encrypted values, field name, and pseudo rules.
+     * @param pseudoConfigSplitter   The PseudoConfigSplitter instance to use for splitting pseudo configurations.
+     * @param recordProcessorFactory The RecordMapProcessorFactory instance to use for creating a new PseudonymizeRecordProcessor.
+     * @return A Flowable stream that processes the field values by applying the configured pseudo rules, and returns them as a lists of strings.
      */
-    public ResponsePseudoField pseudonymizeThenGetResponseField(RecordMapProcessorFactory recordProcessorFactory) {
-        List<String> encryptedValues = pseudonymize(values, recordProcessorFactory);
-        return this.getResponseField(encryptedValues);
-    }
+    public Flowable<List<String>> process(PseudoConfigSplitter pseudoConfigSplitter, RecordMapProcessorFactory recordProcessorFactory, List<String> values) {
+        List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(this.getPseudoConfig());
 
+        RecordMapProcessor recordMapProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs);
 
-    protected List<String> pseudonymize(List<String> values, RecordMapProcessorFactory recordProcessorFactory) {
-        Instant startTime = Instant.now();
-
-        FieldPseudonymizer fieldPseudonymizer = recordProcessorFactory.newFieldPseudonymizer(this.getPseudoConfig().getRules(), RecordMapProcessorFactory.pseudoKeysetsOf(this.getPseudoConfig().getKeysets()));
-
-        ArrayList<String> encryptedValues = new ArrayList<>();
-
-        values.stream().map(value -> fieldPseudonymizer.pseudonymize(new FieldDescriptor(this.getName()), value)).forEach(result -> encryptedValues.add(result));
-
-        Instant endTime = Instant.now();
-        Duration duration = Duration.between(startTime, endTime);
-        log.info("Pseudonymizing field '{}' took {} milliseconds.", this.getName(), duration.toMillis());
-
-        return encryptedValues;
+        return Flowable.fromIterable(() -> values.stream().iterator())
+                .map(value -> recordMapProcessor.process(Map.of(this.getName(), value))
+                        .get(this.getName()).toString())
+                .buffer(BUFFER_SIZE);
     }
 
 
     /**
-     * Creates a {@link ResponsePseudoField} object with the provided encrypted value.
+     * Creates a {@link PseudoFieldMetadata} object with the metadata about the preformed pseudo operations.
      *
-     * @param encryptedValues The encrypted values of the field.
-     * @return A {@link ResponsePseudoField} object containing the encrypted values, field name, and pseudo rules.
+     * @return A {@link PseudoFieldMetadata} object containing the field name and pseudo rules used.
      */
-    public ResponsePseudoField getResponseField(List<String> encryptedValues) {
-        return ResponsePseudoField.builder()
-                .values(encryptedValues)
+    public PseudoFieldMetadata getPseudoFieldMetadata() {
+        return PseudoFieldMetadata.builder()
                 .fieldName(name)
                 .pseudoRules(pseudoConfig).build();
     }
 }
 
+@Builder
 @Data
-@SuperBuilder
-class ResponsePseudoField {
-    private List<String> values;
+class PseudoFieldMetadata {
     private String fieldName;
     private PseudoConfig pseudoRules;
+
+    public String toJsonString() throws JsonProcessingException {
+        /**
+         * Converts the {@link PseudoFieldMetadata} object to a JSON string.
+         *
+         * @return A {@link String} representing the JSON representation of the PseudoFieldMetadata
+         * @throws JsonProcessingException if an error occurs during JSON processing
+         */
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.writeValueAsString(this);
+    }
 }
