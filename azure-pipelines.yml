@@ -45,7 +45,7 @@ jobs:
       sonarQubeRunAnalysis: false
       sonarCloud: bipSonarCloud-Dapla
 
-  - job: buildAndPushDockerImageHack
+  - job: buildAndPushDockerImage
     dependsOn: javaAppCompleteBuild
     displayName: 'Build and push docker image'
     steps:
