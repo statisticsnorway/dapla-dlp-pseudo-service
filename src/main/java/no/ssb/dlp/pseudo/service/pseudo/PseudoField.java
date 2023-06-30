@@ -26,21 +26,18 @@ public class PseudoField {
     private static final String DEFAULT_PSEUDO_FUNC = "daead(keyId=ssb-common-key-1)";
 
     protected String name;
-    protected List<String> values;
     protected PseudoConfig pseudoConfig;
 
     /**
-     * Constructs a {@code PseudoField} object with the specified name, values, keyset, pseudoConfig. If no keyset is supplied
+     * Constructs a {@code PseudoField} object with the specified name, keyset, pseudoConfig. If no keyset is supplied
      * a default pseudo configuration is used.
      *
      * @param name       The name of the field.
-     * @param values     The values of the field.
      * @param pseudoFunc The pseudo function definition.
      * @param keyset     The encrypted keyset to be used for pseudonymization.
      */
-    public PseudoField(String name, List<String> values, String pseudoFunc, EncryptedKeysetWrapper keyset) {
+    public PseudoField(String name, String pseudoFunc, EncryptedKeysetWrapper keyset) {
         this.name = name;
-        this.values = values;
 
         pseudoConfig = new PseudoConfig();
 
@@ -61,18 +58,15 @@ public class PseudoField {
      * @param recordProcessorFactory The RecordMapProcessorFactory instance to use for creating a new PseudonymizeRecordProcessor.
      * @return A Flowable stream that processes the field values by applying the configured pseudo rules, and returns them as a lists of strings.
      */
-    public Flowable<List<String>> process(PseudoConfigSplitter pseudoConfigSplitter, RecordMapProcessorFactory recordProcessorFactory) {
+    public Flowable<List<String>> process(PseudoConfigSplitter pseudoConfigSplitter, RecordMapProcessorFactory recordProcessorFactory, List<String> values) {
         List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(this.getPseudoConfig());
 
         RecordMapProcessor recordMapProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs);
 
-        return Flowable.fromIterable(() -> this.getValues().stream().iterator())
+        return Flowable.fromIterable(() -> values.stream().iterator())
                 .map(value -> recordMapProcessor.process(Map.of(this.getName(), value))
                         .get(this.getName()).toString())
                 .buffer(BUFFER_SIZE);
-                .map(value -> recordMapProcessor.process(Map.of(this.getName(), value))
-                        .get(this.getName()).toString())
-                .iterator()).buffer(BUFFER_SIZE);
     }
 
 

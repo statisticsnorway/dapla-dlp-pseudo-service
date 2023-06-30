@@ -1,6 +1,11 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
+import no.ssb.dlp.pseudo.core.field.FieldDescriptor;
+import no.ssb.dlp.pseudo.core.field.FieldPseudonymizer;
+import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,7 +16,7 @@ class PseudoFieldTest {
 
     @Test
     void UsesDefaultPseudoConfigWhenNoKeysetIsSupplied() {
-        PseudoField pseudoField = new PseudoField(null, null, null, null);
+        PseudoField pseudoField = new PseudoField(null, null, null);
         assertEquals(PseudoField.getDEFAULT_PSEUDO_FUNC(), pseudoField.getPseudoConfig().getRules().get(0).getFunc());
     }
 
@@ -19,7 +24,7 @@ class PseudoFieldTest {
     void usesCustomPseudoFuncWhenPseudoFuncIsSupplied() {
         int keySetPrimaryKey = 12345;
 
-        PseudoField pseudoSIDField = new PseudoField(null, null, String.format("map-sid(keyId=%s)", keySetPrimaryKey), null);
+        PseudoField pseudoSIDField = new PseudoField(null,  String.format("map-sid(keyId=%s)", keySetPrimaryKey), null);
 
         assertEquals(String.format("map-sid(keyId=%s)", keySetPrimaryKey),
                 pseudoSIDField.getPseudoConfig().getRules().get(0).getFunc());
@@ -28,7 +33,7 @@ class PseudoFieldTest {
     @Test
     void setCustomKeysetWhenKeysetIsSupplied() {
         EncryptedKeysetWrapper encryptedKeysetWrapper = mock(EncryptedKeysetWrapper.class);
-        PseudoField pseudoField = new PseudoField(null, null, null, encryptedKeysetWrapper);
+        PseudoField pseudoField = new PseudoField(null, null, encryptedKeysetWrapper);
 
         assertEquals(encryptedKeysetWrapper,
                 pseudoField.getPseudoConfig().getKeysets().get(0));
