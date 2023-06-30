@@ -66,7 +66,10 @@ public class PseudoField {
 
         RecordMapProcessor recordMapProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs);
 
-        return Flowable.fromIterable(() -> this.getValues().stream()
+        return Flowable.fromIterable(() -> this.getValues().stream().iterator())
+                .map(value -> recordMapProcessor.process(Map.of(this.getName(), value))
+                        .get(this.getName()).toString())
+                .buffer(BUFFER_SIZE);
                 .map(value -> recordMapProcessor.process(Map.of(this.getName(), value))
                         .get(this.getName()).toString())
                 .iterator()).buffer(BUFFER_SIZE);
