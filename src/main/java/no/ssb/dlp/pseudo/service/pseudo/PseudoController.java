@@ -282,8 +282,7 @@ public class PseudoController {
                     .doOnComplete(() -> log.info("Preprocessing took {}", stopwatch.elapsed()))
                     // And then do the actual proccessing/transformations
                     .andThen(processStream(fileSource.getInputStream(), streamProcessor, targetContentType)
-                            .doOnSubscribe((subscription) -> log.info("Start processing"))
-                            .doOnRequest((consumer) -> log.info("Proocessing next {}", consumer))
+                            .doOnSubscribe((subscription) -> log.info("Start processing..."))
                             .doOnError(throwable -> log.error("Response failed", throwable))
                             .doOnComplete(() -> log.info("{} took {}", operation, stopwatch.stop().elapsed()))
                     );
