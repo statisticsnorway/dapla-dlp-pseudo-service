@@ -80,7 +80,7 @@ public class PseudoController {
             log.info(Strings.padEnd(String.format("*** Pseudonymize field: %s ", req.getName()), 80, '*'));
             PseudoField pseudoField = new PseudoField(req.getName(), req.getValues(), req.getPseudoFunc(), req.getKeyset());
 
-            MutableHttpResponse mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,recordProcessorFactory));
+            MutableHttpResponse mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter, recordProcessorFactory));
 
             // Add metadata to header
             mutableHttpResponse.getHeaders().add("metadata", pseudoField
