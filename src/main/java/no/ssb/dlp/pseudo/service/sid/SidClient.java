@@ -19,6 +19,6 @@ public interface SidClient {
 
     @Post( "/sid/map/batch")
     @ExecuteOn(TaskExecutors.IO)
-    Publisher<Map<String, SidInfo>> lookup(@Body MultiSidRequest multiSidRequest);
+    Publisher<MultiSidResponse> lookup(@Body MultiSidRequest multiSidRequest);
 
 }

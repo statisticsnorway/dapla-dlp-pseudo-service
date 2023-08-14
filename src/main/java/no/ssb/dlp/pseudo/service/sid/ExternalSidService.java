@@ -1,6 +1,7 @@
 package no.ssb.dlp.pseudo.service.sid;
 
 import io.micronaut.context.annotation.Requires;
+import io.micronaut.core.async.publisher.Publishers;
 import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 
@@ -30,7 +31,11 @@ public class ExternalSidService implements SidService {
 
     @Override
     public Publisher<Map<String, SidInfo>> lookupFnr(List<String> fnrList, Optional<String> snapshot) {
-        return sidClient.lookup(new MultiSidRequest.MultiSidRequestBuilder().fnrList(fnrList)
-                .datasetExtractionSnapshotTime(snapshot.orElse(null)).build());
+        return Publishers.map(sidClient.lookup(
+                        new MultiSidRequest.MultiSidRequestBuilder().fnrList(fnrList)
+                        .datasetExtractionSnapshotTime(snapshot.orElse(null)).build()
+                ), MultiSidResponse::toMap
+        );
     }
+
 }
