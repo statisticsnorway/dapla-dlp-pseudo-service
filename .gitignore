@@ -15,3 +15,5 @@ bin/wdek-*
 micronaut-cli.yml
 private/
 http-client.private.env.json
+# Environment files should not be checked into git
+*.env.json
