@@ -65,7 +65,8 @@ public class SidMapper implements Mapper {
                     }
                 }
             }
-            SidInfo result = bulkRequest.get(fnr).awaitResult().get(fnr);
+            SidInfo result = bulkRequest.get(fnr).awaitResult()
+                    .orElseThrow(() -> new RuntimeException("SID service did not respond")).get(fnr);
             if (result == null || result.getSnr() == null) {
                 log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                 return fnr;
@@ -140,8 +141,8 @@ public class SidMapper implements Mapper {
             log.info("Thread completed after {} seconds", stopwatch.stop().elapsed(TimeUnit.SECONDS));
         }
 
-        public T awaitResult() {
-            return await().result;
+        public Optional<T> awaitResult() {
+            return Optional.ofNullable(await().result);
         }
 
         private ObservableSubscriber<T> await() {
