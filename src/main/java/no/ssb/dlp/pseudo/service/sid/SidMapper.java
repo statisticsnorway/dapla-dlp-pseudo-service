@@ -32,6 +32,7 @@ public class SidMapper implements Mapper {
     private final SidService sidService;
     private static final int DEFAULT_PARTITION_SIZE = 50000;
     private final int partitionSize;
+    private Map<String, Object> config;
 
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
@@ -59,7 +60,8 @@ public class SidMapper implements Mapper {
                 for (List<String> bulkFnr: Lists.partition(List.copyOf(fnrs), partitionSize)) {
                     log.info("Execute SID-mapping bulk request");
                     final ObservableSubscriber<Map<String, SidInfo>> subscriber = ObservableSubscriber.subscribe(
-                            sidService.lookupFnr(bulkFnr, Optional.ofNullable(null)));
+                            sidService.lookupFnr(bulkFnr, Optional.ofNullable(
+                                    String.valueOf(this.config.getOrDefault("versionTimestamp", null)))));
                     for (String f: bulkFnr) {
                         bulkRequest.put(f, subscriber);
                     }
@@ -83,6 +85,11 @@ public class SidMapper implements Mapper {
             log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
             return fnr;
         }
+    }
+
+    @Override
+    public void setConfig(Map<String, Object> config) {
+        this.config = config;
     }
 
     @Override
