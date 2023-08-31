@@ -13,6 +13,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,7 +33,7 @@ public class SidMapper implements Mapper {
     private final SidService sidService;
     private static final int DEFAULT_PARTITION_SIZE = 50000;
     private final int partitionSize;
-    private Map<String, Object> config;
+    private Map<String, Object> config = Collections.emptyMap();
 
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
