@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
 import no.ssb.dlp.pseudo.service.Application;
 import org.reactivestreams.Publisher;
@@ -62,7 +63,7 @@ public class SidMapper implements Mapper {
                     log.info("Execute SID-mapping bulk request");
                     final ObservableSubscriber<Map<String, SidInfo>> subscriber = ObservableSubscriber.subscribe(
                             sidService.lookupFnr(bulkFnr, Optional.ofNullable(
-                                    String.valueOf(this.config.getOrDefault("versionTimestamp", null)))));
+                                    String.valueOf(this.config.getOrDefault(MapFuncConfig.Param.VERSION_TIMESTAMP, null)))));
                     for (String f: bulkFnr) {
                         bulkRequest.put(f, subscriber);
                     }
@@ -90,10 +91,10 @@ public class SidMapper implements Mapper {
 
     @Override
     public void setConfig(Map<String, Object> config) {
-        if (config.containsKey("versionTimestamp")) {
+        if (config.containsKey(MapFuncConfig.Param.VERSION_TIMESTAMP)) {
             VersionInfo snapshots = ObservableSubscriber.subscribe(this.sidService.getSnapshots()).awaitResult()
                     .orElseThrow(() -> new RuntimeException("SID service did not respond"));
-            if (!snapshots.getItems().contains(config.get("versionTimestamp").toString())) {
+            if (!snapshots.getItems().contains(config.get(MapFuncConfig.Param.VERSION_TIMESTAMP).toString())) {
                 throw new RuntimeException(String.format("Invalid version timestamp. Valid versions are: %s",
                         String.join(", ", snapshots.getItems())));
             }
