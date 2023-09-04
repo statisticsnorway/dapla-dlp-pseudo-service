@@ -52,6 +52,10 @@ class LocalSidService implements SidService {
         );
     }
 
+    @Override
+    public Publisher<VersionInfo> getSnapshots() {
+        return Publishers.just(VersionInfo.builder().build());
+    }
 
     public static class NoSidMappingFoundException extends RuntimeException {
         public NoSidMappingFoundException(String message) {

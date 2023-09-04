@@ -90,6 +90,14 @@ public class SidMapper implements Mapper {
 
     @Override
     public void setConfig(Map<String, Object> config) {
+        if (config.containsKey("versionTimestamp")) {
+            VersionInfo snapshots = ObservableSubscriber.subscribe(this.sidService.getSnapshots()).awaitResult()
+                    .orElseThrow(() -> new RuntimeException("SID service did not respond"));
+            if (!snapshots.getItems().contains(config.get("versionTimestamp").toString())) {
+                throw new RuntimeException(String.format("Invalid version timestamp. Valid versions are: %s",
+                        String.join(", ", snapshots.getItems())));
+            }
+        }
         this.config = config;
     }
 
