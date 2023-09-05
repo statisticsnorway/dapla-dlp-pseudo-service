@@ -7,12 +7,14 @@ import com.google.common.collect.Lists;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
 import no.ssb.dlp.pseudo.service.Application;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +34,7 @@ public class SidMapper implements Mapper {
     private final SidService sidService;
     private static final int DEFAULT_PARTITION_SIZE = 50000;
     private final int partitionSize;
+    private Map<String, Object> config = Collections.emptyMap();
 
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
@@ -59,7 +62,8 @@ public class SidMapper implements Mapper {
                 for (List<String> bulkFnr: Lists.partition(List.copyOf(fnrs), partitionSize)) {
                     log.info("Execute SID-mapping bulk request");
                     final ObservableSubscriber<Map<String, SidInfo>> subscriber = ObservableSubscriber.subscribe(
-                            sidService.lookupFnr(bulkFnr, Optional.ofNullable(null)));
+                            sidService.lookupFnr(bulkFnr, Optional.ofNullable(
+                                    String.valueOf(this.config.getOrDefault(MapFuncConfig.Param.VERSION_TIMESTAMP, null)))));
                     for (String f: bulkFnr) {
                         bulkRequest.put(f, subscriber);
                     }
@@ -83,6 +87,19 @@ public class SidMapper implements Mapper {
             log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
             return fnr;
         }
+    }
+
+    @Override
+    public void setConfig(Map<String, Object> config) {
+        if (config.containsKey(MapFuncConfig.Param.VERSION_TIMESTAMP)) {
+            VersionInfo snapshots = ObservableSubscriber.subscribe(this.sidService.getSnapshots()).awaitResult()
+                    .orElseThrow(() -> new RuntimeException("SID service did not respond"));
+            if (!snapshots.getItems().contains(config.get(MapFuncConfig.Param.VERSION_TIMESTAMP).toString())) {
+                throw new RuntimeException(String.format("Invalid version timestamp. Valid versions are: %s",
+                        String.join(", ", snapshots.getItems())));
+            }
+        }
+        this.config = config;
     }
 
     @Override
