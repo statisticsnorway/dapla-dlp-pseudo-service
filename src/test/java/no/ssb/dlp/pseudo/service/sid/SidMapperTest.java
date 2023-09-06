@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+import javax.swing.text.html.Option;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,9 +43,10 @@ public class SidMapperTest {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
+            mapper.setConfig(new HashMap<>());
             mapper.init("11854898347");
             Object mappedSid = mapper.map("11854898347");
-            verify(sidService, times(1)).lookupFnr(anyList(), any(Optional.class));
+            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.ofNullable(null)));
             Assertions.assertEquals("0001ha3", mappedSid);
         }
     }
@@ -64,12 +67,12 @@ public class SidMapperTest {
             mapper.init("11854898347");
             Object mappedSid = mapper.map("11854898347");
             verify(sidService, times(1)).getSnapshots();
-            verify(sidService, times(1)).lookupFnr(anyList(), any(Optional.class));
+            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.of("12345")));
             Assertions.assertEquals("0001ha3", mappedSid);
         }
     }
     @Test
-    public void testMapInvValidVersion() {
+    public void testMapInvalidVersion() {
         when(sidService.getSnapshots()).thenReturn(Publishers.just(
                 VersionInfo.builder().items(List.of("12345")).build()
         ));
