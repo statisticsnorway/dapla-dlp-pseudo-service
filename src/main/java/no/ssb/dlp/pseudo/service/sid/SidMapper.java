@@ -63,7 +63,8 @@ public class SidMapper implements Mapper {
                     log.info("Execute SID-mapping bulk request");
                     final ObservableSubscriber<Map<String, SidInfo>> subscriber = ObservableSubscriber.subscribe(
                             sidService.lookupFnr(bulkFnr, Optional.ofNullable(
-                                    String.valueOf(this.config.getOrDefault(MapFuncConfig.Param.VERSION_TIMESTAMP, null)))));
+                                    this.config.get(MapFuncConfig.Param.VERSION_TIMESTAMP))
+                                    .map(Object::toString)));
                     for (String f: bulkFnr) {
                         bulkRequest.put(f, subscriber);
                     }
