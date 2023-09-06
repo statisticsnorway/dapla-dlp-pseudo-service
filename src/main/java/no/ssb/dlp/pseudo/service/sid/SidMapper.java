@@ -94,8 +94,11 @@ public class SidMapper implements Mapper {
         if (config.containsKey(MapFuncConfig.Param.VERSION_TIMESTAMP)) {
             VersionInfo snapshots = ObservableSubscriber.subscribe(this.sidService.getSnapshots()).awaitResult()
                     .orElseThrow(() -> new RuntimeException("SID service did not respond"));
-            if (!snapshots.getItems().contains(config.get(MapFuncConfig.Param.VERSION_TIMESTAMP).toString())) {
-                throw new RuntimeException(String.format("Invalid version timestamp. Valid versions are: %s",
+            if (snapshots.getItems() == null)
+                throw new InvalidSidVersionException("Invalid version timestamp. There are no valid versions");
+
+            else if (!snapshots.getItems().contains(config.get(MapFuncConfig.Param.VERSION_TIMESTAMP).toString())) {
+                throw new InvalidSidVersionException(String.format("Invalid version timestamp. Valid versions are: %s",
                         String.join(", ", snapshots.getItems())));
             }
         }

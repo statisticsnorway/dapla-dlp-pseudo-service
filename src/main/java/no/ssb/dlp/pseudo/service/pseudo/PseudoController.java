@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dapla.dlp.pseudo.func.PseudoFuncFactory;
 import no.ssb.dapla.storage.client.backend.gcs.GoogleCloudStorageBackend;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.StreamProcessor;
@@ -35,13 +36,16 @@ import no.ssb.dlp.pseudo.core.util.HumanReadableBytes;
 import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.core.util.Zips;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
+import no.ssb.dlp.pseudo.service.sid.InvalidSidVersionException;
 import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
+import org.aopalliance.intercept.Invocation;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -141,9 +145,10 @@ public class PseudoController {
             }
 
             return HttpResponse.ok(file).contentType(res.getTargetContentType());
-        } catch (Exception e) {
+        }
+        catch (RuntimeException e) {
             log.error(String.format("Failed to pseudonymize:%nrequest:%n%s", request), e);
-            return HttpResponse.serverError(Flowable.error(e));
+            throw e;
         }
     }
 
@@ -262,7 +267,7 @@ public class PseudoController {
         }
     }
 
-    private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) throws IOException {
+    private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         targetContentType = MoreMediaTypes.validContentType(targetContentType);
         File tempFile = null;
@@ -336,8 +341,14 @@ public class PseudoController {
         return streamProcessor.process(is, RecordMapSerializerFactory.newFromMediaType(targetContentType));
     }
 
-    private Single<File> receiveFile(StreamingFileUpload data) throws IOException {
-        Path tempDir = java.nio.file.Files.createTempDirectory("temp");
+    private Single<File> receiveFile(StreamingFileUpload data) {
+
+        Path tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("temp");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         File tempFile = tempDir.resolve(data.getFilename()).toFile();
         log.debug("Receive file - stored temporarily at " + tempFile.getAbsolutePath());
         return Single.fromPublisher(data.transferTo(tempFile))
@@ -345,7 +356,7 @@ public class PseudoController {
                     if (Boolean.TRUE.equals(success)) {
                         return tempFile;
                     } else {
-                        throw new IOException("Error receiving file " + tempFile);
+                        throw new RuntimeException("Error receiving file " + tempFile);
                     }
                 });
     }
@@ -459,4 +470,15 @@ public class PseudoController {
         return HttpResponse.<JsonError>serverError().status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
 
+    @Error
+    public HttpResponse<JsonError> sidVersionInvalid(HttpRequest request, PseudoFuncFactory.PseudoFuncInitException e) {
+        if (e.getCause() instanceof InvocationTargetException && e.getCause().getCause() instanceof InvalidSidVersionException){
+            JsonError error = new JsonError(e.getCause().getCause().getMessage())
+                    .link(Link.SELF, Link.of(request.getUri()));
+            return HttpResponse.<JsonError>badRequest().body(error);
+        }
+        JsonError error = new JsonError(e.getMessage())
+                .link(Link.SELF, Link.of(request.getUri()));
+        return HttpResponse.<JsonError>serverError().status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+    }
 }
