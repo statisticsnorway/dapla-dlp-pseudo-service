@@ -67,7 +67,7 @@ public class SidMapperTest {
             mapper.init("11854898347");
             Object mappedSid = mapper.map("11854898347");
             verify(sidService, times(1)).getSnapshots();
-            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.of("12345")));
+            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.of("2023-04-25")));
             Assertions.assertEquals("0001ha3", mappedSid);
         }
     }
