@@ -65,9 +65,7 @@ public class SidMapper implements Mapper {
                 for (List<String> bulkFnr: Lists.partition(List.copyOf(fnrs), partitionSize)) {
                     log.info("Execute SID-mapping bulk request");
                     final ObservableSubscriber<Map<String, SidInfo>> subscriber = ObservableSubscriber.subscribe(
-                            sidService.lookupFnr(bulkFnr, Optional.ofNullable(
-                                    this.config.get(MapFuncConfig.Param.VERSION_TIMESTAMP))
-                                    .map(Object::toString)));
+                            sidService.lookupFnr(bulkFnr, getSnapshot()));
                     for (String f: bulkFnr) {
                         bulkRequest.put(f, subscriber);
                     }
@@ -91,6 +89,13 @@ public class SidMapper implements Mapper {
             log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
             return fnr;
         }
+    }
+
+    private Optional<String> getSnapshot() {
+        return Optional.ofNullable(
+                this.config.getOrDefault(MapFuncConfig.Param.VERSION_TIMESTAMP, null)
+        ).map(String::valueOf);
+
     }
 
     @Override
