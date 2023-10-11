@@ -54,13 +54,13 @@ public class SidMapperTest {
                 Maps.of("11854898347", new SidInfo.SidInfoBuilder().snr("0001ha3").build()))
         );
         when(sidService.getSnapshots()).thenReturn(Publishers.just(
-                VersionInfo.builder().items(List.of("12345")).build()
+                VersionInfo.builder().items(List.of("2023-04-25")).build()
         ));
         try (var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
-            mapper.setConfig(Map.of("versionTimestamp", "12345"));
+            mapper.setConfig(Map.of("versionTimestamp", "2023-04-25"));
             mapper.init("11854898347");
             Object mappedSid = mapper.map("11854898347");
             verify(sidService, times(1)).getSnapshots();
@@ -69,21 +69,36 @@ public class SidMapperTest {
         }
     }
     @Test
-    public void testMapInvValidVersion() {
+    public void testMapVersionEarlierThanAvailable() {
         when(sidService.getSnapshots()).thenReturn(Publishers.just(
-                VersionInfo.builder().items(List.of("12345")).build()
+                VersionInfo.builder().items(List.of("2023-04-25")).build()
         ));
         try (var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
             Exception exception = Assert.assertThrows(RuntimeException.class, () -> {
-                mapper.setConfig(Map.of("versionTimestamp", "1234567"));
+                mapper.setConfig(Map.of("versionTimestamp", "2005-02-27"));
             });
-            Assertions.assertEquals("Invalid version timestamp. Valid versions are: 12345", exception.getMessage());
+            Assertions.assertEquals("Requested version is of an earlier date than all available SID versions. Valid versions are: 2023-04-25", exception.getMessage());
         }
     }
 
+    @Test
+    public void testMapVersionInvalidFormat() {
+        when(sidService.getSnapshots()).thenReturn(Publishers.just(
+                VersionInfo.builder().items(List.of("2023-04-25")).build()
+        ));
+        try (var application = mockStatic(Application.class)) {
+            application.when(Application::getContext).thenReturn(context);
+            Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
+                    new RuntimeException("SidMapper class not found"));
+            Exception exception = Assert.assertThrows(RuntimeException.class, () -> {
+                mapper.setConfig(Map.of("versionTimestamp", "25-04-2023"));
+            });
+            Assertions.assertEquals("Invalid version timestamp format. Valid versions are: 2023-04-25", exception.getMessage());
+        }
+    }
     @MockBean(SidService.class)
     SidService sidService() {
         return mock(SidService.class);

@@ -14,6 +14,9 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -93,11 +96,28 @@ public class SidMapper implements Mapper {
     @Override
     public void setConfig(Map<String, Object> config) {
         if (config.containsKey(MapFuncConfig.Param.VERSION_TIMESTAMP)) {
-            VersionInfo snapshots = ObservableSubscriber.subscribe(this.sidService.getSnapshots()).awaitResult()
+            VersionInfo availableSnapshots = ObservableSubscriber.subscribe(this.sidService.getSnapshots()).awaitResult()
                     .orElseThrow(() -> new RuntimeException("SID service did not respond"));
-            if (!snapshots.getItems().contains(config.get(MapFuncConfig.Param.VERSION_TIMESTAMP).toString())) {
-                throw new RuntimeException(String.format("Invalid version timestamp. Valid versions are: %s",
-                        String.join(", ", snapshots.getItems())));
+            DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+            LocalDate requestedSnapshotDate;
+            try { // Convert the SID snapshot in the request to Date format
+                requestedSnapshotDate = LocalDate.from(formatter.
+                        parse(config.get(MapFuncConfig.Param.VERSION_TIMESTAMP).toString()));
+            } catch (DateTimeParseException e) {
+                throw new RuntimeException(String.format("Invalid version timestamp format. Valid versions are: %s",
+                        String.join(", ", availableSnapshots.getItems())));
+            }
+            List<LocalDate> availableSnapshotDates = availableSnapshots.getItems().stream()
+                    .map(snapshot -> {
+                        try {
+                            return LocalDate.from(formatter.parse(snapshot));
+                        } catch (DateTimeParseException e) {
+                            throw new RuntimeException("Invalid timestamp format from SID service");
+                        }
+                    }).toList();
+            if(availableSnapshotDates.stream().allMatch(requestedSnapshotDate::isBefore)){
+                throw new RuntimeException(String.format("Requested version is of an earlier date than all available SID versions. Valid versions are: %s",
+                        String.join(", ", availableSnapshots.getItems())));
             }
         }
         this.config = config;
