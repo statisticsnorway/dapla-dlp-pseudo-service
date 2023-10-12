@@ -80,7 +80,7 @@ public class SidMapperTest {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
-            Exception exception = Assert.assertThrows(RuntimeException.class, () -> {
+            Exception exception = Assert.assertThrows(InvalidSidVersionException.class, () -> {
                 mapper.setConfig(Map.of("versionTimestamp", "2005-02-27"));
             });
             Assertions.assertEquals("Requested version is of an earlier date than all available SID versions. Valid versions are: 2023-04-25", exception.getMessage());
