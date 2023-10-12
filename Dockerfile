@@ -1,5 +1,5 @@
 FROM azul/zulu-openjdk:17
-RUN apt-get -qq update && apt-get -y --no-install-recommends install curl
+RUN apt-get -qq update && apt-get -y dist-upgrade && apt-get -y --no-install-recommends install curl
 COPY target/dapla-dlp-pseudo-service-*.jar dapla-dlp-pseudo-service.jar
 COPY target/classes/logback*.xml /conf/
 COPY conf/bootstrap.yml /conf/
