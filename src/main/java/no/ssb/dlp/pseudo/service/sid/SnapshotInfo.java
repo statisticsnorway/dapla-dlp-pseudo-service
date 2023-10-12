@@ -9,6 +9,6 @@ import java.util.List;
 @Data
 @Builder
 @Jacksonized
-public class VersionInfo {
+public class SnapshotInfo {
     private final List<String> items;
 }

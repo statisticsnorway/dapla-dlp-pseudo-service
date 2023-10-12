@@ -12,5 +12,5 @@ public interface SidService {
     Publisher<SidInfo> lookupSnr(String fnr, Optional<String> snapshot);
     Publisher<Map<String, SidInfo>> lookupFnr(List<String> fnrList, Optional<String> snapshot);
 
-    Publisher<VersionInfo> getSnapshots();
+    Publisher<SnapshotInfo> getSnapshots();
 }

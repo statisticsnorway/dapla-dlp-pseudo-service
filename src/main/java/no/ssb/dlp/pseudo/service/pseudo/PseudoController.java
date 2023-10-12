@@ -36,9 +36,8 @@ import no.ssb.dlp.pseudo.core.util.HumanReadableBytes;
 import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.core.util.Zips;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
-import no.ssb.dlp.pseudo.service.sid.InvalidSidVersionException;
+import no.ssb.dlp.pseudo.service.sid.InvalidSidSnapshotDateException;
 import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
-import org.aopalliance.intercept.Invocation;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
@@ -472,7 +471,7 @@ public class PseudoController {
 
     @Error
     public HttpResponse<JsonError> sidVersionInvalid(HttpRequest request, PseudoFuncFactory.PseudoFuncInitException e) {
-        if (e.getCause() instanceof InvocationTargetException && e.getCause().getCause() instanceof InvalidSidVersionException){
+        if (e.getCause() instanceof InvocationTargetException && e.getCause().getCause() instanceof InvalidSidSnapshotDateException){
             JsonError error = new JsonError(e.getCause().getCause().getMessage())
                     .link(Link.SELF, Link.of(request.getUri()));
             return HttpResponse.<JsonError>badRequest().body(error);

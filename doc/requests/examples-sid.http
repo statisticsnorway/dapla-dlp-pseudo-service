@@ -43,7 +43,7 @@ Content-Type: application/json
       {
         "name": "fnr",
         "pattern": "**/fnr",
-        "func": "map-sid(keyId=papis-key-1,versionTimestamp=2023_04_25-12_35_40_6495)"
+        "func": "map-sid(keyId=papis-key-1,snapshotDate=2023-07-05)"
       }
     ]
   }

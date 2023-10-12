@@ -1,0 +1,21 @@
+micronaut:
+  netty:
+    event-loops:
+      sid-group:
+        num-threads: 10
+        prefer-native-transport: true
+  http:
+    client:
+      event-loop-group: sid-group
+      read-timeout: 60s
+    services:
+      sid-service:
+        url: 'http://localhost:10240'
+        path: '/v2'
+        read-timeout: 60s
+        event-loop-group: sid-group
+#        pool:
+#          enabled: true
+#          max-connections: 50
+
+sid.mapper.partition.size: 100
