@@ -109,7 +109,7 @@ public class SidMapper implements Mapper {
                 requestedSnapshotDate = LocalDate.from(formatter.
                         parse(config.get(MapFuncConfig.Param.VERSION_TIMESTAMP).toString()));
             } catch (DateTimeParseException e) {
-                throw new RuntimeException(String.format("Invalid version timestamp format. Valid versions are: %s",
+                throw new InvalidSidVersionException(String.format("Invalid version timestamp format. Valid versions are: %s",
                         String.join(", ", availableSnapshots.getItems())));
             }
             List<LocalDate> availableSnapshotDates = availableSnapshots.getItems().stream()
