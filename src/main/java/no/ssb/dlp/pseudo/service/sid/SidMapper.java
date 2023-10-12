@@ -93,21 +93,21 @@ public class SidMapper implements Mapper {
 
     private Optional<String> getSnapshot() {
         return Optional.ofNullable(
-                this.config.getOrDefault(MapFuncConfig.Param.VERSION_TIMESTAMP, null)
+                this.config.getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null)
         ).map(String::valueOf);
 
     }
 
     @Override
     public void setConfig(Map<String, Object> config) {
-        if (config.containsKey(MapFuncConfig.Param.VERSION_TIMESTAMP)) {
-            VersionInfo availableSnapshots = ObservableSubscriber.subscribe(this.sidService.getSnapshots()).awaitResult()
+        if (config.containsKey(MapFuncConfig.Param.SNAPSHOT_DATE)) {
+            SnapshotInfo availableSnapshots = ObservableSubscriber.subscribe(this.sidService.getSnapshots()).awaitResult()
                     .orElseThrow(() -> new RuntimeException("SID service did not respond"));
             DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
             LocalDate requestedSnapshotDate;
             try { // Convert the SID snapshot in the request to Date format
                 requestedSnapshotDate = LocalDate.from(formatter.
-                        parse(config.get(MapFuncConfig.Param.VERSION_TIMESTAMP).toString()));
+                        parse(config.get(MapFuncConfig.Param.SNAPSHOT_DATE).toString()));
             } catch (DateTimeParseException e) {
                 throw new RuntimeException(String.format("Invalid version timestamp format. Valid versions are: %s",
                         String.join(", ", availableSnapshots.getItems())));

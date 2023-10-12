@@ -22,6 +22,6 @@ public interface SidClient {
 
     @Get( "/sid/snapshots")
     @ExecuteOn(TaskExecutors.IO)
-    Publisher<VersionInfo> snapshots();
+    Publisher<SnapshotInfo> snapshots();
 
 }

@@ -39,7 +39,7 @@ public class ExternalSidService implements SidService {
     }
 
     @Override
-    public Publisher<VersionInfo> getSnapshots() {
+    public Publisher<SnapshotInfo> getSnapshots() {
         return sidClient.snapshots();
     }
 }
