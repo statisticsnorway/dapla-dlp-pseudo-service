@@ -109,7 +109,7 @@ public class SidMapper implements Mapper {
                 requestedSnapshotDate = LocalDate.from(formatter.
                         parse(config.get(MapFuncConfig.Param.SNAPSHOT_DATE).toString()));
             } catch (DateTimeParseException e) {
-                throw new RuntimeException(String.format("Invalid version timestamp format. Valid versions are: %s",
+                throw new InvalidSidSnapshotDateException(String.format("Invalid snapshot date format. Valid dates are: %s",
                         String.join(", ", availableSnapshots.getItems())));
             }
             List<LocalDate> availableSnapshotDates = availableSnapshots.getItems().stream()
@@ -117,11 +117,11 @@ public class SidMapper implements Mapper {
                         try {
                             return LocalDate.from(formatter.parse(snapshot));
                         } catch (DateTimeParseException e) {
-                            throw new RuntimeException("Invalid timestamp format from SID service");
+                            throw new RuntimeException("Invalid date format from SID service");
                         }
                     }).toList();
             if(availableSnapshotDates.stream().allMatch(requestedSnapshotDate::isBefore)){
-                throw new RuntimeException(String.format("Requested version is of an earlier date than all available SID versions. Valid versions are: %s",
+                throw new InvalidSidSnapshotDateException(String.format("Requested date is of an earlier date than all available SID dates. Valid dates are: %s",
                         String.join(", ", availableSnapshots.getItems())));
             }
         }
