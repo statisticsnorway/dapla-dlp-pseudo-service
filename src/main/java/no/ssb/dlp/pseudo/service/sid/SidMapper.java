@@ -121,7 +121,7 @@ public class SidMapper implements Mapper {
                         }
                     }).toList();
             if(availableSnapshotDates.stream().allMatch(requestedSnapshotDate::isBefore)){
-                throw new RuntimeException(String.format("Requested version is of an earlier date than all available SID versions. Valid versions are: %s",
+                throw new InvalidSidVersionException(String.format("Requested version is of an earlier date than all available SID versions. Valid versions are: %s",
                         String.join(", ", availableSnapshots.getItems())));
             }
         }
