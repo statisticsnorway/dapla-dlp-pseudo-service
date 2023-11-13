@@ -100,7 +100,7 @@ public class PseudoController {
     @Operation(summary = "Pseudonymize file", description = """
             Pseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
                         
-            Choose between streaming the pseudonymized result back, or storing it as a file in GCS (by providing a `targetUri`).
+            The pseudonymized result will be streamed back.
                         
             Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
             formats. E.g. your source could be a CSV file and the result could be a JSON file.
@@ -146,8 +146,8 @@ public class PseudoController {
                                 
                     Notice that only certain whitelisted users can depseudonymize data.
                                 
-                    Choose between streaming the result back, or storing it as a file in GCS (by providing a `targetUri`).
-                                
+                    The pseudonymized result will be streamed back.
+
                     Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
                     formats. E.g. your source could be a CSV file and the result could be a JSON file.
 
@@ -194,7 +194,7 @@ public class PseudoController {
                     Repseudonymize a file (JSON or CSV - or a zip with potentially multiple such files) by uploading the file.
                     Repseudonymization is done by first applying depseudonuymization and then pseudonymization to fields of the file.
                                 
-                    Choose between streaming the result back, or storing it as a file in GCS (by providing a `targetUri`).
+                    The pseudonymized result will be streamed back.
                                 
                     Notice that you can specify the `targetContentType` if you want to convert to either of the supported file
                     formats. E.g. your source could be a CSV file and the result could be a JSON file.
