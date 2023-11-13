@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>no.ssb.dlp.pseudo.service</groupId>
   <artifactId>dapla-dlp-pseudo-service</artifactId>
-  <version>2.2.7-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
 
   <parent>
     <groupId>io.micronaut</groupId>
