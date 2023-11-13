@@ -67,10 +67,12 @@
       <id>central</id>
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
+    <!--
     <repository>
       <id>jcenter.bintray.com</id>
       <url>https://jcenter.bintray.com</url>
     </repository>
+    -->
   </repositories>
 
   <dependencies>
@@ -242,6 +244,7 @@
   </dependencies>
 
   <build>
+    <!--
     <pluginManagement>
       <plugins>
         <plugin>
@@ -282,7 +285,7 @@
 
       </plugins>
     </pluginManagement>
-
+-->
     <plugins>
       <plugin>
         <groupId>io.micronaut.build</groupId>
