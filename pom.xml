@@ -4,6 +4,7 @@
   <groupId>no.ssb.dlp.pseudo.service</groupId>
   <artifactId>dapla-dlp-pseudo-service</artifactId>
   <version>3.0.0-SNAPSHOT</version>
+  <name>dapla-dlp-pseudo-service</name>
 
   <parent>
     <groupId>io.micronaut</groupId>
