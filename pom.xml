@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>no.ssb.dlp.pseudo.service</groupId>
   <artifactId>dapla-dlp-pseudo-service</artifactId>
-  <version>2.2.7-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
 
   <parent>
     <groupId>io.micronaut</groupId>
@@ -12,31 +12,61 @@
   </parent>
 
   <properties>
-    <jdk.version>17</jdk.version>
+    <jdk.version>21</jdk.version>
     <maven.compiler.target>${jdk.version}</maven.compiler.target>
     <maven.compiler.source>${jdk.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <artifact-registry.url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-5n/dapla-pseudo-maven/</artifact-registry.url>
+    <github.repository>statisticsnorway/dapla-dlp-pseudo-service</github.repository>
+
+    <artifactregistry-maven-wagon.version>2.1.4</artifactregistry-maven-wagon.version>
+    <dapla-dlp-pseudo-core.version>2.0.0</dapla-dlp-pseudo-core.version>
     <micronaut.version>3.8.7</micronaut.version>
     <micronaut.openapi.version>4.6.0</micronaut.openapi.version>
     <micronaut-data.version>3.8.1</micronaut-data.version>
     <micronaut.object.storage.version>1.1.0</micronaut.object.storage.version>
     <auto-service.version>1.0.1</auto-service.version>
     <exec.mainClass>no.ssb.dlp.pseudo.service.Application</exec.mainClass>
-    <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
-    <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
-    <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
-    <lombok.version>1.18.26</lombok.version>
+    <maven-surefire-plugin.version>3.2.2</maven-surefire-plugin.version>
+    <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
+    <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
+    <maven-failsafe-plugin.version>3.2.2</maven-failsafe-plugin.version>
+    <lombok.version>1.18.30</lombok.version>
+    <mockito.version>5.7.0</mockito.version>
   </properties>
 
   <scm>
-    <connection>scm:git:git://github.com/statisticsnorway/dapla-dlp-pseudo-service.git</connection>
-    <developerConnection>scm:git:git@github.com:statisticsnorway/dapla-dlp-pseudo-service.git</developerConnection>
-    <url>https://github.com/statisticsnorway/dapla-dlp-pseudo-service</url>
-    <tag>2.2.3</tag>
+    <developerConnection>scm:git:https://github.com/${github.repository}.git</developerConnection>
+    <url>https://github.com/${github.repository}</url>
+    <tag>HEAD</tag>
   </scm>
 
   <repositories>
+    <repository>
+      <id>artifact-registry</id>
+      <url>${artifact-registry.url}</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>artifact-registry-snapshot</id>
+      <url>${artifact-registry.url}</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
     <repository>
       <id>jcenter.bintray.com</id>
       <url>https://jcenter.bintray.com</url>
@@ -113,27 +143,17 @@
     <dependency>
       <groupId>no.ssb.dapla.dlp.pseudo</groupId>
       <artifactId>dapla-dlp-pseudo-core</artifactId>
-      <version>1.2.5</version>
+      <version>${dapla-dlp-pseudo-core.version}</version>
     </dependency>
     <dependency>
-      <groupId>no.ssb.avro.convert.core</groupId>
-      <artifactId>avro-buddy-core</artifactId>
-      <version>1.1.0</version>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
     </dependency>
     <dependency>
-      <groupId>no.ssb.dapla.storage</groupId>
-      <artifactId>dapla-storage-client</artifactId>
-      <version>5.1.2</version>
-    </dependency>
-    <dependency>
-      <groupId>no.ssb.dapla.parquet</groupId>
-      <artifactId>parquet-buddy</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>no.ssb.dapla</groupId>
-      <artifactId>dataset-api</artifactId>
-      <version>0.6</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.7</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -205,6 +225,7 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -275,7 +296,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>3.0.0-M4</version>
+        <version>${maven-release-plugin.version}</version>
         <configuration>
           <tagNameFormat>@{project.version}</tagNameFormat>
         </configuration>
@@ -428,7 +449,7 @@
       <extension>
         <groupId>com.google.cloud.artifactregistry</groupId>
         <artifactId>artifactregistry-maven-wagon</artifactId>
-        <version>2.1.5</version>
+        <version>${artifactregistry-maven-wagon.version}</version>
       </extension>
     </extensions>
 
@@ -437,43 +458,24 @@
   <profiles>
     <profile>
       <id>ssb-bip</id>
-      <repositories>
-        <repository>
-          <id>central</id>
-          <url>https://repo.maven.apache.org/maven2</url>
-        </repository>
-        <repository>
-          <id>artifact-registry</id>
-          <url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-14da/maven-releases</url>
-          <releases>
-            <enabled>true</enabled>
-          </releases>
-          <snapshots>
-            <enabled>false</enabled>
-          </snapshots>
-        </repository>
-        <repository>
-          <id>artifact-registry-snapshot</id>
-          <url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-14da/maven-snapshots</url>
-          <releases>
-            <enabled>false</enabled>
-          </releases>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-        </repository>
-      </repositories>
       <distributionManagement>
-        <snapshotRepository>
-          <id>artifact-registry</id>
-          <url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-14da/maven-snapshots</url>
-        </snapshotRepository>
         <repository>
           <id>artifact-registry</id>
-          <url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-14da/maven-releases</url>
+          <url>${artifact-registry.url}</url>
         </repository>
+        <snapshotRepository>
+          <id>artifact-registry-snapshots</id>
+          <url>${artifact-registry.url}</url>
+        </snapshotRepository>
       </distributionManagement>
     </profile>
   </profiles>
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/${github.repository}</url>
+    </repository>
+  </distributionManagement>
 
 </project>
