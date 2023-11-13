@@ -22,7 +22,6 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncFactory;
-import no.ssb.dapla.storage.client.backend.gcs.GoogleCloudStorageBackend;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.StreamProcessor;
 import no.ssb.dlp.pseudo.core.exception.NoSuchPseudoKeyException;
@@ -64,7 +63,6 @@ public class PseudoController {
 
     private final StreamProcessorFactory streamProcessorFactory;
     private final RecordMapProcessorFactory recordProcessorFactory;
-    private final GoogleCloudStorageBackend storageBackend;
     private final PseudoConfigSplitter pseudoConfigSplitter;
 
     /**
@@ -133,16 +131,6 @@ public class PseudoController {
             RecordMapProcessor recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs);
             ProcessFileResult res = processFile(data, PseudoOperation.PSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Flowable file = res.getFlowable();
-            if (req.getTargetUri() != null) {
-                URI targetUri = req.getTargetUri();
-                Completable fileUpload = storageBackend
-                        .write(targetUri.toString(), file)
-                        .timeout(30, TimeUnit.SECONDS)
-                        .doOnError(throwable -> log.error("Upload failed: %s".formatted(targetUri), throwable))
-                        .doOnComplete(() -> log.info("Successful upload: %s".formatted(targetUri)));
-                return HttpResponse.ok(fileUpload.toFlowable());
-            }
-
             return HttpResponse.ok(file).contentType(res.getTargetContentType());
         }
         catch (RuntimeException e) {
@@ -192,16 +180,6 @@ public class PseudoController {
             RecordMapProcessor recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs);
             ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Flowable file = res.getFlowable();
-            if (req.getTargetUri() != null) {
-                URI targetUri = req.getTargetUri();
-                Completable fileUpload = storageBackend
-                        .write(targetUri.toString(), file)
-                        .timeout(30, TimeUnit.SECONDS)
-                        .doOnError(throwable -> log.error("Upload failed: %s".formatted(targetUri), throwable))
-                        .doOnComplete(() -> log.info("Successful upload: %s".formatted(targetUri)));
-                return HttpResponse.ok(fileUpload.toFlowable());
-            }
-
             return HttpResponse.ok(file).contentType(res.getTargetContentType());
         } catch (Exception e) {
             log.error(String.format("Failed to depseudonymize:%nrequest:%n%s", request), e);
@@ -249,16 +227,6 @@ public class PseudoController {
             RecordMapProcessor recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig());
             ProcessFileResult res = processFile(data, PseudoOperation.REPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Flowable file = res.getFlowable();
-            if (req.getTargetUri() != null) {
-                URI targetUri = req.getTargetUri();
-                Completable fileUpload = storageBackend
-                        .write(targetUri.toString(), file)
-                        .timeout(30, TimeUnit.SECONDS)
-                        .doOnError(throwable -> log.error("Upload failed: %s".formatted(targetUri), throwable))
-                        .doOnComplete(() -> log.info("Successful upload: %s".formatted(targetUri)));
-                return HttpResponse.ok(fileUpload.toFlowable());
-            }
-
             return HttpResponse.ok(file).contentType(res.getTargetContentType());
         } catch (Exception e) {
             log.error(String.format("Failed to repseudonymize:%nrequest:%n%s", request), e);
@@ -369,14 +337,6 @@ public class PseudoController {
         private PseudoConfig pseudoConfig;
 
         /**
-         * Specify this if you want to stream the result to a specific location such as a GCS bucket. Note that the pseudo
-         * service needs to have access to the bucket. Leave this unspecified in order to just stream the result back to
-         * the client.
-         */
-        @Schema(implementation = String.class)
-        private URI targetUri;
-
-        /**
          * The content type of the resulting file.
          */
         @Schema(implementation = String.class, allowableValues = {
@@ -413,14 +373,6 @@ public class PseudoController {
          * The target pseudonymization config
          */
         private PseudoConfig targetPseudoConfig;
-
-        /**
-         * Specify this if you want to stream the result to a specific location such as a GCS bucket. Note that the pseudo
-         * service needs to have access to the bucket. Leave this unspecified in order to just stream the result back to
-         * the client.
-         */
-        @Schema(implementation = String.class)
-        private URI targetUri;
 
         /**
          * The content type of the resulting file.

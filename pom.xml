@@ -144,24 +144,14 @@
       <version>${dapla-dlp-pseudo-core.version}</version>
     </dependency>
     <dependency>
-      <groupId>no.ssb.avro.convert.core</groupId>
-      <artifactId>avro-buddy-core</artifactId>
-      <version>1.1.0</version>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
     </dependency>
     <dependency>
-      <groupId>no.ssb.dapla.storage</groupId>
-      <artifactId>dapla-storage-client</artifactId>
-      <version>5.1.2</version>
-    </dependency>
-    <dependency>
-      <groupId>no.ssb.dapla.parquet</groupId>
-      <artifactId>parquet-buddy</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>no.ssb.dapla</groupId>
-      <artifactId>dataset-api</artifactId>
-      <version>0.6</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.7</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
