@@ -20,7 +20,8 @@
     <artifact-registry.url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-5n/dapla-pseudo-maven/</artifact-registry.url>
     <github.repository>statisticsnorway/dapla-dlp-pseudo-service</github.repository>
 
-    <dapla-dlp-pseudo-core.version>1.2.6-SNAPSHOT</dapla-dlp-pseudo-core.version>
+    <artifactregistry-maven-wagon.version>2.1.4</artifactregistry-maven-wagon.version>
+    <dapla-dlp-pseudo-core.version>2.0.0</dapla-dlp-pseudo-core.version>
     <micronaut.version>3.8.7</micronaut.version>
     <micronaut.openapi.version>4.6.0</micronaut.openapi.version>
     <micronaut-data.version>3.8.1</micronaut-data.version>
@@ -42,10 +43,6 @@
   </scm>
 
   <repositories>
-    <repository>
-      <id>jcenter.bintray.com</id>
-      <url>https://jcenter.bintray.com</url>
-    </repository>
     <repository>
       <id>artifact-registry</id>
       <url>${artifact-registry.url}</url>
@@ -69,6 +66,10 @@
     <repository>
       <id>central</id>
       <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+    <repository>
+      <id>jcenter.bintray.com</id>
+      <url>https://jcenter.bintray.com</url>
     </repository>
   </repositories>
 
@@ -448,7 +449,7 @@
       <extension>
         <groupId>com.google.cloud.artifactregistry</groupId>
         <artifactId>artifactregistry-maven-wagon</artifactId>
-        <version>2.1.5</version>
+        <version>${artifactregistry-maven-wagon.version}</version>
       </extension>
     </extensions>
 
