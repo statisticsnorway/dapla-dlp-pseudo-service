@@ -11,49 +11,6 @@ Browse the API docs as:
 
 ## Examples
 
-### Export a dataset
-```sh
-curl "${root_url}/export" -i -H "Authorization: Bearer ${dapla_auth_token}" --data @export-request.json
-```
-Where `root_url` points to an instance of the pseudo-service, `dapla_auth_token` is a JWT token and
-`export-request.json` is a file containing the request. E.g:
-
-```json
-{
-  "sourceDataset": {
-    "root": "gs://ssb-dev-demo-enhjoern-a-data-produkt",
-    "path": "/path/to/data",
-    "version": "123"
-  },
-  "targetContentName": "test",
-  "targetContentType":  "application/json",
-  "targetPassword": "kensentme",
-  "depseudonymize": true,
-  "pseudoRules": [
-    {
-      "name": "kontonummer",
-      "pattern": "**/kontonummer",
-      "func": "fpe-anychar(secret1)"
-    }
-  ]
-}
-```
-
-This example exports all columns matching either `**/foedsel` or `**/kontonummer` from a dataset located in a GCS
-bucket at `gs://ssb-dev-demo-enhjoern-a-data-produkt/path/to/data/123`.
-Columns matching `**/kontonummer` will be depseudonymized using the function `fpe-anychar(secret1)` and then compressed,
-encrypted and uploaded (as json) to the preconfigured data export bucket (see config).      
-
-Note that the above will export all data. If you only need a subset of fields, you can specify this with column selector
-glob expressions, like so:
-```
-  "columnSelectors": [
-    "**/foedsel*",
-    "**/kontonummer"
-  ]
-```
-
-
 ### Pseudonymize JSON file and stream back the result 
 
 ```sh
@@ -94,13 +51,12 @@ curl "${root_url}/depseudonymize/file" \
 }'
 ```
 
-### Depseudonymize JSON file and upload to google cloud storage as zipped CSV-file
+### Depseudonymize JSON file and download a zipped CSV-file
 ```sh
 curl "${root_url}/depseudonymize/file" \
 --header "Authorization: Bearer ${dapla_auth_token}" \
 --form 'data=@src/test/resources/data/15k-pseudonymized.json' \
 --form 'request={
-  "targetUri": "gs://ssb-dev-demo-enhjoern-a-data-export/path/to/depseudonymized-csv.zip",
   "targetContentType": "text/csv",
   "pseudoConfig": {
     "rules": [

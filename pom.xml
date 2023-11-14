@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>no.ssb.dlp.pseudo.service</groupId>
+  <groupId>no.ssb.dapla.dlp.pseudo</groupId>
   <artifactId>dapla-dlp-pseudo-service</artifactId>
   <version>3.0.0-SNAPSHOT</version>
+  <name>dapla-dlp-pseudo-service</name>
 
   <parent>
     <groupId>io.micronaut</groupId>
@@ -17,18 +18,21 @@
     <maven.compiler.source>${jdk.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <artifact-registry.url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-5n/dapla-pseudo-maven/</artifact-registry.url>
+    <artifact-registry.url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-5n/dapla-pseudo-maven</artifact-registry.url>
     <github.repository>statisticsnorway/dapla-dlp-pseudo-service</github.repository>
+    <exec.mainClass>no.ssb.dlp.pseudo.service.Application</exec.mainClass>
 
-    <artifactregistry-maven-wagon.version>2.1.4</artifactregistry-maven-wagon.version>
+    <artifactregistry-maven-wagon.version>2.2.1</artifactregistry-maven-wagon.version>
     <dapla-dlp-pseudo-core.version>2.0.0</dapla-dlp-pseudo-core.version>
     <micronaut.version>3.8.7</micronaut.version>
     <micronaut.openapi.version>4.6.0</micronaut.openapi.version>
     <micronaut-data.version>3.8.1</micronaut-data.version>
     <micronaut.object.storage.version>1.1.0</micronaut.object.storage.version>
     <auto-service.version>1.0.1</auto-service.version>
-    <exec.mainClass>no.ssb.dlp.pseudo.service.Application</exec.mainClass>
+    <maven-javadoc-plugin.version>3.6.2</maven-javadoc-plugin.version>
+    <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
     <maven-surefire-plugin.version>3.2.2</maven-surefire-plugin.version>
+    <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
     <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
     <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
     <maven-failsafe-plugin.version>3.2.2</maven-failsafe-plugin.version>
@@ -44,32 +48,19 @@
 
   <repositories>
     <repository>
-      <id>artifact-registry</id>
-      <url>${artifact-registry.url}</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>artifact-registry-snapshot</id>
-      <url>${artifact-registry.url}</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
       <id>central</id>
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
     <repository>
-      <id>jcenter.bintray.com</id>
-      <url>https://jcenter.bintray.com</url>
+      <id>artifact-registry</id>
+      <url>${artifact-registry.url}</url>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
     </repository>
   </repositories>
 
@@ -246,43 +237,139 @@
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>${maven-shade-plugin.version}</version>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>${maven-resources-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>${maven-source-plugin.version}</version>
           <executions>
             <execution>
-              <id>default-shade</id>
+              <id>attach-sources</id>
+              <goals>
+                <goal>jar-no-fork</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <release>${jdk.version}</release>
+            <annotationProcessorPaths>
+              <path>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+              </path>
+              <path>
+                <groupId>io.micronaut</groupId>
+                <artifactId>micronaut-inject-java</artifactId>
+                <version>${micronaut.version}</version>
+              </path>
+              <path>
+                <groupId>io.micronaut</groupId>
+                <artifactId>micronaut-validation</artifactId>
+                <version>${micronaut.version}</version>
+              </path>
+              <path>
+                <groupId>io.micronaut.security</groupId>
+                <artifactId>micronaut-security-annotations</artifactId>
+                <version>${micronaut.security.version}</version>
+              </path>
+              <path>
+                <groupId>io.micronaut.openapi</groupId>
+                <artifactId>micronaut-openapi</artifactId>
+                <version>${micronaut.openapi.version}</version>
+              </path>
+              <path>
+                <groupId>com.google.auto.service</groupId>
+                <artifactId>auto-service</artifactId>
+                <version>${auto-service.version}</version>
+              </path>
+            </annotationProcessorPaths>
+          </configuration>
+          <executions>
+            <execution>
+              <id>test-compile</id>
+              <goals>
+                <goal>testCompile</goal>
+              </goals>
               <configuration>
-                <createDependencyReducedPom>false</createDependencyReducedPom>
-                <transformers>
-                  <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                    <mainClass>${exec.mainClass}</mainClass>
-                  </transformer>
-                  <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                </transformers>
-                <filters>
-                  <filter>
-                    <artifact>*:*</artifact>
-                    <excludes>
-                      <exclude>module-info.class</exclude>
-                      <exclude>META-INF/*.MF</exclude>
-                      <exclude>META-INF/*.txt</exclude>
-                      <exclude>META-INF/LICENSE</exclude>
-                      <exclude>META-INF/DEPENDENCIES</exclude>
-                      <exclude>META-INF/NOTICE</exclude>
-                      <exclude>META-INF/*.SF</exclude>
-                      <exclude>META-INF/*.DSA</exclude>
-                      <exclude>META-INF/*.RSA</exclude>
-                    </excludes>
-                  </filter>
-                </filters>
+                <annotationProcessorPaths>
+                  <path>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                    <version>${lombok.version}</version>
+                  </path>
+                  <path>
+                    <groupId>io.micronaut</groupId>
+                    <artifactId>micronaut-inject-java</artifactId>
+                    <version>${micronaut.version}</version>
+                  </path>
+                  <path>
+                    <groupId>io.micronaut</groupId>
+                    <artifactId>micronaut-validation</artifactId>
+                    <version>${micronaut.version}</version>
+                  </path>
+                  <path>
+                    <groupId>io.micronaut.security</groupId>
+                    <artifactId>micronaut-security-annotations</artifactId>
+                    <version>${micronaut.security.version}</version>
+                  </path>
+                </annotationProcessorPaths>
               </configuration>
             </execution>
           </executions>
         </plugin>
-
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>${maven-release-plugin.version}</version>
+          <configuration>
+            <tagNameFormat>@{project.version}</tagNameFormat>
+          </configuration>
+        </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-shade-plugin</artifactId>
+              <version>${maven-shade-plugin.version}</version>
+              <executions>
+                <execution>
+                  <id>default-shade</id>
+                  <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <transformers>
+                      <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <mainClass>${exec.mainClass}</mainClass>
+                      </transformer>
+                      <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                    </transformers>
+                    <filters>
+                      <filter>
+                        <artifact>*:*</artifact>
+                        <excludes>
+                          <exclude>module-info.class</exclude>
+                          <exclude>META-INF/*.MF</exclude>
+                          <exclude>META-INF/*.txt</exclude>
+                          <exclude>META-INF/LICENSE</exclude>
+                          <exclude>META-INF/DEPENDENCIES</exclude>
+                          <exclude>META-INF/NOTICE</exclude>
+                          <exclude>META-INF/*.SF</exclude>
+                          <exclude>META-INF/*.DSA</exclude>
+                          <exclude>META-INF/*.RSA</exclude>
+                        </excludes>
+                      </filter>
+                    </filters>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
       </plugins>
     </pluginManagement>
-
     <plugins>
       <plugin>
         <groupId>io.micronaut.build</groupId>
@@ -291,15 +378,16 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
+        <artifactId>maven-compiler-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>${maven-release-plugin.version}</version>
-        <configuration>
-          <tagNameFormat>@{project.version}</tagNameFormat>
-        </configuration>
+        <artifactId>maven-source-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -322,77 +410,6 @@
               <goal>integration-test</goal>
               <goal>verify</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <release>${jdk.version}</release>
-          <annotationProcessorPaths>
-            <path>
-              <groupId>org.projectlombok</groupId>
-              <artifactId>lombok</artifactId>
-              <version>${lombok.version}</version>
-            </path>
-            <path>
-              <groupId>io.micronaut</groupId>
-              <artifactId>micronaut-inject-java</artifactId>
-              <version>${micronaut.version}</version>
-            </path>
-            <path>
-              <groupId>io.micronaut</groupId>
-              <artifactId>micronaut-validation</artifactId>
-              <version>${micronaut.version}</version>
-            </path>
-            <path>
-              <groupId>io.micronaut.security</groupId>
-              <artifactId>micronaut-security-annotations</artifactId>
-              <version>${micronaut.security.version}</version>
-            </path>
-            <path>
-              <groupId>io.micronaut.openapi</groupId>
-              <artifactId>micronaut-openapi</artifactId>
-              <version>${micronaut.openapi.version}</version>
-            </path>
-            <path>
-              <groupId>com.google.auto.service</groupId>
-              <artifactId>auto-service</artifactId>
-              <version>${auto-service.version}</version>
-            </path>
-          </annotationProcessorPaths>
-        </configuration>
-        <executions>
-          <execution>
-            <id>test-compile</id>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
-            <configuration>
-              <annotationProcessorPaths>
-                <path>
-                  <groupId>org.projectlombok</groupId>
-                  <artifactId>lombok</artifactId>
-                  <version>${lombok.version}</version>
-                </path>
-                <path>
-                  <groupId>io.micronaut</groupId>
-                  <artifactId>micronaut-inject-java</artifactId>
-                  <version>${micronaut.version}</version>
-                </path>
-                <path>
-                  <groupId>io.micronaut</groupId>
-                  <artifactId>micronaut-validation</artifactId>
-                  <version>${micronaut.version}</version>
-                </path>
-                <path>
-                  <groupId>io.micronaut.security</groupId>
-                  <artifactId>micronaut-security-annotations</artifactId>
-                  <version>${micronaut.security.version}</version>
-                </path>
-              </annotationProcessorPaths>
-            </configuration>
           </execution>
         </executions>
       </plugin>
