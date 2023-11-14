@@ -9,6 +9,7 @@ on:
       - src/**
       - conf/**
       - Dockerfile
+      - pom.xml
   pull_request:
     branches:
       - master
@@ -17,6 +18,7 @@ on:
       - src/**
       - conf/**
       - Dockerfile
+      - pom.xml
 
 env:
   REGISTRY: europe-north1-docker.pkg.dev/artifact-registry-5n/dapla-pseudo-docker/ssb/dapla
