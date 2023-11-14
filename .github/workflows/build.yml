@@ -5,6 +5,7 @@ on:
     branches:
       - master
     paths:
+      - .github/**
       - src/**
       - conf/**
       - Dockerfile
@@ -12,6 +13,7 @@ on:
     branches:
       - master
     paths:
+      - .github/**
       - src/**
       - conf/**
       - Dockerfile
@@ -74,12 +76,12 @@ jobs:
           # Docker tags based on the following events/attributes
           tags: |
             type=ref,event=branch
-            type=ref,event=pr
+            type=ref,event=pr,suffix=-${{ github.event.pull_request.head.sha }}
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value={{branch}}-{{sha}},enable={{is_default_branch}}
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
-            type=raw,value=${{ env.TAG }}, enable=true
 
       - name: Build and push
         id: docker_build
