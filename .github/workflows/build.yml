@@ -50,9 +50,10 @@ jobs:
         run: mvn --batch-mode -P ssb-bip deploy
 
       - name: Clean up artifacts that are no longer needed
-        run: rm -f target/dapla-dlp-pseudo-service-*-sources.jar && \
-             rm -f target/dapla-dlp-pseudo-service-*-javadoc.jar && \
-             ls -al target/dapla-dlp-pseudo-service-*.jar
+        run: |
+          rm -f target/dapla-dlp-pseudo-service-*-sources.jar
+          rm -f target/dapla-dlp-pseudo-service-*-javadoc.jar
+          ls -al target/dapla-dlp-pseudo-service-*.jar
 
       - name: Set up Docker Buildx
         id: buildx
