@@ -78,11 +78,11 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,prefix={{branch}}-,enabled={{is_default_branch}}
+            type=sha,prefix={{branch}}-,enable={{is_default_branch}}
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
-            type=raw,value=${{ env.TAG }},enable=true,enabled={{is_pull_request}}
+            type=raw,value=${{ env.TAG }},enable={{is_pull_request}}
 
       - name: Build and push
         id: docker_build
