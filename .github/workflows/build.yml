@@ -21,7 +21,7 @@ on:
 env:
   REGISTRY: europe-north1-docker.pkg.dev/artifact-registry-5n/dapla-pseudo-docker/ssb/dapla
   IMAGE: dapla-dlp-pseudo-service
-  TAG: ${{ github.ref_name }}-${{ github.sha[:8] }}
+  TAG: ${{ github.ref_name }}-${{ github.sha }}
 
 jobs:
   build:
@@ -75,13 +75,13 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE }}
           # Docker tags based on the following events/attributes
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
+            type=ref,event=branch,suffix=-{{ sha }}
+            type=ref,event=pr,suffix=-{{ sha }}
             type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix={{branch}}-,enabled={{is_default_branch}}
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
-            type=raw,value=${{ env.TAG }}, enable=true
 
       - name: Build and push
         id: docker_build
