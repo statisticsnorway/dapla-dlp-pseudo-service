@@ -79,7 +79,7 @@ jobs:
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
-            type=raw,value=${{ env.TAG }}, enable=true
+            type=sha,format=short,prefix={{branch}}-
 
       - name: Build and push
         id: docker_build
