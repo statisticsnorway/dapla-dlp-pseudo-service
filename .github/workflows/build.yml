@@ -81,7 +81,7 @@ jobs:
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
-            type=sha
+            type=sha,prefix={{branch}}{{github.ref_name}}
 
       - name: Build and push
         id: docker_build
