@@ -4,9 +4,17 @@ on:
   push:
     branches:
       - master
+    paths:
+      - src/**
+      - conf/**
+      - Dockerfile
   pull_request:
     branches:
       - master
+    paths:
+      - src/**
+      - conf/**
+      - Dockerfile
 
 env:
   REGISTRY: europe-north1-docker.pkg.dev/artifact-registry-5n/dapla-pseudo-docker/ssb/dapla
@@ -39,7 +47,10 @@ jobs:
           token_format: access_token
 
       - name: Build with Maven and deploy to Artifact Registry
-        run: mvn --batch-mode -P ssb-bip deploy -T 1C
+        run: mvn --batch-mode -P ssb-bip deploy
+
+      - name: Clean up artifacts that are no longer needed
+        run: rm -f target/dapla-dlp-pseudo-service-*-sources.jar && rm -f target/dapla-dlp-pseudo-service-*-javadoc.jar
 
       - name: Set up Docker Buildx
         id: buildx
