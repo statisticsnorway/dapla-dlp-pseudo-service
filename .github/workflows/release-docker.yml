@@ -49,6 +49,8 @@ jobs:
             type=semver,pattern=v{{major}}
 
       - name: Download Java asset
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p target
           # Download just the jar file (no javadoc or sources)
