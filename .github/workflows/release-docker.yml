@@ -54,7 +54,7 @@ jobs:
         run: |
           mkdir -p target
           # Download just the jar file (no javadoc or sources)
-          gh release download -p "*{{ github.event.release.tag_name }}.jar" -D target
+          gh release download -p "*${{ github.event.release.tag_name }}.jar" -D target
 
       - name: Build and push
         id: docker_build
