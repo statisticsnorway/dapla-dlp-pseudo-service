@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This filter will obtain an {@link com.google.auth.oauth2.IdToken} and add it to the request. It uses Google's
- * default Application Default Credentials as opposed to the {@link io.micronaut.gcp.http.client.GoogleAuthFilter} which
+ * default Application Default Credentials as opposed to the {@see io.micronaut.gcp.http.client.GoogleAuthFilter} which
  * uses the Compute metadata server.
  */
 @IdTokenFilterMatcher
