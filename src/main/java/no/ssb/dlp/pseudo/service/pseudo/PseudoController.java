@@ -44,12 +44,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static no.ssb.dlp.pseudo.core.util.Zips.ZipOptions.zipOpts;
@@ -57,7 +55,7 @@ import static no.ssb.dlp.pseudo.core.util.Zips.ZipOptions.zipOpts;
 @RequiredArgsConstructor
 @Controller
 @Slf4j
-@Secured(SecurityRule.IS_AUTHENTICATED)
+@Secured({PseudoServiceRole.USER, PseudoServiceRole.ADMIN})
 @Tag(name = "Pseudo operations")
 public class PseudoController {
 

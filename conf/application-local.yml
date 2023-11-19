@@ -97,6 +97,8 @@ pseudo.secrets:
     type: TINK_WDEK
 
 app-roles:
+  users:
+    - isAuthenticated()
   admins:
     - kons_schu@ssb.no
     - kons-skaar@ssb.no
