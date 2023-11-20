@@ -4,6 +4,7 @@ import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requirements;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.env.Environment;
+import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.security.token.DefaultRolesFinder;
 import io.micronaut.security.token.RolesFinder;
 import io.micronaut.security.token.config.TokenConfiguration;
@@ -31,8 +32,13 @@ public class CustomRolesFinder implements RolesFinder {
         List<String> roles = new ArrayList<>();
 
         Object username = attributes.get(tokenConfiguration.getNameKey());
-        if (rolesConfig.getAdmins().contains(username)) {
+        if (rolesConfig.getAdmins().contains(SecurityRule.IS_AUTHENTICATED)
+                ||rolesConfig.getAdmins().contains(username)) {
             roles.add(PseudoServiceRole.ADMIN);
+        }
+        if (rolesConfig.getUsers().contains(SecurityRule.IS_AUTHENTICATED)
+                || rolesConfig.getUsers().contains(username)) {
+            roles.add(PseudoServiceRole.USER);
         }
 
         return roles;
