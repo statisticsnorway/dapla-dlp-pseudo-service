@@ -101,8 +101,9 @@ app-roles:
     - isAuthenticated()
   admins:
     - kons_schu@ssb.no
-    - kons-skaar@ssb.no
     - kons-lunde@ssb.no
     - mmw@ssb.no
     - mic@ssb.no
+
+  admins-group: pseudo-service-user-dev@ssb.no
 
