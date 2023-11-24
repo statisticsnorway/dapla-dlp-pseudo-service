@@ -41,6 +41,13 @@ micronaut:
             keycloak-staging:
               url: 'https://keycloak.staging-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
 
+  http:
+    services:
+      cloud-identity-service:
+        url: 'https://cloudidentity.googleapis.com'
+        path: '/v1'
+        read-timeout: 60s
+
   object-storage:
     gcp:
       sid:
@@ -62,6 +69,15 @@ gcp:
     key-uris:
       - gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1
       - gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/crypto-keyring/cryptoKeys/crypto-key
+
+  http:
+    client:
+      filter:
+        services:
+          cloud-identity-service:
+            audience: "https://www.googleapis.com/auth/cloud-identity.groups.readonly"
+
+        credentials-path: private/gcp/sa-keys/dev-dapla-pseudo-service-test-sa-key.json
 
 sid:
   mapping.filename: "freg-snr/snr-kat-latest"
@@ -101,8 +117,9 @@ app-roles:
     - isAuthenticated()
   admins:
     - kons_schu@ssb.no
-    - kons-skaar@ssb.no
     - kons-lunde@ssb.no
     - mmw@ssb.no
     - mic@ssb.no
+
+  admins-group: pseudo-service-user-dev@ssb.no
 

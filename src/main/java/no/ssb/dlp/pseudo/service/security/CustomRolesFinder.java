@@ -9,6 +9,9 @@ import io.micronaut.security.token.DefaultRolesFinder;
 import io.micronaut.security.token.RolesFinder;
 import io.micronaut.security.token.config.TokenConfiguration;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import no.ssb.dlp.pseudo.service.accessgroups.CloudIdentityService;
+import no.ssb.dlp.pseudo.service.accessgroups.Membership;
 
 import javax.inject.Singleton;
 import java.util.ArrayList;
@@ -22,10 +25,12 @@ import java.util.Map;
         @Requires(notEnv = Environment.TEST),
         @Requires(notEquals = "endpoints.cloud-run.enabled", value = "true")
 })
+@Slf4j
 public class CustomRolesFinder implements RolesFinder {
 
     private final TokenConfiguration tokenConfiguration;
     private final StaticRolesConfig rolesConfig;
+    private final CloudIdentityService cloudIdentityService;
 
     @Override
     public List<String> resolveRoles(Map<String, Object> attributes) {
@@ -40,7 +45,22 @@ public class CustomRolesFinder implements RolesFinder {
                 || rolesConfig.getUsers().contains(username)) {
             roles.add(PseudoServiceRole.USER);
         }
-
+        if (rolesConfig.getAdminsGroup().isPresent()) {
+            final List<Membership> adminMembers = cloudIdentityService.listMembers(rolesConfig.getAdminsGroup().get());
+            if (adminMembers.stream().anyMatch(value -> value.getPreferredMemberKey().getId().equals(username))) {
+                roles.add(PseudoServiceRole.ADMIN);
+            }
+        }
+        if (rolesConfig.getUsersGroup().isPresent()) {
+            final List<Membership> adminMembers = cloudIdentityService.listMembers(rolesConfig.getUsersGroup().get());
+            if (adminMembers.stream().anyMatch(value -> value.getPreferredMemberKey().getId().equals(username))) {
+                roles.add(PseudoServiceRole.USER);
+            }
+        }
+        if (roles.isEmpty()) {
+            log.info("Could not resolve any roles for user {}", username);
+        }
+        log.debug("Resolved roles {} for user {}", roles, username);
         return roles;
     }
 }
