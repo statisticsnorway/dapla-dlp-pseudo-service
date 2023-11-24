@@ -13,12 +13,24 @@ import javax.annotation.Nullable;
 @AccessTokenFilterMatcher()
 public interface CloudIdentityClient {
 
-    // https://cloud.google.com/identity/docs/reference/rest/v1/groups.memberships/list
+    /**
+     * Lookup a group by its email address.
+     * See: https://cloud.google.com/identity/docs/reference/rest/v1/groups/lookup
+     * @param groupKeyId the email address of the group
+     * @return a {@link Publisher} of {@link LookupResponse}
+     */
     @Get( "/groups:lookup?groupKey.id={groupKeyId}")
     @ExecuteOn(TaskExecutors.IO)
     Publisher<LookupResponse> lookup(String groupKeyId);
 
-    // https://cloud.google.com/identity/docs/reference/rest/v1/groups/lookup
+    /**
+     * List all members of a group.
+     * See: https://cloud.google.com/identity/docs/reference/rest/v1/groups.memberships/list
+     *
+     * @param groupId the id of the group
+     * @param pageToken for pagination
+     * @return a {@link Publisher} of {@link MembershipResponse}
+     */
     @Get( "/groups/{groupId}/memberships?pageToken={pageToken}")
     @ExecuteOn(TaskExecutors.IO)
     Publisher<MembershipResponse> listMembers(String groupId, @Nullable String pageToken);

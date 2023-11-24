@@ -21,6 +21,14 @@ public class CloudIdentityService {
                 .blockingFirst();
     }
 
+    /**
+     * Paginate through all memberships of a group.
+     *
+     * @param groupId the id of the group
+     * @param nextPageToken a token for pagination (will be null on first call)
+     * @param allMemberships a list that will be populated with all memberships
+     * @return the list of all memberships
+     */
     private Flowable<List<Membership>> fetchMemberships(String groupId, String nextPageToken,
                                                                    List<Membership> allMemberships) {
         if (groupId == null || groupId.isEmpty()) {
