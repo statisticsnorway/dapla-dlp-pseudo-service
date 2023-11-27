@@ -26,7 +26,7 @@ Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
 
-### Map SIDs in batch
+### Look up SID for a list of FNRs and return those that are not found
 
 POST {{base_url}}/sid/lookup/batch
 Content-Type: application/json
