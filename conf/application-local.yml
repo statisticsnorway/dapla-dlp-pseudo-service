@@ -79,6 +79,10 @@ gcp:
 
         credentials-path: private/gcp/sa-keys/dev-dapla-pseudo-service-test-sa-key.json
 
+  caches:
+    cloud-identity-service-cache:
+      expire-after-write: 30s
+
 sid:
   mapping.filename: "freg-snr/snr-kat-latest"
   index.filename: "sid/index"

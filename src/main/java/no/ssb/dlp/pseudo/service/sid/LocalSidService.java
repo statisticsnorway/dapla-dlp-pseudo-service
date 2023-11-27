@@ -53,6 +53,13 @@ class LocalSidService implements SidService {
     }
 
     @Override
+    public Publisher<MultiSidLookupResponse> lookupMissing(List<String> fnrList, Optional<String> snapshot) {
+        return Publishers.just(MultiSidLookupResponse.builder().missing(fnrList.stream().filter(fnr ->
+                sidCache.getCurrentSnrForFnr(fnr).isEmpty()).collect(Collectors.toList())).build()
+        );
+    }
+
+    @Override
     public Publisher<SnapshotInfo> getSnapshots() {
         return Publishers.just(SnapshotInfo.builder().items(List.of("2023-04-25")).build());
     }
