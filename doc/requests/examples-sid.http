@@ -26,6 +26,19 @@ Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
 
+### Map SIDs in batch
+
+POST {{base_url}}/sid/lookup/batch
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "fnrList": [
+    "20859374701",
+    "01234567890"
+  ]
+}
+
 ### Pseudonymize using SID mapping
 
 POST {{base_url}}/pseudonymize/file

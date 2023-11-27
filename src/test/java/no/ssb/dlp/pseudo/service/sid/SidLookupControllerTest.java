@@ -7,11 +7,13 @@ import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.token.generator.TokenGenerator;
 import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -72,6 +74,50 @@ public class SidLookupControllerTest {
         verify(sidClient, times(1)).lookup(any(SidRequest.class));
     }
 
+    @Test
+    public void testMissingFnr(RequestSpecification spec) {
+        Authentication user = Authentication.build("sherlock", Set.of(PseudoServiceRole.USER));
+        Optional<String> accessToken = tokenGenerator.generateToken(user, 10000);
+        assertTrue(accessToken.isPresent());
+
+        when(sidClient.lookup(any(MultiSidRequest.class))).thenReturn(Publishers.just(
+                new MultiSidResponse.MultiSidResponseBuilder().missing(List.of("11854898347")).build())
+        );
+
+        spec.when().auth().oauth2(accessToken.get())
+            .contentType(ContentType.JSON)
+            .body(new MultiSidRequest.MultiSidRequestBuilder().fnrList(List.of("11854898347")).build())
+            .post("/sid/lookup/batch")
+        .then()
+            .statusCode(200)
+            .body(is("[{\"missing\":[\"11854898347\"]}]"));
+        verify(sidClient, times(1)).lookup(any(MultiSidRequest.class));
+    }
+
+    @Test
+    public void testNoMissingFnr(RequestSpecification spec) {
+        Authentication user = Authentication.build("sherlock", Set.of(PseudoServiceRole.USER));
+        Optional<String> accessToken = tokenGenerator.generateToken(user, 10000);
+        assertTrue(accessToken.isPresent());
+
+        when(sidClient.lookup(any(MultiSidRequest.class))).thenReturn(Publishers.just(
+                new MultiSidResponse.MultiSidResponseBuilder()
+                        .mapping(new MultiSidResponse.Mapping.MappingBuilder()
+                                .fnr(List.of("11854898347"))
+                                .fnrList(List.of("11854898347"))
+                                .snr(List.of("0001ha3")).build())
+                        .build())
+        );
+
+        spec.when().auth().oauth2(accessToken.get())
+                .contentType(ContentType.JSON)
+                .body(new MultiSidRequest.MultiSidRequestBuilder().fnrList(List.of("11854898347")).build())
+                .post("/sid/lookup/batch")
+                .then()
+                .statusCode(200)
+                .body(is("[{}]"));
+        verify(sidClient, times(1)).lookup(any(MultiSidRequest.class));
+    }
     @MockBean(SidClient.class)
     SidClient sidClient() {
         return mock(SidClient.class);

@@ -39,6 +39,19 @@ public class ExternalSidService implements SidService {
     }
 
     @Override
+    public Publisher<MultiSidLookupResponse> lookupMissing(List<String> fnrList, Optional<String> snapshot) {
+        return Publishers.map(sidClient.lookup(
+                        new MultiSidRequest.MultiSidRequestBuilder().fnrList(fnrList)
+                                .datasetExtractionSnapshotTime(snapshot.orElse(null)).build()
+                ), response ->
+                    MultiSidLookupResponse.builder()
+                            .missing(response.getMissing())
+                            .datasetExtractionSnapshotTime(response.getDatasetExtractionSnapshotTime())
+                        .build()
+        );
+    }
+
+    @Override
     public Publisher<SnapshotInfo> getSnapshots() {
         return sidClient.snapshots();
     }
