@@ -12,6 +12,7 @@ the following structure:
 {
   "local": {
     "base_url": "localhost:10210",
+    "keycloak_token": "..."
   },
   "staging": {
     "base_url": "localhost:10210",
