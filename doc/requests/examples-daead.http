@@ -337,7 +337,7 @@ Content-Type: application/json
 < ../../src/test/resources/data/person_3.json
 --separator--
 
-### Null fnr: Pseudonymize using DAEAD and default key
+### Null value: Pseudonymize using DAEAD and default key
 POST {{base_url}}/pseudonymize/file
 Content-Type: multipart/form-data; boundary=separator
 Authorization: Bearer {{keycloak_token}}

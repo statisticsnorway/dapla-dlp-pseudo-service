@@ -97,7 +97,7 @@ Content-Type: application/json
 < ../../src/test/resources/data/person_3_sid_deid.json
 --separator--
 
-### Null fnr: Map to SID and pseudonymize SID values with papis-key
+### Null value: Map to SID and pseudonymize SID values with papis-key
 POST {{base_url}}/pseudonymize/file
 Content-Type: multipart/form-data; boundary=separator
 Authorization: Bearer {{keycloak_token}}
