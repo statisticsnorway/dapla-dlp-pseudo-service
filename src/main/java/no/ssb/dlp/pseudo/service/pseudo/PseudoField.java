@@ -9,8 +9,7 @@ import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a field to be pseudonymized.
@@ -55,28 +54,34 @@ public class PseudoField {
      * @param recordProcessorFactory The RecordMapProcessorFactory instance to use for creating a new PseudonymizeRecordProcessor.
      * @return A Flowable stream that processes the field values by applying the configured pseudo rules, and returns them as a lists of strings.
      */
-    public Flowable<List<String>> process(PseudoConfigSplitter pseudoConfigSplitter, RecordMapProcessorFactory recordProcessorFactory, List<String> values) {
+    public Flowable<List<Object>> process(PseudoConfigSplitter pseudoConfigSplitter, RecordMapProcessorFactory recordProcessorFactory, List<String> values) {
         List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(this.getPseudoConfig());
 
         RecordMapProcessor recordMapProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs);
         Completable preprocessor = getPreprocessor(values, recordMapProcessor);
 
-        return preprocessor.andThen(Flowable.fromIterable(() -> values.stream().iterator())
-                .map(value -> recordMapProcessor.process(Map.of(this.getName(), value))
-                        .get(this.getName()).toString())
-                .buffer(BUFFER_SIZE));
+        return preprocessor.andThen(Flowable.fromIterable(() ->
+                values.stream().map(value -> {
+                    if (value == null) {
+                        return Optional.ofNullable(null);
+                    }
+                    return recordMapProcessor.process(Map.of(this.getName(), value)).get(this.getName()).toString();
+                }).iterator()).buffer(BUFFER_SIZE));
     }
 
-    private Completable getPreprocessor(List<String> values, RecordMapProcessor recordMapProcessor) {
+    protected Completable getPreprocessor(List<String> values, RecordMapProcessor recordMapProcessor) {
         if (recordMapProcessor.hasPreprocessors()) {
-            return Completable.fromPublisher(Flowable.fromIterable(() -> values.stream().iterator())
-                    .map(value -> recordMapProcessor.init(Map.of(this.getName(), value))
-                            .get(this.getName()).toString()));
+            return Completable.fromPublisher(Flowable.fromIterable(() ->
+                    values.stream().map(value -> {
+                        if (value == null) {
+                            return Optional.ofNullable(null);
+                        }
+                        return recordMapProcessor.init(Map.of(this.getName(), value));
+                    }).iterator()));
         } else {
             return Completable.complete();
         }
     }
-
 
     /**
      * Creates a {@link PseudoFieldMetadata} object with the metadata about the preformed pseudo operations.
@@ -96,13 +101,13 @@ class PseudoFieldMetadata {
     private String fieldName;
     private PseudoConfig pseudoRules;
 
+    /**
+     * Converts the {@link PseudoFieldMetadata} object to a JSON string.
+     *
+     * @return A {@link String} representing the JSON representation of the PseudoFieldMetadata
+     * @throws JsonProcessingException if an error occurs during JSON processing
+     */
     public String toJsonString() throws JsonProcessingException {
-        /**
-         * Converts the {@link PseudoFieldMetadata} object to a JSON string.
-         *
-         * @return A {@link String} representing the JSON representation of the PseudoFieldMetadata
-         * @throws JsonProcessingException if an error occurs during JSON processing
-         */
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(this);
     }

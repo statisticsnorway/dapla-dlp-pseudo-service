@@ -11,7 +11,6 @@ import io.micronaut.http.multipart.StreamingFileUpload;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
-import io.micronaut.security.rules.SecurityRule;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
@@ -73,13 +72,13 @@ public class PseudoController {
     @Produces(MediaType.APPLICATION_JSON)
     @Post(value = "/pseudonymize/field", consumes = MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Flowable> pseudonymizeField(@Schema(implementation = PseudoFieldRequest.class) String request) {
+    public HttpResponse<Flowable<List<Object>>> pseudonymizeField(@Schema(implementation = PseudoFieldRequest.class) String request) {
         try {
             PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
             log.info(Strings.padEnd(String.format("*** Pseudonymize field: %s ", req.getName()), 80, '*'));
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
-            MutableHttpResponse mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter, recordProcessorFactory,req.values));
+            MutableHttpResponse<Flowable<List<Object>>>  mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter, recordProcessorFactory,req.values));
 
             // Add metadata to header
             mutableHttpResponse.getHeaders().add("metadata", pseudoField
