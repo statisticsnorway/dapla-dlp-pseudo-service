@@ -1,6 +1,5 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
-import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
