@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import lombok.*;
+import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
@@ -44,26 +45,61 @@ public class PseudoField {
             pseudoConfig.getKeysets().add(keyset);
         }
         pseudoConfig.getRules().add(new PseudoFuncRule(name, "**", pseudoFunc));
-
     }
 
     /**
      * Creates a Flowable that processes each value of the field, by applying the configured pseudo rules using a recordMapProcessor.
-     *
+     * This variant of the process() method is intended for "pseudonymize" and "depseudonymize" operations.
      * @param pseudoConfigSplitter   The PseudoConfigSplitter instance to use for splitting pseudo configurations.
      * @param recordProcessorFactory The RecordMapProcessorFactory instance to use for creating a new PseudonymizeRecordProcessor.
+     * @param values                 The values to be processed.
      * @return A Flowable stream that processes the field values by applying the configured pseudo rules, and returns them as a lists of strings.
      */
-    public Flowable<List<Object>> process(PseudoConfigSplitter pseudoConfigSplitter, RecordMapProcessorFactory recordProcessorFactory, List<String> values) {
+    public Flowable<List<Object>> process(PseudoConfigSplitter pseudoConfigSplitter,
+                                          RecordMapProcessorFactory recordProcessorFactory,
+                                          List<String> values,
+                                          PseudoOperation pseudoOperation) {
         List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(this.getPseudoConfig());
 
-        RecordMapProcessor recordMapProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs);
+        RecordMapProcessor recordMapProcessor;
+        switch (pseudoOperation){
+            case PSEUDONYMIZE -> recordMapProcessor = recordProcessorFactory.
+                    newPseudonymizeRecordProcessor(pseudoConfigs);
+            case DEPSEUDONYMIZE -> recordMapProcessor = recordProcessorFactory.
+                    newDepseudonymizeRecordProcessor(pseudoConfigs);
+            default -> throw new RuntimeException(
+                    String.format("Pseudo operation \"%s\" not supported for this method", pseudoOperation));
+        }
         Completable preprocessor = getPreprocessor(values, recordMapProcessor);
 
         return preprocessor.andThen(Flowable.fromIterable(() ->
                 values.stream().map(value -> {
                     if (value == null) {
-                        return Optional.ofNullable(null);
+                        return Optional.empty();
+                    }
+                    return recordMapProcessor.process(Map.of(this.getName(), value)).get(this.getName()).toString();
+                }).iterator()).buffer(BUFFER_SIZE));
+    }
+
+    /**
+     * Creates a Flowable that processes each value of the field, by applying the configured pseudo rules using a recordMapProcessor.
+     * This variant of the process() method is intended for the "repseudonymize" operation.
+     * @param recordProcessorFactory The RecordMapProcessorFactory instance to use for creating a new PseudonymizeRecordProcessor.
+     * @param values                 The values to be processed.
+     * @return A Flowable stream that processes the field values by applying the configured pseudo rules, and returns them as a lists of strings.
+     */
+    public Flowable<List<Object>> process(RecordMapProcessorFactory recordProcessorFactory,
+                                          List<String> values,
+                                          PseudoField targetPseudoField) {
+        PseudoConfig targetPseudoConfig = targetPseudoField.getPseudoConfig();
+        RecordMapProcessor recordMapProcessor = recordProcessorFactory.
+                newRepseudonymizeRecordProcessor(this.getPseudoConfig(), targetPseudoConfig);
+        Completable preprocessor = getPreprocessor(values, recordMapProcessor);
+
+        return preprocessor.andThen(Flowable.fromIterable(() ->
+                values.stream().map(value -> {
+                    if (value == null) {
+                        return Optional.empty();
                     }
                     return recordMapProcessor.process(Map.of(this.getName(), value)).get(this.getName()).toString();
                 }).iterator()).buffer(BUFFER_SIZE));
