@@ -1,0 +1,31 @@
+[
+  {
+    "identifiers": {
+      "fnr": "su2rb4Lm3Rg",
+      "dnr": "02099510504"
+    },
+    "fornavn": "Mathias",
+    "etternavn": "Holm",
+    "kjonn": "M",
+    "fodselsdato": "020995"
+  },
+  {
+    "identifiers": {
+      "fnr": "vT2zNtmt26x"
+    },
+    "fornavn": "Gunnar",
+    "etternavn": "Jørgensen",
+    "kjonn": "M",
+    "fodselsdato": "060970"
+  },
+  {
+    "identifiers": {
+      "fnr": "0bKA3puJ9qC"
+    },
+    "fnr": "0bKA3puJ9qC",
+    "fornavn": "Kristoffer",
+    "etternavn": "Pedersen",
+    "kjonn": "M",
+    "fodselsdato": "180999"
+  }
+]

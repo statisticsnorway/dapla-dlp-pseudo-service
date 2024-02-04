@@ -55,10 +55,13 @@ public class PseudoField {
      * @param recordProcessorFactory The RecordMapProcessorFactory instance to use for creating a new PseudonymizeRecordProcessor.
      * @return A Flowable stream that processes the field values by applying the configured pseudo rules, and returns them as a lists of strings.
      */
-    public Flowable<List<String>> process(PseudoConfigSplitter pseudoConfigSplitter, RecordMapProcessorFactory recordProcessorFactory, List<String> values) {
+    public Flowable<List<String>> process(PseudoConfigSplitter pseudoConfigSplitter,
+                                          RecordMapProcessorFactory recordProcessorFactory,
+                                          List<String> values,
+                                          String correlationId) {
         List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(this.getPseudoConfig());
 
-        RecordMapProcessor recordMapProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs);
+        RecordMapProcessor recordMapProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
         Completable preprocessor = getPreprocessor(values, recordMapProcessor);
 
         return preprocessor.andThen(Flowable.fromIterable(() -> values.stream().iterator())

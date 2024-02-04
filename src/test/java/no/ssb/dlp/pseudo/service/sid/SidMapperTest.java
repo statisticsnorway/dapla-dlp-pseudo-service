@@ -4,6 +4,7 @@ import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
 import no.ssb.dlp.pseudo.service.Application;
 import org.apache.groovy.util.Maps;
@@ -43,8 +44,8 @@ public class SidMapperTest {
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
-            mapper.init("11854898347");
-            Object mappedSid = mapper.map("11854898347");
+            mapper.init(PseudoFuncInput.of("11854898347"));
+            Object mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getFirstValue();
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.ofNullable(null)));
             Assertions.assertEquals("0001ha3", mappedSid);
         }
@@ -63,8 +64,8 @@ public class SidMapperTest {
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(Map.of("snapshotDate", "2023-04-25"));
-            mapper.init("11854898347");
-            Object mappedSid = mapper.map("11854898347");
+            mapper.init(PseudoFuncInput.of("11854898347"));
+            Object mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getFirstValue();
             verify(sidService, times(1)).getSnapshots();
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.of("2023-04-25")));
             Assertions.assertEquals("0001ha3", mappedSid);

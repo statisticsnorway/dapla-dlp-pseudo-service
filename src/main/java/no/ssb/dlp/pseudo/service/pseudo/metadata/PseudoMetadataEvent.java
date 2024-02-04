@@ -4,14 +4,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import no.ssb.dlp.pseudo.core.field.FieldDescriptor;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
+
+import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
 public class PseudoMetadataEvent {
     @NonNull
-    private final String correlationId;
-    @NonNull
     private final FieldDescriptor field;
-//    @NonNull
-//    private Class datatype;
+    @NonNull
+    private final PseudoFuncRule rule;
+    private final String algorithm;
+    Map<String, String> config;
+    Map<String, String> metadata;
+    List<String> warnings;
 }

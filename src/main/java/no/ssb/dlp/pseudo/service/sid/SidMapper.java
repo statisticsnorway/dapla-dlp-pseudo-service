@@ -7,6 +7,8 @@ import com.google.common.collect.Lists;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import lombok.extern.slf4j.Slf4j;
+import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
+import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
 import no.ssb.dlp.pseudo.service.Application;
@@ -35,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class SidMapper implements Mapper {
 
     private final SidService sidService;
+
     private static final int DEFAULT_PARTITION_SIZE = 50000;
     private final int partitionSize;
     private Map<String, Object> config = Collections.emptyMap();
@@ -44,20 +47,31 @@ public class SidMapper implements Mapper {
         partitionSize = Application.getContext().getProperty("sid.mapper.partition.size", Integer.class,
                 DEFAULT_PARTITION_SIZE).intValue();
     }
+
     private Set<String> fnrs = ConcurrentHashMap.newKeySet();
     private ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
 
     @Override
-    public void init(Object data) {
-        fnrs.add(String.valueOf(data));
+    public void init(PseudoFuncInput input) {
+        for (Object inputValue : input.getValues()) {
+            fnrs.add(String.valueOf(inputValue));
+        }
     }
 
     @Override
-    public Object map(Object data) {
-        if (data == null) {
-            return null;
+    public PseudoFuncOutput map(PseudoFuncInput input) {
+        PseudoFuncOutput output = new PseudoFuncOutput();
+        for (Object inputValue : input.getValues()) {
+            String plain = String.valueOf(inputValue);
+            mapTo(plain, output);
         }
-        String fnr = String.valueOf(data);
+        return output;
+    }
+
+    private void mapTo(String fnr, PseudoFuncOutput output) {
+        if (fnr == null) {
+            return;
+        }
         try {
             // Execute the bulk request if necessary
             if (bulkRequest.isEmpty()) {
@@ -73,21 +87,30 @@ public class SidMapper implements Mapper {
             }
             SidInfo result = bulkRequest.get(fnr).awaitResult()
                     .orElseThrow(() -> new RuntimeException("SID service did not respond")).get(fnr);
-            if (result == null || result.getSnr() == null) {
+            if (result == null) {
                 log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
-                return fnr;
+                output.addWarning(String.format("No SID-mapping found for fnr %s", fnr));
+                output.add(fnr);
+            } else if (result.getSnr() == null) {
+                log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
+                output.addWarning(String.format("No SID-mapping found for fnr %s", fnr));
+                output.add(fnr);
             } else {
                 if (fnr.equals(result.getSnr())) {
                     log.warn("Incorrect SID-mapping for fnr starting with {}. Mapping returned the original fnr!",
                             Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                    output.addWarning(String.format("Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!", fnr));
                 } else {
                     log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                 }
-                return result.getSnr();
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
+                output.add(result.getSnr());
             }
         } catch (LocalSidService.NoSidMappingFoundException e) {
             log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
-            return fnr;
+            output.addWarning(String.format("No SID-mapping found for fnr %s", fnr));
+            output.add(fnr);
         }
     }
 
@@ -95,10 +118,9 @@ public class SidMapper implements Mapper {
         return Optional.ofNullable(
                 this.config.getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null)
         ).map(String::valueOf);
-
     }
 
-    @Override
+        @Override
     public void setConfig(Map<String, Object> config) {
         if (config.containsKey(MapFuncConfig.Param.SNAPSHOT_DATE)) {
             SnapshotInfo availableSnapshots = ObservableSubscriber.subscribe(this.sidService.getSnapshots()).awaitResult()
@@ -129,8 +151,8 @@ public class SidMapper implements Mapper {
     }
 
     @Override
-    public Object restore(Object mapped) {
-        return mapped;
+    public PseudoFuncOutput restore(PseudoFuncInput input) {
+        return PseudoFuncOutput.of(input.getValues());
     }
 
     /**

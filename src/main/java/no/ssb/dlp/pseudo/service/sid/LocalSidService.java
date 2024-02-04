@@ -46,7 +46,8 @@ class LocalSidService implements SidService {
                     String currentSnr = sidCache.getCurrentSnrForFnr(fnr).orElseThrow(() ->
                             new LocalSidService.NoSidMappingFoundException("No SID matching fnr=" + fnr));
                     return sidCache.getCurrentFnrForSnr(currentSnr).map(currentFnr ->
-                                    new SidInfo.SidInfoBuilder().snr(currentSnr).fnr(currentFnr).build())
+                                    new SidInfo.SidInfoBuilder().snr(currentSnr).fnr(currentFnr)
+                                            .datasetExtractionSnapshotTime(snapshot.orElse(null)).build())
                             .orElse(null);
                 }).collect(Collectors.toMap(SidInfo::getFnr, sidInfo -> sidInfo))
         );
