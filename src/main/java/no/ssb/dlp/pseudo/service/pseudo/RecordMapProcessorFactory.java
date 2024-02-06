@@ -36,7 +36,7 @@ public class RecordMapProcessorFactory {
 
         for (PseudoConfig config : pseudoConfigs) {
             final PseudoFuncs fieldPseudonymizer = newPseudoFuncs(config.getRules(),
-                    pseudoKeysetsOf(config.getKeysets()), correlationId);
+                    pseudoKeysetsOf(config.getKeysets()));
             chain.preprocessor((f, v) -> init(fieldPseudonymizer, f, v));
             chain.register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataProcessor));
         }
@@ -49,7 +49,7 @@ public class RecordMapProcessorFactory {
 
         for (PseudoConfig config : pseudoConfigs) {
             final PseudoFuncs fieldDepseudonymizer = newPseudoFuncs(config.getRules(),
-                    pseudoKeysetsOf(config.getKeysets()), correlationId);
+                    pseudoKeysetsOf(config.getKeysets()));
             chain.register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataProcessor));
         }
 
@@ -59,9 +59,9 @@ public class RecordMapProcessorFactory {
     public RecordMapProcessor<FieldMetadata> newRepseudonymizeRecordProcessor(PseudoConfig sourcePseudoConfig,
                                                                PseudoConfig targetPseudoConfig, String correlationId) {
         final PseudoFuncs fieldDepseudonymizer = newPseudoFuncs(sourcePseudoConfig.getRules(),
-                pseudoKeysetsOf(sourcePseudoConfig.getKeysets()), correlationId);
+                pseudoKeysetsOf(sourcePseudoConfig.getKeysets()));
         final PseudoFuncs fieldPseudonymizer = newPseudoFuncs(targetPseudoConfig.getRules(),
-                pseudoKeysetsOf(targetPseudoConfig.getKeysets()), correlationId);
+                pseudoKeysetsOf(targetPseudoConfig.getKeysets()));
         PseudoMetadataProcessor metadataProcessor = new PseudoMetadataProcessor(correlationId);
         return new RecordMapProcessor<>(
                 new ValueInterceptorChain()
@@ -71,9 +71,8 @@ public class RecordMapProcessorFactory {
     }
 
     protected PseudoFuncs newPseudoFuncs(Collection<PseudoFuncRule> rules,
-                                         Collection<PseudoKeyset> keysets,
-                                         String correlationId) {
-        return new PseudoFuncs(rules, pseudoSecrets.resolve(), keysets, correlationId);
+                                         Collection<PseudoKeyset> keysets) {
+        return new PseudoFuncs(rules, pseudoSecrets.resolve(), keysets);
     }
 
     private String init(PseudoFuncs pseudoFuncs, FieldDescriptor field, String varValue) {
