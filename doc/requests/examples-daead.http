@@ -338,4 +338,29 @@ Content-Type: application/json
 < ../../src/test/resources/data/person_3_sid_hierarchial.json
 --separator--
 
+### Null value: Pseudonymize using DAEAD and default key
+POST {{base_url}}/pseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
 
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "pattern": "**/{fnr,fornavn,etternavn}",
+        "func": "daead(keyId=ssb-common-key-1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="null_fnr.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/null_fnr.json
+--separator--

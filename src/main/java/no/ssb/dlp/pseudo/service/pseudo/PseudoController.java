@@ -73,7 +73,7 @@ public class PseudoController {
     @Produces(MediaType.APPLICATION_JSON)
     @Post(value = "/pseudonymize/field", consumes = MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Publisher<List<String>>> pseudonymizeField(
+    public HttpResponse<Publisher<String>> pseudonymizeField(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = PseudoFieldRequest.class) String request) {
         try {
@@ -83,14 +83,77 @@ public class PseudoController {
 
             // Validate clientCorrelationId if present; otherwise generate a new UUID
             final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
-            MutableHttpResponse<Publisher<List<String>>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
-                    recordProcessorFactory, req.values, correlationId));
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
+                    recordProcessorFactory, req.values, PseudoOperation.PSEUDONYMIZE, correlationId));
+            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
+            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE);
+            mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
+            return mutableHttpResponse;
 
-            // Add metadata to header
-            mutableHttpResponse.getHeaders().add("metadata", pseudoField
-                    .getPseudoFieldMetadata()
-                    .toJsonString());
+        } catch (Exception e) {
+            return HttpResponse.serverError(Flowable.error(e));
+        }
+    }
 
+    /**
+     * Depseudonymizes a field.
+     *
+     * @param request JSON string representing a {@link DepseudoFieldRequest} object.
+     * @return HTTP response containing a {@link HttpResponse<Flowable>} object.
+     */
+    @Operation(summary = "Depseudonymize field", description = "Depseudonymize a field.")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured({PseudoServiceRole.ADMIN})
+    @Post(value = "/depseudonymize/field", consumes = MediaType.APPLICATION_JSON)
+    @ExecuteOn(TaskExecutors.IO)
+    public HttpResponse<Publisher<String>> depseudonymizeField(
+            @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
+            @Schema(implementation = DepseudoFieldRequest.class) String request) {
+        try {
+            DepseudoFieldRequest req = Json.toObject(DepseudoFieldRequest.class, request);
+            log.info(Strings.padEnd(String.format("*** Depseudonymize field: %s ", req.getName()), 80, '*'));
+            PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
+
+            // Validate clientCorrelationId if present; otherwise generate a new UUID
+            final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
+            MutableHttpResponse<Publisher<String>>  mutableHttpResponse = HttpResponse.ok(pseudoField.process(
+                    pseudoConfigSplitter, recordProcessorFactory,req.values, PseudoOperation.DEPSEUDONYMIZE, correlationId));
+            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
+            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE);
+            mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
+            return mutableHttpResponse;
+
+        } catch (Exception e) {
+            return HttpResponse.serverError(Flowable.error(e));
+        }
+    }
+
+    /**
+     * Repseudonymizes a field.
+     *
+     * @param request JSON string representing a {@link RepseudoFieldRequest} object.
+     * @return HTTP response containing a {@link HttpResponse<Flowable>} object.
+     */
+    @Operation(summary = "Repseudonymize field", description = "Repseudonymize a field.")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Secured({PseudoServiceRole.ADMIN})
+    @Post(value = "/repseudonymize/field", consumes = MediaType.APPLICATION_JSON)
+    @ExecuteOn(TaskExecutors.IO)
+    public HttpResponse<Publisher<String>> repseudonymizeField(
+            @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
+            @Schema(implementation = RepseudoFieldRequest.class) String request) {
+        try {
+            RepseudoFieldRequest req = Json.toObject(RepseudoFieldRequest.class, request);
+            log.info(Strings.padEnd(String.format("*** Repseudonymize field: %s ", req.getName()), 80, '*'));
+            PseudoField sourcePseudoField = new PseudoField(req.getName(), req.getSourcePseudoFunc(), req.getSourceKeyset());
+            PseudoField targetPseudoField = new PseudoField(req.getName(), req.getTargetPseudoFunc(), req.getTargetKeyset());
+
+            // Validate clientCorrelationId if present; otherwise generate a new UUID
+            final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(
+                    sourcePseudoField.process(recordProcessorFactory, req.values, targetPseudoField, correlationId));
+            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
+            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE);
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
 
@@ -350,18 +413,6 @@ public class PseudoController {
     }
 
     @Data
-    public static class PseudoFieldRequest {
-
-        /**
-         * The pseudonymization config to apply
-         */
-        private String pseudoFunc;
-        private EncryptedKeysetWrapper keyset;
-        private String name;
-        private List<String> values;
-    }
-
-    @Data
     public static class RepseudoRequest {
 
         /**
@@ -385,6 +436,44 @@ public class PseudoController {
          * Specify this if you want to compress and password protect the payload. The archive will be encrypted with AES256.
          */
         private TargetCompression compression;
+    }
+
+    @Data
+    public static class PseudoFieldRequest {
+
+        /**
+         * The pseudonymization config to apply
+         */
+        private String pseudoFunc;
+        private EncryptedKeysetWrapper keyset;
+        private String name;
+        private List<String> values;
+    }
+
+    @Data
+    public static class DepseudoFieldRequest {
+
+        /**
+         * The depseudonymization config to apply
+         */
+        private String pseudoFunc;
+        private EncryptedKeysetWrapper keyset;
+        private String name;
+        private List<String> values;
+    }
+
+    @Data
+    public static class RepseudoFieldRequest {
+
+        /**
+         * The repseudonymization config to apply
+         */
+        private String sourcePseudoFunc;
+        private String targetPseudoFunc;
+        private EncryptedKeysetWrapper sourceKeyset;
+        private EncryptedKeysetWrapper targetKeyset;
+        private String name;
+        private List<String> values;
     }
 
     @Data

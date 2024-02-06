@@ -88,3 +88,35 @@ Authorization: Bearer {{keycloak_token}}
     "pseudoFunc": "map-sid(keyId=papis-key-1)"
   }
 }
+
+### Null value: DEAD with default keyset
+POST {{base_url}}/pseudonymize/field
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "request": {
+    "name": "empty",
+    "values": [
+      "20859374701",
+      null
+    ]
+  }
+}
+
+### Null value: Map field to SID and pseudonymize SID values
+POST {{base_url}}/pseudonymize/field
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "request": {
+    "name": "fnr",
+    "values": [
+      "20859374701",
+      null
+    ],
+    "pseudoFunc": "map-sid(keyId=papis-key-1)"
+  }
+}
+

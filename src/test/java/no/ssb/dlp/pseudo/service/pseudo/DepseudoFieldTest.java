@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @MicronautTest
-class PseudoFieldTest {
+class DepseudoFieldTest {
 
     @Mock
     private PseudoConfigSplitter pseudoConfigSplitter;
@@ -28,35 +28,10 @@ class PseudoFieldTest {
     @Mock
     private RecordMapProcessor recordMapProcessor;
 
-    @Test
-    void UsesDefaultPseudoConfigWhenNoKeysetIsSupplied() {
-        PseudoField pseudoField = new PseudoField(null, null, null);
-        assertEquals(PseudoField.getDEFAULT_PSEUDO_FUNC(), pseudoField.getPseudoConfig().getRules().get(0).getFunc());
-    }
-
-    @Test
-    void usesCustomPseudoFuncWhenPseudoFuncIsSupplied() {
-        int keySetPrimaryKey = 12345;
-
-        PseudoField pseudoSIDField = new PseudoField(null,  String.format("map-sid(keyId=%s)", keySetPrimaryKey), null);
-
-        assertEquals(String.format("map-sid(keyId=%s)", keySetPrimaryKey),
-                pseudoSIDField.getPseudoConfig().getRules().get(0).getFunc());
-    }
-
-    @Test
-    void setCustomKeysetWhenKeysetIsSupplied() {
-        EncryptedKeysetWrapper encryptedKeysetWrapper = mock(EncryptedKeysetWrapper.class);
-        PseudoField pseudoField = new PseudoField(null, null, encryptedKeysetWrapper);
-
-        assertEquals(encryptedKeysetWrapper,
-                pseudoField.getPseudoConfig().getKeysets().get(0));
-    }
-
     void setUpProcessorMocks() {
         MockitoAnnotations.openMocks(this);
         when(pseudoConfigSplitter.splitIfNecessary(any())).thenReturn(Collections.singletonList(new PseudoConfig()));
-        when(recordProcessorFactory.newPseudonymizeRecordProcessor(any(), anyString())).thenReturn(recordMapProcessor);
+        when(recordProcessorFactory.newDepseudonymizeRecordProcessor(any(), anyString())).thenReturn(recordMapProcessor);
     }
 
     @Test
@@ -76,7 +51,7 @@ class PseudoFieldTest {
         List<String> values = Arrays.asList("v1", null, "v2");
 
         Flowable<String> result = pseudoField.process(pseudoConfigSplitter, recordProcessorFactory,
-                values, PseudoOperation.PSEUDONYMIZE, "dummy-correlation-id");
+                values, PseudoOperation.DEPSEUDONYMIZE, "dummy-correlation-id");
         List<String> resultList = result.toList().blockingGet();
         assertEquals(List.of(List.of("processedValue v1", Optional.empty(), "processedValue v2")), resultList);
         assertEquals(3, resultList.size());
@@ -84,25 +59,4 @@ class PseudoFieldTest {
         // Verify that recordMapProcessor was called once for each non-null value
         verify(recordMapProcessor, times(2)).process(any());
     }
-
-    @Test
-    void preprocessorWithNullValues() {
-        setUpProcessorMocks();
-
-        when(recordMapProcessor.hasPreprocessors()).thenReturn(true);
-        when(recordMapProcessor.init(any())).thenReturn(Collections.singletonMap("testField", "initializedValue"));
-
-        PseudoField pseudoField = new PseudoField("testField", null, null);
-        List<String> values = Arrays.asList("v1", null, "v2");
-
-        Completable result = pseudoField.getPreprocessor(values, recordMapProcessor);
-
-        TestObserver<Void> testObserver = result.test();
-        testObserver.assertComplete();
-        testObserver.assertNoErrors();
-
-        // Verify that recordMapProcessor was called once for each non-null value
-        verify(recordMapProcessor, times(2)).init(any());
-    }
-
 }
