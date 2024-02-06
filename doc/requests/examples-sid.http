@@ -97,11 +97,3 @@ Content-Type: application/json
 
 < ../../src/test/resources/data/person_3_sid_deid.json
 --separator--
-
-### Metadata
-GET {{base_url}}/metadata
-Authorization: Bearer {{keycloak_token}}
-
-### Metadata by ID
-GET {{base_url}}/metadata/ad94e671-7388-4fa2-8b0a-f9f3ec970d9b
-Authorization: Bearer {{keycloak_token}}
