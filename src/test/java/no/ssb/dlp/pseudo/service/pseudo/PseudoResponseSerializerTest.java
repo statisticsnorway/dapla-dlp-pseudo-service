@@ -54,6 +54,5 @@ class PseudoResponseSerializerTest {
                    ]
                  }
                 """;
-        System.out.println(got);
         JSONAssert.assertEquals(want, got, JSONCompareMode.STRICT);
     }}

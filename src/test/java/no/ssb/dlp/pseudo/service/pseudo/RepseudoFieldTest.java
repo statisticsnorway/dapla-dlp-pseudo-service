@@ -1,23 +1,22 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
+import com.google.common.collect.Lists;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import io.reactivex.Completable;
-import io.reactivex.Flowable;
-import io.reactivex.observers.TestObserver;
-import io.reactivex.processors.PublishProcessor;
 import io.reactivex.processors.ReplayProcessor;
-import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
-import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
-import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
+import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @MicronautTest
@@ -43,7 +42,7 @@ class RepseudoFieldTest {
     }
 
     @Test
-    void processWithNullValues() {
+    void processWithNullValues() throws JSONException {
         setUpProcessorMocks();
 
         //Preprocessor logic is covered in #preprocessorWithNullValues
@@ -59,11 +58,30 @@ class RepseudoFieldTest {
         PseudoField targetPseudoField = new PseudoField("testField", null, null);
         List<String> values = Arrays.asList("v1", null, "v2");
 
-        Flowable<String> result = sourcePseudoField.process(recordProcessorFactory,
-                values, targetPseudoField, "dummy-correlation-id");
-        List<String> resultList = result.toList().blockingGet();
-        assertEquals(List.of(List.of("processedValue v1", Optional.empty(), "processedValue v2")), resultList);
-        assertEquals(3, resultList.size());
+        String want = """
+                {
+                    "data": [
+                      "processedValue v1",
+                      null,
+                      "processedValue v2"
+                    ],
+                    "metadata": [
+                      {
+                        "path": "path",
+                        "name": "testField",
+                        "pattern": "pattern",
+                        "func": null,
+                        "algorithm": null,
+                        "metadata": null,
+                        "warnings": null
+                      }
+                    ]
+                  }
+                """;
+        String got = String.join("", Lists.newArrayList(sourcePseudoField.process(recordProcessorFactory,
+                values, targetPseudoField, "dummy-correlation-id").blockingIterable()));
+
+        JSONAssert.assertEquals(want, got, JSONCompareMode.STRICT);
 
         // Verify that recordMapProcessor was called once for each non-null value
         verify(recordMapProcessor, times(2)).process(any());
