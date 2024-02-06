@@ -24,7 +24,6 @@
 
     <artifactregistry-maven-wagon.version>2.2.1</artifactregistry-maven-wagon.version>
     <dapla-dlp-pseudo-core.version>2.0.1-SNAPSHOT</dapla-dlp-pseudo-core.version>
-    <dapla-datadoc-model.version>1.2</dapla-datadoc-model.version>
     <micronaut.version>3.8.7</micronaut.version>
     <micronaut.openapi.version>4.6.0</micronaut.openapi.version>
     <micronaut-data.version>3.8.1</micronaut-data.version>
@@ -140,11 +139,6 @@
       <groupId>no.ssb.dapla.dlp.pseudo</groupId>
       <artifactId>dapla-dlp-pseudo-core</artifactId>
       <version>${dapla-dlp-pseudo-core.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>no.ssb.dapla.metadata</groupId>
-      <artifactId>datadoc-model</artifactId>
-      <version>${dapla-datadoc-model.version}</version>
     </dependency>
     <dependency>
       <groupId>javax.inject</groupId>

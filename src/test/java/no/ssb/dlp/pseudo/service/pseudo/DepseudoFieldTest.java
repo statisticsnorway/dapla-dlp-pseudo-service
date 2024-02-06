@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata.*;
 import static org.mockito.Mockito.*;
 
 @MicronautTest
@@ -38,9 +39,22 @@ class DepseudoFieldTest {
         when(recordProcessorFactory.newDepseudonymizeRecordProcessor(any(), anyString())).thenReturn(recordMapProcessor);
         RecordMapProcessor.MetadataProcessor<FieldMetadata> metadataProcessorMock = mock(RecordMapProcessor.MetadataProcessor.class);
         final ReplayProcessor<FieldMetadata> publishProcessor = ReplayProcessor.create();
-        publishProcessor.onNext(FieldMetadata.builder().path("path").name("testField").pattern("pattern").build());
+        publishProcessor.onNext(createFieldMetadata());
         when(metadataProcessorMock.toFlowableProcessor()).thenReturn(publishProcessor);
         when(recordMapProcessor.getMetadataProcessor()).thenReturn(metadataProcessorMock);
+    }
+
+    private static FieldMetadata createFieldMetadata() {
+        return FieldMetadata.builder()
+                .shortName("shortName")
+                .dataElementPath("path")
+                .dataElementPattern("pattern")
+                .encryptionKeyReference("pattern")
+                .encryptionAlgorithm("algorithm")
+                .encryptionAlgorithmParameters(Map.of("key", "value"))
+                .stableIdentifierVersion("stableIdVersion")
+                .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
+            .build();
     }
 
     @Test
@@ -61,23 +75,26 @@ class DepseudoFieldTest {
 
         String want = """
                 {
-                    "data": [
-                      "processedValue v1",
-                      null,
-                      "processedValue v2"
-                    ],
-                    "metadata": [
-                      {
-                        "path": "path",
-                        "name": "testField",
-                        "pattern": "pattern",
-                        "func": null,
-                        "algorithm": null,
-                        "metadata": null,
-                        "warnings": null
-                      }
-                    ]
-                  }
+                     "data": [
+                       "processedValue v1",
+                       null,
+                       "processedValue v2"
+                     ],
+                     "metadata": [
+                       {
+                         "shortName": "shortName",
+                         "dataElementPath": "path",
+                         "dataElementPattern": "pattern",
+                         "encryptionKeyReference": "pattern",
+                         "encryptionAlgorithm": "algorithm",
+                         "stableIdentifierVersion": "stableIdVersion",
+                         "stableIdentifierType": "FREG_SNR",
+                         "encryptionAlgorithmParameters": {
+                           "key": "value"
+                         }
+                       }
+                     ]
+                }
                 """;
         Flowable<String> result = pseudoField.process(pseudoConfigSplitter, recordProcessorFactory,
                 values, PseudoOperation.DEPSEUDONYMIZE, "dummy-correlation-id");

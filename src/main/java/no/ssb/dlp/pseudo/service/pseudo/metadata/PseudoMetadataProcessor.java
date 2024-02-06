@@ -20,7 +20,7 @@ public class PseudoMetadataProcessor {
         this.correlationId = correlationId;
     }
     public void add(final FieldMetadata metadata) {
-        Set<FieldMetadata> rules = uniqueMetadataPaths.computeIfAbsent(metadata.getPath(), k -> new HashSet<>());
+        Set<FieldMetadata> rules = uniqueMetadataPaths.computeIfAbsent(metadata.getDataElementPath(), k -> new HashSet<>());
         if (rules.add(metadata)) {
             publishProcessor.onNext(metadata);
         }

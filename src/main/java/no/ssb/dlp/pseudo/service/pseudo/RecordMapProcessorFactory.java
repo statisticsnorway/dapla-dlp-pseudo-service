@@ -4,12 +4,15 @@ import lombok.RequiredArgsConstructor;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.fpe.FpeFunc;
+import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.tink.fpe.TinkFpeFunc;
 import no.ssb.dlp.pseudo.core.PseudoException;
 import no.ssb.dlp.pseudo.core.PseudoKeyset;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.field.FieldDescriptor;
 import no.ssb.dlp.pseudo.core.field.ValueInterceptorChain;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncDeclaration;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncNames;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRuleMatch;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncs;
@@ -21,9 +24,12 @@ import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 import javax.inject.Singleton;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static no.ssb.dlp.pseudo.core.PseudoOperation.DEPSEUDONYMIZE;
 import static no.ssb.dlp.pseudo.core.PseudoOperation.PSEUDONYMIZE;
+import static no.ssb.dlp.pseudo.core.func.PseudoFuncDeclaration.*;
+import static no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata.*;
 
 @RequiredArgsConstructor
 @Singleton
@@ -99,14 +105,17 @@ public class RecordMapProcessorFactory {
             PseudoFuncOutput output;
             if (operation == PSEUDONYMIZE) {
                 output = match.getFunc().apply(PseudoFuncInput.of(varValue));
+                PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
+                final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID);
                 metadataProcessor.add(FieldMetadata.builder()
-                        .path(field.getPath())
-                        .name(field.getName())
-                        .pattern(match.getRule().getPattern())
-                        .func(match.getRule().getFunc())
-                        .algorithm(match.getFunc().getAlgorithm())
-                        .metadata(output.getMetadata())
-                        .warnings(output.getWarnings())
+                        .shortName(field.getName())
+                        .dataElementPath(field.getPath().substring(1).replace('/', '.')) // Skip leading slash and use dot as separator
+                        .dataElementPattern(match.getRule().getPattern())
+                        .encryptionKeyReference(isSidMapping ? null : funcDeclaration.getArgs().getOrDefault(KEY_REFERENCE, null))
+                        .encryptionAlgorithm(match.getFunc().getAlgorithm())
+                        .encryptionAlgorithmParameters(isSidMapping ? null : funcDeclaration.getArgs())
+                        .stableIdentifierVersion(output.getMetadata().getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null))
+                        .stableIdentifierType(isSidMapping ? STABLE_IDENTIFIER_TYPE : null)
                         .build());
             } else {
                 output = match.getFunc().restore(PseudoFuncInput.of(varValue));
