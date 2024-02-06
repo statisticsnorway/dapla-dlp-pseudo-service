@@ -15,7 +15,6 @@ import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.reactivex.processors.FlowableProcessor;
-import io.reactivex.processors.PublishProcessor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +25,6 @@ import no.ssb.dapla.dlp.pseudo.func.PseudoFuncFactory;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.StreamProcessor;
 import no.ssb.dlp.pseudo.core.exception.NoSuchPseudoKeyException;
-import no.ssb.dlp.pseudo.core.file.CompressionEncryptionMethod;
 import no.ssb.dlp.pseudo.core.file.MoreMediaTypes;
 import no.ssb.dlp.pseudo.core.file.PseudoFileSource;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
@@ -34,11 +32,11 @@ import no.ssb.dlp.pseudo.core.map.RecordMapSerializerFactory;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.core.util.HumanReadableBytes;
 import no.ssb.dlp.pseudo.core.util.Json;
-import no.ssb.dlp.pseudo.core.util.Zips;
-import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataService;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.sid.InvalidSidSnapshotDateException;
 import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
+import org.reactivestreams.Publisher;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
@@ -50,12 +48,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static no.ssb.dlp.pseudo.core.util.Zips.ZipOptions.zipOpts;
 
 @RequiredArgsConstructor
 @Controller
@@ -64,12 +58,10 @@ import static no.ssb.dlp.pseudo.core.util.Zips.ZipOptions.zipOpts;
 @Tag(name = "Pseudo operations")
 public class PseudoController {
 
-    private static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
-    private static final String METADATA_HEADER = "X-Metadata";
+    public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
     private final StreamProcessorFactory streamProcessorFactory;
     private final RecordMapProcessorFactory recordProcessorFactory;
     private final PseudoConfigSplitter pseudoConfigSplitter;
-    private final PseudoMetadataService pseudoMetadataService;
 
     /**
      * Pseudonymizes a field.
@@ -81,7 +73,7 @@ public class PseudoController {
     @Produces(MediaType.APPLICATION_JSON)
     @Post(value = "/pseudonymize/field", consumes = MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
-    public MutableHttpResponse<Flowable<String>> pseudonymizeField(
+    public HttpResponse<Publisher<List<String>>> pseudonymizeField(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = PseudoFieldRequest.class) String request) {
         try {
@@ -91,7 +83,7 @@ public class PseudoController {
 
             // Validate clientCorrelationId if present; otherwise generate a new UUID
             final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
-            MutableHttpResponse mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
+            MutableHttpResponse<Publisher<List<String>>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
                     recordProcessorFactory, req.values, correlationId));
 
             // Add metadata to header
@@ -131,9 +123,9 @@ public class PseudoController {
     )
     @Post("/pseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MoreMediaTypes.APPLICATION_ZIP})
+    @Produces(MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
-    public MutableHttpResponse<Flowable<String>> pseudonymizeFile(
+    public HttpResponse<Publisher<String>> pseudonymizeFile(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data) {
         log.info(Strings.padEnd(String.format("*** Pseudonymize file: %s", data.getFilename()), 80, '*'));
@@ -143,10 +135,10 @@ public class PseudoController {
             List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
             // Validate clientCorrelationId if present; otherwise generate a new UUID
             final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
-            RecordMapProcessor recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
+            RecordMapProcessor<FieldMetadata> recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.PSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            Flowable file = res.getFlowable();
-            MutableHttpResponse mutableHttpResponse = HttpResponse.ok(file).contentType(res.getTargetContentType());
+            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(res.getResponse()).contentType(MediaType.TEXT_PLAIN_TYPE);
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
         } catch (RuntimeException e) {
@@ -182,10 +174,10 @@ public class PseudoController {
     )
     @Post("/depseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces({MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MediaType.APPLICATION_OCTET_STREAM})
+    @Produces(MediaType.APPLICATION_JSON)
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
-    public MutableHttpResponse<Flowable<String>> depseudonymizeFile(
+    public HttpResponse<Publisher<String>> depseudonymizeFile(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
         log.info(Strings.padEnd(String.format("*** Depseudonymize file: %s", data.getFilename()), 80, '*'));
@@ -196,10 +188,10 @@ public class PseudoController {
             List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
             // Validate clientCorrelationId if present; otherwise generate a new UUID
             final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
-            RecordMapProcessor recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
+            RecordMapProcessor<FieldMetadata> recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            Flowable file = res.getFlowable();
-            MutableHttpResponse mutableHttpResponse = HttpResponse.ok(file).contentType(res.getTargetContentType());
+            Publisher<String> file = res.getResponse();
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(file).contentType(res.getTargetContentType());
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
         } catch (Exception e) {
@@ -236,10 +228,10 @@ public class PseudoController {
     )
     @Post("/repseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces({MediaType.APPLICATION_JSON, MoreMediaTypes.TEXT_CSV, MediaType.APPLICATION_OCTET_STREAM})
+    @Produces(MediaType.APPLICATION_JSON)
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
-    public MutableHttpResponse<Flowable<String>> repseudonymizeFile(
+    public HttpResponse<Publisher<String>> repseudonymizeFile(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = RepseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
         log.info(Strings.padEnd(String.format("*** Repseudonymize file: %s", data.getFilename()), 80, '*'));
@@ -249,10 +241,10 @@ public class PseudoController {
             RepseudoRequest req = Json.toObject(RepseudoRequest.class, request);
             // Validate clientCorrelationId if present; otherwise generate a new UUID
             final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
-            RecordMapProcessor recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig(), correlationId);
+            RecordMapProcessor<FieldMetadata> recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig(), correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.REPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            Flowable file = res.getFlowable();
-            MutableHttpResponse mutableHttpResponse = HttpResponse.ok(file).contentType(res.getTargetContentType());
+            Publisher<String> file = res.getResponse();
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(file).contentType(res.getTargetContentType());
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
         } catch (Exception e) {
@@ -260,7 +252,7 @@ public class PseudoController {
             return HttpResponse.serverError(Flowable.error(e));
         }
     }
-    private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) {
+    private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor<FieldMetadata> recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         targetContentType = MoreMediaTypes.validContentType(targetContentType);
         File tempFile = null;
@@ -274,7 +266,9 @@ public class PseudoController {
             log.info("Target content type: {}", targetContentType);
 
             final StreamProcessor streamProcessor = streamProcessorFactory.newStreamProcessor(fileSource.getMediaType(), recordMapProcessor);
-            final FlowableProcessor<String> metadataProcessor = recordMapProcessor.getMetadataProcessor().toFlowableProcessor();
+            final FlowableProcessor<FieldMetadata> metadataProcessor = recordMapProcessor.getMetadataProcessor().toFlowableProcessor();
+            // Metadata will be processes in parallel with the data, but must be collected separately
+            final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor).map(Json::from);
             // Preprocess the file contents - if necessary
             Flowable<String> res = preprocessStream(fileSource.getInputStream(), streamProcessor)
                     .doOnError(throwable -> log.error("Preprocessing failed", throwable))
@@ -291,21 +285,8 @@ public class PseudoController {
                                 // Signal the metadataProcessor to stop collecting metadata
                                 metadataProcessor.onComplete();
                             })
-            );
-            Flowable<String> result = PseudoResponseSerializer.serialize(Map.of("data", res, "metadata", Flowable.fromPublisher(metadataProcessor)));
-
-            if (targetCompression != null) {
-                log.info("Applying target compression: " + MoreMediaTypes.APPLICATION_ZIP_TYPE);
-                String contentFilename = (operation + "-" + System.currentTimeMillis() + "." + targetContentType.getExtension()).toLowerCase();
-                result = serialize(result, targetContentType);
-                return new ProcessFileResult(MediaType.APPLICATION_OCTET_STREAM_TYPE, Zips.zip(result, contentFilename, zipOpts()
-                        .password(targetCompression.getPassword())
-                        .encryptionMethod(CompressionEncryptionMethod.AES)
-                        .build()
-                ));
-            }
-
-            return new ProcessFileResult(targetContentType, result);
+                    );
+            return new ProcessFileResult(targetContentType, PseudoResponseSerializer.serialize(res, metadata));
         } finally {
             try {
                 if (fileSource != null) {
@@ -318,22 +299,6 @@ public class PseudoController {
                 log.warn("Error cleaning up", e);
             }
         }
-    }
-
-    private static Flowable<String> serialize(Flowable<String> recordStream, MediaType targetContentType) {
-        if (targetContentType.equals(MediaType.APPLICATION_JSON_TYPE)) {
-            AtomicBoolean first = new AtomicBoolean(true);
-            return recordStream
-                    .map(rec -> {
-                        if (first.getAndSet(false)) {
-                            return "[%s".formatted(rec);
-                        }
-                        return ",%s".formatted(rec);
-                    })
-                    .concatWith(Single.just("]"));
-        }
-
-        return recordStream;
     }
 
     private Completable preprocessStream(InputStream is, StreamProcessor streamProcessor) {
@@ -427,7 +392,7 @@ public class PseudoController {
         @Schema(implementation = String.class)
         private final MediaType targetContentType;
 
-        private final Flowable flowable;
+        private final Publisher<String> response;
     }
 
     @Data

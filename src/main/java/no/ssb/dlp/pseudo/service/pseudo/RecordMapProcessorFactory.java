@@ -1,6 +1,5 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
-import io.micronaut.context.event.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
@@ -16,8 +15,8 @@ import no.ssb.dlp.pseudo.core.func.PseudoFuncRuleMatch;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncs;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
-import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataEvent;
-import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataEventListener;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 
 import javax.inject.Singleton;
 import java.util.Collection;
@@ -31,44 +30,44 @@ import static no.ssb.dlp.pseudo.core.PseudoOperation.PSEUDONYMIZE;
 public class RecordMapProcessorFactory {
     private final PseudoSecrets pseudoSecrets;
 
-    public RecordMapProcessor newPseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs, String correlationId) {
+    public RecordMapProcessor<FieldMetadata> newPseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs, String correlationId) {
         ValueInterceptorChain chain = new ValueInterceptorChain();
-        PseudoMetadataEventListener metadataEventListener = new PseudoMetadataEventListener(correlationId);
+        PseudoMetadataProcessor metadataProcessor = new PseudoMetadataProcessor(correlationId);
 
         for (PseudoConfig config : pseudoConfigs) {
             final PseudoFuncs fieldPseudonymizer = newPseudoFuncs(config.getRules(),
                     pseudoKeysetsOf(config.getKeysets()), correlationId);
             chain.preprocessor((f, v) -> init(fieldPseudonymizer, f, v));
-            chain.register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataEventListener));
+            chain.register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataProcessor));
         }
-        return new RecordMapProcessor(chain, metadataEventListener::getMetadataProcessor);
+        return new RecordMapProcessor<>(chain, metadataProcessor::toFlowableProcessor);
     }
 
-    public RecordMapProcessor newDepseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs, String correlationId) {
+    public RecordMapProcessor<FieldMetadata> newDepseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs, String correlationId) {
         ValueInterceptorChain chain = new ValueInterceptorChain();
-        PseudoMetadataEventListener metadataEventListener = new PseudoMetadataEventListener(correlationId);
+        PseudoMetadataProcessor metadataProcessor = new PseudoMetadataProcessor(correlationId);
 
         for (PseudoConfig config : pseudoConfigs) {
             final PseudoFuncs fieldDepseudonymizer = newPseudoFuncs(config.getRules(),
                     pseudoKeysetsOf(config.getKeysets()), correlationId);
-            chain.register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataEventListener));
+            chain.register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataProcessor));
         }
 
-        return new RecordMapProcessor(chain, metadataEventListener::getMetadataProcessor);
+        return new RecordMapProcessor<>(chain, metadataProcessor::toFlowableProcessor);
     }
 
-    public RecordMapProcessor newRepseudonymizeRecordProcessor(PseudoConfig sourcePseudoConfig,
+    public RecordMapProcessor<FieldMetadata> newRepseudonymizeRecordProcessor(PseudoConfig sourcePseudoConfig,
                                                                PseudoConfig targetPseudoConfig, String correlationId) {
         final PseudoFuncs fieldDepseudonymizer = newPseudoFuncs(sourcePseudoConfig.getRules(),
                 pseudoKeysetsOf(sourcePseudoConfig.getKeysets()), correlationId);
         final PseudoFuncs fieldPseudonymizer = newPseudoFuncs(targetPseudoConfig.getRules(),
                 pseudoKeysetsOf(targetPseudoConfig.getKeysets()), correlationId);
-        PseudoMetadataEventListener metadataEventListener = new PseudoMetadataEventListener(correlationId);
-        return new RecordMapProcessor(
+        PseudoMetadataProcessor metadataProcessor = new PseudoMetadataProcessor(correlationId);
+        return new RecordMapProcessor<>(
                 new ValueInterceptorChain()
-                        .register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataEventListener))
-                        .register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataEventListener)),
-                metadataEventListener::getMetadataProcessor);
+                        .register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataProcessor))
+                        .register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataProcessor)),
+                metadataProcessor::toFlowableProcessor);
     }
 
     protected PseudoFuncs newPseudoFuncs(Collection<PseudoFuncRule> rules,
@@ -87,7 +86,7 @@ public class RecordMapProcessorFactory {
                            PseudoFuncs func,
                            FieldDescriptor field,
                            String varValue,
-                           PseudoMetadataEventListener eventListener) {
+                           PseudoMetadataProcessor metadataProcessor) {
         PseudoFuncRuleMatch match = func.findPseudoFunc(field).orElse(null);
 
         if (varValue == null || match == null) {
@@ -101,9 +100,11 @@ public class RecordMapProcessorFactory {
             PseudoFuncOutput output;
             if (operation == PSEUDONYMIZE) {
                 output = match.getFunc().apply(PseudoFuncInput.of(varValue));
-                eventListener.onPseudoMetadataEvent(PseudoMetadataEvent.builder()
-                        .field(field)
-                        .rule(match.getRule())
+                metadataProcessor.add(FieldMetadata.builder()
+                        .path(field.getPath())
+                        .name(field.getName())
+                        .pattern(match.getRule().getPattern())
+                        .func(match.getRule().getFunc())
                         .algorithm(match.getFunc().getAlgorithm())
                         .metadata(output.getMetadata())
                         .warnings(output.getWarnings())

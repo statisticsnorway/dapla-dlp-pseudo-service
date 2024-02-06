@@ -314,6 +314,7 @@ Content-Type: application/json
 POST {{base_url}}/pseudonymize/file
 Content-Type: multipart/form-data; boundary=separator
 Authorization: Bearer {{keycloak_token}}
+X-Correlation-Id: ad94e671-7388-4fa2-8b0a-f9f3ec970d9b
 
 --separator
 Content-Disposition: form-data; name="request"

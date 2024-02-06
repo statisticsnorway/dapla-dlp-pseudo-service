@@ -8,50 +8,51 @@ import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
-import java.util.List;
 import java.util.Map;
 
 class PseudoResponseSerializerTest {
 
     @Test
     void testSerializeMap() throws JSONException {
-        Flowable<String> data = Flowable.just(Json.from(List.of(
+        Flowable<String> data = Flowable.just(
                 Map.of("person", Map.of("name", Map.of("firstName", "Donald", "lastName", "Duck"))),
                 Map.of("person", Map.of("name", Map.of("firstName", "Bolla", "lastName", "Bollerud")))
-        )));
+        ).map(Json::from);
         Flowable<String> metadata = Flowable.just(
                 Json.from(Map.of("variable_descriptions", Map.of("name", Map.of("type", "string", "description", "name variable"))))
         );
-        String got = String.join("", Lists.newArrayList(PseudoResponseSerializer.serialize(Map.of("data", data, "metadata", metadata)).blockingIterable()));
+        String got = String.join("", Lists.newArrayList(PseudoResponseSerializer.serialize(data, metadata).blockingIterable()));
         String want = """
                 {
-                  "metadata": {
-                    "variable_descriptions": {
-                      "name": {
-                        "description": "name variable",
-                        "type": "string"
-                      }
-                    }
-                  },
-                  "data": [
-                    {
-                      "person": {
-                        "name": {
-                          "firstName": "Donald",
-                          "lastName": "Duck"
-                        }
-                      }
-                    },
-                    {
-                      "person": {
-                        "name": {
-                          "firstName": "Bolla",
-                          "lastName": "Bollerud"
-                        }
-                      }
-                    }
-                  ]
-                }
+                   "data": [
+                     {
+                       "person": {
+                         "name": {
+                           "lastName": "Duck",
+                           "firstName": "Donald"
+                         }
+                       }
+                     },
+                     {
+                       "person": {
+                         "name": {
+                           "lastName": "Bollerud",
+                           "firstName": "Bolla"
+                         }
+                       }
+                     }
+                   ],
+                   "metadata": [
+                     {
+                       "variable_descriptions": {
+                         "name": {
+                           "description": "name variable",
+                           "type": "string"
+                         }
+                       }
+                     }
+                   ]
+                 }
                 """;
         System.out.println(got);
         JSONAssert.assertEquals(want, got, JSONCompareMode.STRICT);
