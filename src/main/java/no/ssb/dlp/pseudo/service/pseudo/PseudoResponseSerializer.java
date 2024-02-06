@@ -4,8 +4,10 @@ import io.reactivex.Flowable;
 
 public class PseudoResponseSerializer {
     /**
-     * Special case for serializing a Map of flowables. The key will represent the name and the value will contain
-     * the contents, so that the resulting JSON will contain named arrays of data.
+     * Combine two <code>Flowable</code> JSON-objects (data and metadata) into a single <code>Flowable</code> that
+     * represents the JSON-structure.
+     * @param data a flowable of String elements, each in JSON-format
+     * @param metadata a flowable of String elements, each in JSON-format
      */
     public static Flowable<String> serialize(Flowable<String> data, Flowable<String> metadata) {
         return enclose(data.concatMap(item -> Flowable.just(item, ","))

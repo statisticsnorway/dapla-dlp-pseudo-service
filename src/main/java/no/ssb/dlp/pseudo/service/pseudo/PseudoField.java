@@ -1,7 +1,5 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
@@ -83,15 +81,16 @@ public class PseudoField {
         // Metadata will be processes in parallel with the data, but must be collected separately
         final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor).map(Json::from);
 
-        Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values))
-                .map(value -> recordMapProcessor.process(Map.of(this.getName(), value)).get(this.getName()))
-                .map(Json::from)
+        Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values.stream()
+                        .map(v -> mapOptional(v, recordMapProcessor)).toList()
+                ))
+                .map(v -> v.map(Json::from).orElse("null"))
                 .doOnError(throwable -> {
                     log.error("Response failed", throwable);
                     metadataProcessor.onError(throwable);
                 })
                 .doOnComplete(() -> {
-                    log.info("{} took {}", PseudoOperation.REPSEUDONYMIZE, stopwatch.stop().elapsed());
+                    log.info("{} took {}", pseudoOperation, stopwatch.stop().elapsed());
                     // Signal the metadataProcessor to stop collecting metadata
                     metadataProcessor.onComplete();
                 });
@@ -119,9 +118,10 @@ public class PseudoField {
         // Metadata will be processes in parallel with the data, but must be collected separately
         final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor).map(Json::from);
 
-        Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values))
-                .map(value -> recordMapProcessor.process(Map.of(this.getName(), value)).get(this.getName()))
-                .map(Json::from)
+        Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values.stream()
+                        .map(v -> mapOptional(v, recordMapProcessor)).toList()
+                ))
+                .map(v -> v.map(Json::from).orElse("null"))
                 .doOnError(throwable -> {
                     log.error("Response failed", throwable);
                     metadataProcessor.onError(throwable);
@@ -134,15 +134,21 @@ public class PseudoField {
         return PseudoResponseSerializer.serialize(result, metadata);
     }
 
+    private Optional<Object> mapOptional(String v, RecordMapProcessor<FieldMetadata> recordMapProcessor) {
+        if (v == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(recordMapProcessor.process(Map.of(this.getName(), v)).get(this.getName()));
+        }
+    }
+
     protected Completable getPreprocessor(List<String> values, RecordMapProcessor<FieldMetadata> recordMapProcessor) {
         if (recordMapProcessor.hasPreprocessors()) {
-            return Completable.fromPublisher(Flowable.fromIterable(() ->
-                    values.stream().map(value -> {
-                        if (value == null) {
-                            return Optional.ofNullable(null);
-                        }
-                        return recordMapProcessor.init(Map.of(this.getName(), value));
-                    }).iterator()));
+            return Completable.fromPublisher(Flowable.fromIterable(values.stream()
+                    .filter(Objects::nonNull)
+                    .map(v -> recordMapProcessor.init(Map.of(this.getName(), v)))
+                    .toList())
+            );
         } else {
             return Completable.complete();
         }
