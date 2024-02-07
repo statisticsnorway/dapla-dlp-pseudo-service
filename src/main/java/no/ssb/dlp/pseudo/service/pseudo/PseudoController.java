@@ -81,8 +81,7 @@ public class PseudoController {
             log.info(Strings.padEnd(String.format("*** Pseudonymize field: %s ", req.getName()), 80, '*'));
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
-            // Validate clientCorrelationId if present; otherwise generate a new UUID
-            final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
+            final String correlationId = validateOrCreate(clientCorrelationId);
             MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
                     recordProcessorFactory, req.values, PseudoOperation.PSEUDONYMIZE, correlationId));
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
@@ -114,8 +113,7 @@ public class PseudoController {
             log.info(Strings.padEnd(String.format("*** Depseudonymize field: %s ", req.getName()), 80, '*'));
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
-            // Validate clientCorrelationId if present; otherwise generate a new UUID
-            final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
+            final String correlationId = validateOrCreate(clientCorrelationId);
             MutableHttpResponse<Publisher<String>>  mutableHttpResponse = HttpResponse.ok(pseudoField.process(
                     pseudoConfigSplitter, recordProcessorFactory,req.values, PseudoOperation.DEPSEUDONYMIZE, correlationId));
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
@@ -148,8 +146,7 @@ public class PseudoController {
             PseudoField sourcePseudoField = new PseudoField(req.getName(), req.getSourcePseudoFunc(), req.getSourceKeyset());
             PseudoField targetPseudoField = new PseudoField(req.getName(), req.getTargetPseudoFunc(), req.getTargetKeyset());
 
-            // Validate clientCorrelationId if present; otherwise generate a new UUID
-            final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
+            final String correlationId = validateOrCreate(clientCorrelationId);
             MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(
                     sourcePseudoField.process(recordProcessorFactory, req.values, targetPseudoField, correlationId));
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
@@ -196,8 +193,8 @@ public class PseudoController {
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
             List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
-            // Validate clientCorrelationId if present; otherwise generate a new UUID
-            final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
+
+            final String correlationId = validateOrCreate(clientCorrelationId);
             RecordMapProcessor<FieldMetadata> recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.PSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
@@ -249,8 +246,8 @@ public class PseudoController {
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
             List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
-            // Validate clientCorrelationId if present; otherwise generate a new UUID
-            final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
+
+            final String correlationId = validateOrCreate(clientCorrelationId);
             RecordMapProcessor<FieldMetadata> recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Publisher<String> file = res.getResponse();
@@ -302,8 +299,7 @@ public class PseudoController {
 
         try {
             RepseudoRequest req = Json.toObject(RepseudoRequest.class, request);
-            // Validate clientCorrelationId if present; otherwise generate a new UUID
-            final String correlationId = clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
+            final String correlationId = validateOrCreate(clientCorrelationId);
             RecordMapProcessor<FieldMetadata> recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig(), correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.REPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Publisher<String> file = res.getResponse();
@@ -315,6 +311,14 @@ public class PseudoController {
             return HttpResponse.serverError(Flowable.error(e));
         }
     }
+
+    /*
+     * Validate clientCorrelationId if present; otherwise generate a new UUID
+     */
+    private static String validateOrCreate(Optional<String> clientCorrelationId) {
+        return clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
+    }
+
     private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor<FieldMetadata> recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         targetContentType = MoreMediaTypes.validContentType(targetContentType);
@@ -322,6 +326,7 @@ public class PseudoController {
         PseudoFileSource fileSource = null;
 
         try {
+            // TODO: Rewrite to non-blocking
             tempFile = receiveFile(data).blockingGet();
             fileSource = new PseudoFileSource(tempFile);
             log.info("Received file ({}, {})", fileSource.getProvidedMediaType(), HumanReadableBytes.fromBin(tempFile.length()));
