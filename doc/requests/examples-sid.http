@@ -112,7 +112,7 @@ Content-Type: application/json
   "pseudoConfig": {
     "rules": [
       {
-        "pattern": "**/{fnr,fornavn,etternavn}",
+        "pattern": "**/{fnr}",
         "func": "map-sid(keyId=papis-key-1)"
       }
     ]

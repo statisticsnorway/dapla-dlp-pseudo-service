@@ -82,8 +82,10 @@ public class RecordMapProcessorFactory {
     }
 
     private String init(PseudoFuncs pseudoFuncs, FieldDescriptor field, String varValue) {
-        pseudoFuncs.findPseudoFunc(field).ifPresent(pseudoFunc ->
-                pseudoFunc.getFunc().init(PseudoFuncInput.of(varValue)));
+        if (varValue != null) {
+            pseudoFuncs.findPseudoFunc(field).ifPresent(pseudoFunc ->
+                    pseudoFunc.getFunc().init(PseudoFuncInput.of(varValue)));
+        }
         return varValue;
     }
 
