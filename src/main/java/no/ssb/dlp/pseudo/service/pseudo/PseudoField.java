@@ -3,19 +3,22 @@ package no.ssb.dlp.pseudo.service.pseudo;
 import com.google.common.base.Stopwatch;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
-import io.reactivex.processors.FlowableProcessor;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.core.util.Json;
-import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
-import org.reactivestreams.Publisher;
 
-import java.util.*;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Represents a field to be pseudonymized.
@@ -94,7 +97,9 @@ public class PseudoField {
                     recordMapProcessor.getMetadataProcessor().onErrorAll(throwable);
                 })
                 .doOnComplete(() -> {
-                    log.info("{} took {}", pseudoOperation, stopwatch.stop().elapsed());
+                    final Duration duration = stopwatch.stop().elapsed();
+                    metadataProcessor.addLog(String.format("%s took %s", pseudoOperation, duration));
+                    log.info("{} took {}", pseudoOperation, duration);
                     // Signal the metadataProcessor to stop collecting metadata
                     recordMapProcessor.getMetadataProcessor().onCompleteAll();
                 });
@@ -133,7 +138,9 @@ public class PseudoField {
                     metadataProcessor.onErrorAll(throwable);
                 })
                 .doOnComplete(() -> {
-                    log.info("{} took {}", PseudoOperation.REPSEUDONYMIZE, stopwatch.stop().elapsed());
+                    final Duration duration = stopwatch.stop().elapsed();
+                    metadataProcessor.addLog(String.format("%s took %s", PseudoOperation.REPSEUDONYMIZE, duration));
+                    log.info("{} took {}", PseudoOperation.REPSEUDONYMIZE, duration);
                     // Signal the metadataProcessor to stop collecting metadata
                     metadataProcessor.onCompleteAll();
                 });

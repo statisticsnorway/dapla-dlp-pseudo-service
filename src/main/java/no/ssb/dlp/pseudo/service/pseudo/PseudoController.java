@@ -47,6 +47,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -353,7 +354,9 @@ public class PseudoController {
                                 metadataProcessor.onErrorAll(throwable);
                             })
                             .doOnComplete(() -> {
-                                log.info("{} took {}", operation, stopwatch.stop().elapsed());
+                                final Duration duration = stopwatch.stop().elapsed();
+                                metadataProcessor.addLog(String.format("%s took %s", operation, duration));
+                                log.info("{} took {}", operation, duration);
                                 // Signal the metadataProcessor to stop collecting metadata
                                 metadataProcessor.onCompleteAll();
                             })
