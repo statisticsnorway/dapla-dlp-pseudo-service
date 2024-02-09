@@ -12,6 +12,8 @@ import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
+import org.reactivestreams.Publisher;
 
 import java.util.*;
 
@@ -67,7 +69,7 @@ public class PseudoField {
         Stopwatch stopwatch = Stopwatch.createStarted();
         List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(this.getPseudoConfig());
 
-        RecordMapProcessor<FieldMetadata> recordMapProcessor;
+        RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor;
         switch (pseudoOperation){
             case PSEUDONYMIZE -> recordMapProcessor = recordProcessorFactory.
                     newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
@@ -77,9 +79,11 @@ public class PseudoField {
                     String.format("Pseudo operation \"%s\" not supported for this method", pseudoOperation));
         }
         Completable preprocessor = getPreprocessor(values, recordMapProcessor);
-        final FlowableProcessor<FieldMetadata> metadataProcessor = recordMapProcessor.getMetadataProcessor().toFlowableProcessor();
         // Metadata will be processes in parallel with the data, but must be collected separately
-        final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor).map(Json::from);
+        final PseudoMetadataProcessor metadataProcessor = recordMapProcessor.getMetadataProcessor();
+        final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor.getMetadata());
+        final Flowable<String> logs = Flowable.fromPublisher(metadataProcessor.getLogs());
+        final Flowable<String> metrics = Flowable.fromPublisher(metadataProcessor.getMetrics());
 
         Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values.stream()
                         .map(v -> mapOptional(v, recordMapProcessor)).toList()
@@ -87,15 +91,15 @@ public class PseudoField {
                 .map(v -> v.map(Json::from).orElse("null"))
                 .doOnError(throwable -> {
                     log.error("Response failed", throwable);
-                    metadataProcessor.onError(throwable);
+                    recordMapProcessor.getMetadataProcessor().onErrorAll(throwable);
                 })
                 .doOnComplete(() -> {
                     log.info("{} took {}", pseudoOperation, stopwatch.stop().elapsed());
                     // Signal the metadataProcessor to stop collecting metadata
-                    metadataProcessor.onComplete();
+                    recordMapProcessor.getMetadataProcessor().onCompleteAll();
                 });
 
-        return PseudoResponseSerializer.serialize(result, metadata);
+        return PseudoResponseSerializer.serialize(result, metadata, logs, metrics);
     }
 
     /**
@@ -111,12 +115,14 @@ public class PseudoField {
                                           String correlationId) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         PseudoConfig targetPseudoConfig = targetPseudoField.getPseudoConfig();
-        RecordMapProcessor<FieldMetadata> recordMapProcessor = recordProcessorFactory.
+        RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor = recordProcessorFactory.
                 newRepseudonymizeRecordProcessor(this.getPseudoConfig(), targetPseudoConfig, correlationId);
         Completable preprocessor = getPreprocessor(values, recordMapProcessor);
-        final FlowableProcessor<FieldMetadata> metadataProcessor = recordMapProcessor.getMetadataProcessor().toFlowableProcessor();
         // Metadata will be processes in parallel with the data, but must be collected separately
-        final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor).map(Json::from);
+        final PseudoMetadataProcessor metadataProcessor = recordMapProcessor.getMetadataProcessor();
+        final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor.getMetadata());
+        final Flowable<String> logs = Flowable.fromPublisher(metadataProcessor.getLogs());
+        final Flowable<String> metrics = Flowable.fromPublisher(metadataProcessor.getMetrics());
 
         Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values.stream()
                         .map(v -> mapOptional(v, recordMapProcessor)).toList()
@@ -124,17 +130,17 @@ public class PseudoField {
                 .map(v -> v.map(Json::from).orElse("null"))
                 .doOnError(throwable -> {
                     log.error("Response failed", throwable);
-                    metadataProcessor.onError(throwable);
+                    metadataProcessor.onErrorAll(throwable);
                 })
                 .doOnComplete(() -> {
                     log.info("{} took {}", PseudoOperation.REPSEUDONYMIZE, stopwatch.stop().elapsed());
                     // Signal the metadataProcessor to stop collecting metadata
-                    metadataProcessor.onComplete();
+                    metadataProcessor.onCompleteAll();
                 });
-        return PseudoResponseSerializer.serialize(result, metadata);
+        return PseudoResponseSerializer.serialize(result, metadata, logs, metrics);
     }
 
-    private Optional<Object> mapOptional(String v, RecordMapProcessor<FieldMetadata> recordMapProcessor) {
+    private Optional<Object> mapOptional(String v, RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor) {
         if (v == null) {
             return Optional.empty();
         } else {
@@ -142,7 +148,7 @@ public class PseudoField {
         }
     }
 
-    protected Completable getPreprocessor(List<String> values, RecordMapProcessor<FieldMetadata> recordMapProcessor) {
+    protected Completable getPreprocessor(List<String> values, RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor) {
         if (recordMapProcessor.hasPreprocessors()) {
             return Completable.fromPublisher(Flowable.fromIterable(values.stream()
                     .filter(Objects::nonNull)

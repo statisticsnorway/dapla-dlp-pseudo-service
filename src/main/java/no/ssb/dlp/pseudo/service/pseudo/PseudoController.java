@@ -2,6 +2,7 @@ package no.ssb.dlp.pseudo.service.pseudo;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
+import io.micronaut.core.async.annotation.SingleResult;
 import io.micronaut.http.*;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.*;
@@ -14,7 +15,6 @@ import io.micronaut.security.annotation.Secured;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
-import io.reactivex.processors.FlowableProcessor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,7 +32,7 @@ import no.ssb.dlp.pseudo.core.map.RecordMapSerializerFactory;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.core.util.HumanReadableBytes;
 import no.ssb.dlp.pseudo.core.util.Json;
-import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.sid.InvalidSidSnapshotDateException;
 import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
@@ -183,7 +183,8 @@ public class PseudoController {
     )
     @Post("/pseudonymize/file")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(value = MediaType.APPLICATION_JSON)
+    @SingleResult
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Publisher<String>> pseudonymizeFile(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
@@ -195,10 +196,11 @@ public class PseudoController {
             List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
 
             final String correlationId = validateOrCreate(clientCorrelationId);
-            RecordMapProcessor<FieldMetadata> recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
+            RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.PSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(res.getResponse()).contentType(MediaType.TEXT_PLAIN_TYPE);
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(res.getResponse())
+                    .contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
         } catch (RuntimeException e) {
@@ -248,7 +250,7 @@ public class PseudoController {
             List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
 
             final String correlationId = validateOrCreate(clientCorrelationId);
-            RecordMapProcessor<FieldMetadata> recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
+            RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Publisher<String> file = res.getResponse();
             MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(file).contentType(res.getTargetContentType());
@@ -300,7 +302,7 @@ public class PseudoController {
         try {
             RepseudoRequest req = Json.toObject(RepseudoRequest.class, request);
             final String correlationId = validateOrCreate(clientCorrelationId);
-            RecordMapProcessor<FieldMetadata> recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig(), correlationId);
+            RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig(), correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.REPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             Publisher<String> file = res.getResponse();
             MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(file).contentType(res.getTargetContentType());
@@ -319,7 +321,7 @@ public class PseudoController {
         return clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
     }
 
-    private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor<FieldMetadata> recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) {
+    private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         targetContentType = MoreMediaTypes.validContentType(targetContentType);
         File tempFile = null;
@@ -334,9 +336,11 @@ public class PseudoController {
             log.info("Target content type: {}", targetContentType);
 
             final StreamProcessor streamProcessor = streamProcessorFactory.newStreamProcessor(fileSource.getMediaType(), recordMapProcessor);
-            final FlowableProcessor<FieldMetadata> metadataProcessor = recordMapProcessor.getMetadataProcessor().toFlowableProcessor();
+            final PseudoMetadataProcessor metadataProcessor = recordMapProcessor.getMetadataProcessor();
             // Metadata will be processes in parallel with the data, but must be collected separately
-            final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor).map(Json::from);
+            final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor.getMetadata());
+            final Flowable<String> logs = Flowable.fromPublisher(metadataProcessor.getLogs());
+            final Flowable<String> metrics = Flowable.fromPublisher(metadataProcessor.getMetrics());
             // Preprocess the file contents - if necessary
             Flowable<String> res = preprocessStream(fileSource.getInputStream(), streamProcessor)
                     .doOnError(throwable -> log.error("Preprocessing failed", throwable))
@@ -346,15 +350,15 @@ public class PseudoController {
                             .doOnSubscribe((subscription) -> log.info("Start processing..."))
                             .doOnError(throwable -> {
                                 log.error("Response failed", throwable);
-                                metadataProcessor.onError(throwable);
+                                metadataProcessor.onErrorAll(throwable);
                             })
                             .doOnComplete(() -> {
                                 log.info("{} took {}", operation, stopwatch.stop().elapsed());
                                 // Signal the metadataProcessor to stop collecting metadata
-                                metadataProcessor.onComplete();
+                                metadataProcessor.onCompleteAll();
                             })
                     );
-            return new ProcessFileResult(targetContentType, PseudoResponseSerializer.serialize(res, metadata));
+            return new ProcessFileResult(targetContentType, PseudoResponseSerializer.serialize(res, metadata, logs, metrics));
         } finally {
             try {
                 if (fileSource != null) {

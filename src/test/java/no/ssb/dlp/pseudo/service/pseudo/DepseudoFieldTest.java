@@ -2,10 +2,11 @@ package no.ssb.dlp.pseudo.service.pseudo;
 
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.reactivex.Flowable;
-import io.reactivex.processors.ReplayProcessor;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetric;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -31,21 +32,18 @@ class DepseudoFieldTest {
     private RecordMapProcessorFactory recordProcessorFactory;
 
     @Mock
-    private RecordMapProcessor<FieldMetadata> recordMapProcessor;
+    private RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor;
 
     void setUpProcessorMocks() {
         MockitoAnnotations.openMocks(this);
         when(pseudoConfigSplitter.splitIfNecessary(any())).thenReturn(Collections.singletonList(new PseudoConfig()));
         when(recordProcessorFactory.newDepseudonymizeRecordProcessor(any(), anyString())).thenReturn(recordMapProcessor);
-        RecordMapProcessor.MetadataProcessor<FieldMetadata> metadataProcessorMock = mock(RecordMapProcessor.MetadataProcessor.class);
-        final ReplayProcessor<FieldMetadata> publishProcessor = ReplayProcessor.create();
-        publishProcessor.onNext(createFieldMetadata());
-        when(metadataProcessorMock.toFlowableProcessor()).thenReturn(publishProcessor);
-        when(recordMapProcessor.getMetadataProcessor()).thenReturn(metadataProcessorMock);
+        when(recordMapProcessor.getMetadataProcessor()).thenReturn(createPseudoMetadataProcessor());
     }
 
-    private static FieldMetadata createFieldMetadata() {
-        return FieldMetadata.builder()
+    private static PseudoMetadataProcessor createPseudoMetadataProcessor() {
+        PseudoMetadataProcessor processor = new PseudoMetadataProcessor("correlation-id");
+        processor.addMetadata(FieldMetadata.builder()
                 .shortName("shortName")
                 .dataElementPath("path")
                 .dataElementPattern("pattern")
@@ -54,7 +52,10 @@ class DepseudoFieldTest {
                 .encryptionAlgorithmParameters(Map.of("key", "value"))
                 .stableIdentifierVersion("stableIdVersion")
                 .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
-            .build();
+            .build());
+        processor.addLog("Log line");
+        processor.addMetric(FieldMetric.MISSING_SID);
+        return processor;
     }
 
     @Test
@@ -80,20 +81,32 @@ class DepseudoFieldTest {
                        null,
                        "processedValue v2"
                      ],
-                     "metadata": [
-                       {
-                         "shortName": "shortName",
-                         "dataElementPath": "path",
-                         "dataElementPattern": "pattern",
-                         "encryptionKeyReference": "pattern",
-                         "encryptionAlgorithm": "algorithm",
-                         "stableIdentifierVersion": "stableIdVersion",
-                         "stableIdentifierType": "FREG_SNR",
-                         "encryptionAlgorithmParameters": {
-                           "key": "value"
-                         }
-                       }
-                     ]
+                     "datadoc_metadata": {
+                        "pseudo_variables": [
+                           {
+                             "short_name": "shortName",
+                             "data_element_path": "path",
+                             "data_element_pattern": "pattern",
+                             "encryption_key_reference": "pattern",
+                             "encryption_algorithm": "algorithm",
+                             "stable_identifier_version": "stableIdVersion",
+                             "stable_identifier_type": "FREG_SNR",
+                              "encryption_algorithm_parameters": [
+                                {
+                                  "key": "value"
+                                }
+                              ]
+                           }
+                        ]
+                      },
+                      "metrics": [
+                          {
+                            "MISSING_SID": 1
+                          }
+                      ],
+                      "logs": [
+                        "Log line"
+                      ]
                 }
                 """;
         Flowable<String> result = pseudoField.process(pseudoConfigSplitter, recordProcessorFactory,

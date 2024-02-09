@@ -9,6 +9,8 @@ import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetric;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -35,7 +37,7 @@ class PseudoFieldTest {
     private RecordMapProcessorFactory recordProcessorFactory;
 
     @Mock
-    private RecordMapProcessor<FieldMetadata> recordMapProcessor;
+    private RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor;
 
     @Test
     void UsesDefaultPseudoConfigWhenNoKeysetIsSupplied() {
@@ -66,15 +68,12 @@ class PseudoFieldTest {
         MockitoAnnotations.openMocks(this);
         when(pseudoConfigSplitter.splitIfNecessary(any())).thenReturn(Collections.singletonList(new PseudoConfig()));
         when(recordProcessorFactory.newPseudonymizeRecordProcessor(any(), anyString())).thenReturn(recordMapProcessor);
-        RecordMapProcessor.MetadataProcessor<FieldMetadata> metadataProcessorMock = mock(RecordMapProcessor.MetadataProcessor.class);
-        final ReplayProcessor<FieldMetadata> publishProcessor = ReplayProcessor.create();
-        publishProcessor.onNext(createFieldMetadata());
-        when(metadataProcessorMock.toFlowableProcessor()).thenReturn(publishProcessor);
-        when(recordMapProcessor.getMetadataProcessor()).thenReturn(metadataProcessorMock);
+        when(recordMapProcessor.getMetadataProcessor()).thenReturn(createPseudoMetadataProcessor());
     }
 
-    private static FieldMetadata createFieldMetadata() {
-        return FieldMetadata.builder()
+    private static PseudoMetadataProcessor createPseudoMetadataProcessor() {
+        PseudoMetadataProcessor processor = new PseudoMetadataProcessor("correlation-id");
+        processor.addMetadata(FieldMetadata.builder()
                 .shortName("shortName")
                 .dataElementPath("path")
                 .dataElementPattern("pattern")
@@ -83,7 +82,14 @@ class PseudoFieldTest {
                 .encryptionAlgorithmParameters(Map.of("key", "value"))
                 .stableIdentifierVersion("stableIdVersion")
                 .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
-                .build();
+                .build());
+        processor.addLog("Log line");
+        processor.addMetric(FieldMetric.NULL_VALUE);
+        processor.addMetric(FieldMetric.MISSING_SID);
+        processor.addMetric(FieldMetric.NULL_VALUE);
+        processor.addMetric(FieldMetric.NULL_VALUE);
+        processor.addMetric(FieldMetric.MISSING_SID);
+        return processor;
     }
 
     @Test
@@ -104,26 +110,41 @@ class PseudoFieldTest {
 
         String want = """
                 {
-                     "data": [
-                       "processedValue v1",
-                       null,
-                       "processedValue v2"
-                     ],
-                     "metadata": [
+                   "data": [
+                     "processedValue v1",
+                     null,
+                     "processedValue v2"
+                   ],
+                   "datadoc_metadata": {
+                     "pseudo_variables": [
                        {
-                         "shortName": "shortName",
-                         "dataElementPath": "path",
-                         "dataElementPattern": "pattern",
-                         "encryptionKeyReference": "pattern",
-                         "encryptionAlgorithm": "algorithm",
-                         "stableIdentifierVersion": "stableIdVersion",
-                         "stableIdentifierType": "FREG_SNR",
-                         "encryptionAlgorithmParameters": {
-                           "key": "value"
-                         }
+                         "short_name": "shortName",
+                         "data_element_path": "path",
+                         "data_element_pattern": "pattern",
+                         "stable_identifier_type": "FREG_SNR",
+                         "stable_identifier_version": "stableIdVersion",
+                         "encryption_algorithm": "algorithm",
+                         "encryption_key_reference": "pattern",
+                         "encryption_algorithm_parameters": [
+                           {
+                             "key": "value"
+                           }
+                         ]
                        }
                      ]
-                }
+                   },
+                   "metrics": [
+                     {
+                       "MISSING_SID": 2
+                     },
+                     {
+                       "NULL_VALUE": 3
+                     }
+                   ],
+                   "logs": [
+                     "Log line"
+                   ]
+                 }
                 """;
         Flowable<String> result = pseudoField.process(pseudoConfigSplitter, recordProcessorFactory,
                 values, PseudoOperation.PSEUDONYMIZE, "dummy-correlation-id");

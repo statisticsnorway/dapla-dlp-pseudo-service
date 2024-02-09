@@ -21,38 +21,55 @@ class PseudoResponseSerializerTest {
         Flowable<String> metadata = Flowable.just(
                 Json.from(Map.of("variable_descriptions", Map.of("name", Map.of("type", "string", "description", "name variable"))))
         );
-        String got = String.join("", Lists.newArrayList(PseudoResponseSerializer.serialize(data, metadata).blockingIterable()));
+        Flowable<String> logs = Flowable.just(
+                "Log line 1", "Log line 2"
+        ).map(Json::from);
+        Flowable<String> metrics = Flowable.just(
+                Map.of("metric1", 1))
+                .map(Json::from);
+        String got = String.join("", Lists.newArrayList(PseudoResponseSerializer.serialize(data, metadata, logs, metrics).blockingIterable()));
         String want = """
                 {
-                   "data": [
-                     {
-                       "person": {
-                         "name": {
-                           "lastName": "Duck",
-                           "firstName": "Donald"
+                     "data": [
+                       {
+                         "person": {
+                           "name": {
+                             "lastName": "Duck",
+                             "firstName": "Donald"
+                           }
+                         }
+                       },
+                       {
+                         "person": {
+                           "name": {
+                             "lastName": "Bollerud",
+                             "firstName": "Bolla"
+                           }
                          }
                        }
+                     ],
+                     "datadoc_metadata": {
+                       "pseudo_variables": [
+                         {
+                           "variable_descriptions": {
+                             "name": {
+                               "description": "name variable",
+                               "type": "string"
+                             }
+                           }
+                         }
+                       ]
                      },
-                     {
-                       "person": {
-                         "name": {
-                           "lastName": "Bollerud",
-                           "firstName": "Bolla"
-                         }
+                     "metrics": [
+                       {
+                         "metric1": 1
                        }
-                     }
-                   ],
-                   "metadata": [
-                     {
-                       "variable_descriptions": {
-                         "name": {
-                           "description": "name variable",
-                           "type": "string"
-                         }
-                       }
-                     }
-                   ]
-                 }
+                     ],
+                     "logs": [
+                       "Log line 1",
+                       "Log line 2"
+                     ]
+                   }
                 """;
         JSONAssert.assertEquals(want, got, JSONCompareMode.STRICT);
     }}

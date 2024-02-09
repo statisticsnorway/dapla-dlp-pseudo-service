@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.fpe.FpeFunc;
+import no.ssb.dapla.dlp.pseudo.func.map.MapFunc;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.tink.fpe.TinkFpeFunc;
 import no.ssb.dlp.pseudo.core.PseudoException;
@@ -19,12 +20,12 @@ import no.ssb.dlp.pseudo.core.func.PseudoFuncs;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetric;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 
 import javax.inject.Singleton;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import static no.ssb.dlp.pseudo.core.PseudoOperation.DEPSEUDONYMIZE;
 import static no.ssb.dlp.pseudo.core.PseudoOperation.PSEUDONYMIZE;
@@ -36,7 +37,7 @@ import static no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata.*;
 public class RecordMapProcessorFactory {
     private final PseudoSecrets pseudoSecrets;
 
-    public RecordMapProcessor<FieldMetadata> newPseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs, String correlationId) {
+    public RecordMapProcessor<PseudoMetadataProcessor> newPseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs, String correlationId) {
         ValueInterceptorChain chain = new ValueInterceptorChain();
         PseudoMetadataProcessor metadataProcessor = new PseudoMetadataProcessor(correlationId);
 
@@ -46,10 +47,10 @@ public class RecordMapProcessorFactory {
             chain.preprocessor((f, v) -> init(fieldPseudonymizer, f, v));
             chain.register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataProcessor));
         }
-        return new RecordMapProcessor<>(chain, metadataProcessor::toFlowableProcessor);
+        return new RecordMapProcessor<>(chain, metadataProcessor);
     }
 
-    public RecordMapProcessor<FieldMetadata> newDepseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs, String correlationId) {
+    public RecordMapProcessor<PseudoMetadataProcessor> newDepseudonymizeRecordProcessor(List<PseudoConfig> pseudoConfigs, String correlationId) {
         ValueInterceptorChain chain = new ValueInterceptorChain();
         PseudoMetadataProcessor metadataProcessor = new PseudoMetadataProcessor(correlationId);
 
@@ -59,10 +60,10 @@ public class RecordMapProcessorFactory {
             chain.register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataProcessor));
         }
 
-        return new RecordMapProcessor<>(chain, metadataProcessor::toFlowableProcessor);
+        return new RecordMapProcessor<>(chain, metadataProcessor);
     }
 
-    public RecordMapProcessor<FieldMetadata> newRepseudonymizeRecordProcessor(PseudoConfig sourcePseudoConfig,
+    public RecordMapProcessor<PseudoMetadataProcessor> newRepseudonymizeRecordProcessor(PseudoConfig sourcePseudoConfig,
                                                                PseudoConfig targetPseudoConfig, String correlationId) {
         final PseudoFuncs fieldDepseudonymizer = newPseudoFuncs(sourcePseudoConfig.getRules(),
                 pseudoKeysetsOf(sourcePseudoConfig.getKeysets()));
@@ -73,7 +74,7 @@ public class RecordMapProcessorFactory {
                 new ValueInterceptorChain()
                         .register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataProcessor))
                         .register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataProcessor)),
-                metadataProcessor::toFlowableProcessor);
+                metadataProcessor);
     }
 
     protected PseudoFuncs newPseudoFuncs(Collection<PseudoFuncRule> rules,
@@ -96,11 +97,19 @@ public class RecordMapProcessorFactory {
                            PseudoMetadataProcessor metadataProcessor) {
         PseudoFuncRuleMatch match = func.findPseudoFunc(field).orElse(null);
 
-        if (varValue == null || match == null) {
+        if (match == null) {
+            return varValue;
+        }
+        if (varValue == null) {
+            // Avoid counting null values to map-sid twice (since map-sid consists of 2 functions)
+            if (!(match.getFunc() instanceof MapFunc)) {
+                metadataProcessor.addMetric(FieldMetric.NULL_VALUE);
+            }
             return varValue;
         }
         // Due to FPE limitations, we can not pseudonymize values shorter than 2 characters
         if (varValue.length() <= 2 && (match.getFunc() instanceof FpeFunc || match.getFunc() instanceof TinkFpeFunc)) {
+            metadataProcessor.addMetric(FieldMetric.FPE_LIMITATION);
             return varValue;
         }
         try {
@@ -109,16 +118,23 @@ public class RecordMapProcessorFactory {
                 output = match.getFunc().apply(PseudoFuncInput.of(varValue));
                 PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
                 final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID);
-                metadataProcessor.add(FieldMetadata.builder()
-                        .shortName(field.getName())
-                        .dataElementPath(field.getPath().substring(1).replace('/', '.')) // Skip leading slash and use dot as separator
-                        .dataElementPattern(match.getRule().getPattern())
-                        .encryptionKeyReference(isSidMapping ? null : funcDeclaration.getArgs().getOrDefault(KEY_REFERENCE, null))
-                        .encryptionAlgorithm(match.getFunc().getAlgorithm())
-                        .encryptionAlgorithmParameters(isSidMapping ? null : funcDeclaration.getArgs())
-                        .stableIdentifierVersion(output.getMetadata().getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null))
-                        .stableIdentifierType(isSidMapping ? STABLE_IDENTIFIER_TYPE : null)
-                        .build());
+                final String sidSnapshotDate = output.getMetadata().getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null);
+                if (isSidMapping && sidSnapshotDate == null) {
+                    // Unsuccessful SID-mapping do not have any sidSnapshotDate
+                    metadataProcessor.addMetric(FieldMetric.MISSING_SID);
+                } else {
+                    metadataProcessor.addMetadata(FieldMetadata.builder()
+                            .shortName(field.getName())
+                            .dataElementPath(field.getPath().substring(1).replace('/', '.')) // Skip leading slash and use dot as separator
+                            .dataElementPattern(match.getRule().getPattern())
+                            .encryptionKeyReference(isSidMapping ? null : funcDeclaration.getArgs().getOrDefault(KEY_REFERENCE, null))
+                            .encryptionAlgorithm(match.getFunc().getAlgorithm())
+                            .encryptionAlgorithmParameters(isSidMapping ? null : funcDeclaration.getArgs())
+                            .stableIdentifierVersion(sidSnapshotDate)
+                            .stableIdentifierType(isSidMapping ? STABLE_IDENTIFIER_TYPE : null)
+                            .build());
+                }
+                output.getWarnings().forEach(metadataProcessor::addLog);
             } else {
                 output = match.getFunc().restore(PseudoFuncInput.of(varValue));
             }
