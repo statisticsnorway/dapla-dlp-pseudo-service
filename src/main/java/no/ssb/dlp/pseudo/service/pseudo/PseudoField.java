@@ -14,7 +14,6 @@ import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -97,9 +96,7 @@ public class PseudoField {
                     recordMapProcessor.getMetadataProcessor().onErrorAll(throwable);
                 })
                 .doOnComplete(() -> {
-                    final Duration duration = stopwatch.stop().elapsed();
-                    metadataProcessor.addLog(String.format("%s took %s", pseudoOperation, duration));
-                    log.info("{} took {}", pseudoOperation, duration);
+                    log.info("{} took {}", pseudoOperation, stopwatch.stop().elapsed());
                     // Signal the metadataProcessor to stop collecting metadata
                     recordMapProcessor.getMetadataProcessor().onCompleteAll();
                 });
@@ -138,9 +135,7 @@ public class PseudoField {
                     metadataProcessor.onErrorAll(throwable);
                 })
                 .doOnComplete(() -> {
-                    final Duration duration = stopwatch.stop().elapsed();
-                    metadataProcessor.addLog(String.format("%s took %s", PseudoOperation.REPSEUDONYMIZE, duration));
-                    log.info("{} took {}", PseudoOperation.REPSEUDONYMIZE, duration);
+                    log.info("{} took {}", PseudoOperation.REPSEUDONYMIZE, stopwatch.stop().elapsed());
                     // Signal the metadataProcessor to stop collecting metadata
                     metadataProcessor.onCompleteAll();
                 });

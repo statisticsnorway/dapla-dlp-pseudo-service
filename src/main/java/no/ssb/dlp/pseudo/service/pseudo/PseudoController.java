@@ -47,7 +47,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -86,7 +85,7 @@ public class PseudoController {
             MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
                     recordProcessorFactory, req.values, PseudoOperation.PSEUDONYMIZE, correlationId));
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE);
+            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
 
@@ -118,7 +117,7 @@ public class PseudoController {
             MutableHttpResponse<Publisher<String>>  mutableHttpResponse = HttpResponse.ok(pseudoField.process(
                     pseudoConfigSplitter, recordProcessorFactory,req.values, PseudoOperation.DEPSEUDONYMIZE, correlationId));
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE);
+            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
 
@@ -151,7 +150,7 @@ public class PseudoController {
             MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(
                     sourcePseudoField.process(recordProcessorFactory, req.values, targetPseudoField, correlationId));
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE);
+            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
 
@@ -253,8 +252,9 @@ public class PseudoController {
             final String correlationId = validateOrCreate(clientCorrelationId);
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            Publisher<String> file = res.getResponse();
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(file).contentType(res.getTargetContentType());
+            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(res.getResponse())
+                    .contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
         } catch (Exception e) {
@@ -305,8 +305,9 @@ public class PseudoController {
             final String correlationId = validateOrCreate(clientCorrelationId);
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig(), correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.REPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            Publisher<String> file = res.getResponse();
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(file).contentType(res.getTargetContentType());
+            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(res.getResponse())
+                    .contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
         } catch (Exception e) {
@@ -354,9 +355,7 @@ public class PseudoController {
                                 metadataProcessor.onErrorAll(throwable);
                             })
                             .doOnComplete(() -> {
-                                final Duration duration = stopwatch.stop().elapsed();
-                                metadataProcessor.addLog(String.format("%s took %s", operation, duration));
-                                log.info("{} took {}", operation, duration);
+                                log.info("{} took {}", operation, stopwatch.stop().elapsed());
                                 // Signal the metadataProcessor to stop collecting metadata
                                 metadataProcessor.onCompleteAll();
                             })
