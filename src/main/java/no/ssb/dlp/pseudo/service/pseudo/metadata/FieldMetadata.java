@@ -39,6 +39,7 @@ public class FieldMetadata {
     }
 
     private List<EncryptionAlgorithmParameter> toEncryptionAlgorithmParameters() {
+        if (encryptionAlgorithmParameters == null) return null;
         return encryptionAlgorithmParameters.entrySet().stream().map(entry ->
             EncryptionAlgorithmParameter.builder()
                     .withAdditionalProperty(entry.getKey(), entry.getValue())

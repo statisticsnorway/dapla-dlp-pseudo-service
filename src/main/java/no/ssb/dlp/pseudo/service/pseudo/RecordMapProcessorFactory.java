@@ -122,16 +122,24 @@ public class RecordMapProcessorFactory {
                 if (isSidMapping && sidSnapshotDate == null) {
                     // Unsuccessful SID-mapping do not have any sidSnapshotDate
                     metadataProcessor.addMetric(FieldMetric.MISSING_SID);
+                } else if (isSidMapping) {
+                    metadataProcessor.addMetric(FieldMetric.MAPPED_SID);
+                    metadataProcessor.addMetadata(FieldMetadata.builder()
+                            .shortName(field.getName())
+                            .dataElementPath(field.getPath().substring(1).replace('/', '.')) // Skip leading slash and use dot as separator
+                            .dataElementPattern(match.getRule().getPattern())
+                            .encryptionAlgorithm(match.getFunc().getAlgorithm())
+                            .stableIdentifierVersion(sidSnapshotDate)
+                            .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
+                            .build());
                 } else {
                     metadataProcessor.addMetadata(FieldMetadata.builder()
                             .shortName(field.getName())
                             .dataElementPath(field.getPath().substring(1).replace('/', '.')) // Skip leading slash and use dot as separator
                             .dataElementPattern(match.getRule().getPattern())
-                            .encryptionKeyReference(isSidMapping ? null : funcDeclaration.getArgs().getOrDefault(KEY_REFERENCE, null))
+                            .encryptionKeyReference(funcDeclaration.getArgs().getOrDefault(KEY_REFERENCE, null))
                             .encryptionAlgorithm(match.getFunc().getAlgorithm())
-                            .encryptionAlgorithmParameters(isSidMapping ? null : funcDeclaration.getArgs())
-                            .stableIdentifierVersion(sidSnapshotDate)
-                            .stableIdentifierType(isSidMapping ? STABLE_IDENTIFIER_TYPE : null)
+                            .encryptionAlgorithmParameters(funcDeclaration.getArgs())
                             .build());
                 }
                 output.getWarnings().forEach(metadataProcessor::addLog);
