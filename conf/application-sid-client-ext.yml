@@ -10,7 +10,7 @@ micronaut:
       read-timeout: 60s
     services:
       sid-service:
-        url: 'http://localhost:10240'
+        url: 'http://localhost:8080'
         path: '/v2'
         read-timeout: 60s
         event-loop-group: sid-group

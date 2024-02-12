@@ -4,15 +4,26 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.observers.TestObserver;
+import io.reactivex.processors.ReplayProcessor;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetric;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
+import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
+import static no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -26,7 +37,7 @@ class PseudoFieldTest {
     private RecordMapProcessorFactory recordProcessorFactory;
 
     @Mock
-    private RecordMapProcessor recordMapProcessor;
+    private RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor;
 
     @Test
     void UsesDefaultPseudoConfigWhenNoKeysetIsSupplied() {
@@ -56,11 +67,33 @@ class PseudoFieldTest {
     void setUpProcessorMocks() {
         MockitoAnnotations.openMocks(this);
         when(pseudoConfigSplitter.splitIfNecessary(any())).thenReturn(Collections.singletonList(new PseudoConfig()));
-        when(recordProcessorFactory.newPseudonymizeRecordProcessor(any())).thenReturn(recordMapProcessor);
+        when(recordProcessorFactory.newPseudonymizeRecordProcessor(any(), anyString())).thenReturn(recordMapProcessor);
+        when(recordMapProcessor.getMetadataProcessor()).thenReturn(createPseudoMetadataProcessor());
+    }
+
+    private static PseudoMetadataProcessor createPseudoMetadataProcessor() {
+        PseudoMetadataProcessor processor = new PseudoMetadataProcessor("correlation-id");
+        processor.addMetadata(FieldMetadata.builder()
+                .shortName("shortName")
+                .dataElementPath("path")
+                .dataElementPattern("pattern")
+                .encryptionKeyReference("pattern")
+                .encryptionAlgorithm("algorithm")
+                .encryptionAlgorithmParameters(Map.of("key", "value"))
+                .stableIdentifierVersion("stableIdVersion")
+                .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
+                .build());
+        processor.addLog("Log line");
+        processor.addMetric(FieldMetric.NULL_VALUE);
+        processor.addMetric(FieldMetric.MISSING_SID);
+        processor.addMetric(FieldMetric.NULL_VALUE);
+        processor.addMetric(FieldMetric.NULL_VALUE);
+        processor.addMetric(FieldMetric.MISSING_SID);
+        return processor;
     }
 
     @Test
-    void processWithNullValues() {
+    void processWithNullValues() throws JSONException {
         setUpProcessorMocks();
 
         //Preprocessor logic is covered in #preprocessorWithNullValues
@@ -75,11 +108,50 @@ class PseudoFieldTest {
         PseudoField pseudoField = new PseudoField("testField", null, null);
         List<String> values = Arrays.asList("v1", null, "v2");
 
-        Flowable<List<Object>> result = pseudoField.process(pseudoConfigSplitter, recordProcessorFactory,
-                values, PseudoOperation.PSEUDONYMIZE);
-        List<List<Object>> resultList = result.toList().blockingGet();
-        assertEquals(List.of(List.of("processedValue v1", Optional.empty(), "processedValue v2")), resultList);
-        assertEquals(3, resultList.get(0).size());
+        String want = """
+                {
+                   "data": [
+                     "processedValue v1",
+                     null,
+                     "processedValue v2"
+                   ],
+                   "datadoc_metadata": {
+                     "pseudo_variables": [
+                       {
+                         "short_name": "shortName",
+                         "data_element_path": "path",
+                         "data_element_pattern": "pattern",
+                         "stable_identifier_type": "FREG_SNR",
+                         "stable_identifier_version": "stableIdVersion",
+                         "encryption_algorithm": "algorithm",
+                         "encryption_key_reference": "pattern",
+                         "encryption_algorithm_parameters": [
+                           {
+                             "key": "value"
+                           }
+                         ]
+                       }
+                     ]
+                   },
+                   "metrics": [
+                     {
+                       "MISSING_SID": 2
+                     },
+                     {
+                       "NULL_VALUE": 3
+                     }
+                   ],
+                   "logs": [
+                     "Log line"
+                   ]
+                 }
+                """;
+        Flowable<String> result = pseudoField.process(pseudoConfigSplitter, recordProcessorFactory,
+                values, PseudoOperation.PSEUDONYMIZE, "dummy-correlation-id");
+
+        String got = String.join("", result.blockingIterable());
+
+        JSONAssert.assertEquals(want, got, JSONCompareMode.STRICT);
 
         // Verify that recordMapProcessor was called once for each non-null value
         verify(recordMapProcessor, times(2)).process(any());

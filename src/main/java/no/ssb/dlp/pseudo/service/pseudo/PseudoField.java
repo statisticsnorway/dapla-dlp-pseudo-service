@@ -1,21 +1,29 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Stopwatch;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
+import no.ssb.dlp.pseudo.core.util.Json;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Represents a field to be pseudonymized.
  */
 @Data
+@Slf4j
 public class PseudoField {
     @Getter(AccessLevel.PROTECTED)
     private static final int BUFFER_SIZE = 10000;
@@ -55,30 +63,45 @@ public class PseudoField {
      * @param values                 The values to be processed.
      * @return A Flowable stream that processes the field values by applying the configured pseudo rules, and returns them as a lists of strings.
      */
-    public Flowable<List<Object>> process(PseudoConfigSplitter pseudoConfigSplitter,
+    public Flowable<String> process(PseudoConfigSplitter pseudoConfigSplitter,
                                           RecordMapProcessorFactory recordProcessorFactory,
                                           List<String> values,
-                                          PseudoOperation pseudoOperation) {
+                                          PseudoOperation pseudoOperation,
+                                          String correlationId) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
         List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(this.getPseudoConfig());
 
-        RecordMapProcessor recordMapProcessor;
+        RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor;
         switch (pseudoOperation){
             case PSEUDONYMIZE -> recordMapProcessor = recordProcessorFactory.
-                    newPseudonymizeRecordProcessor(pseudoConfigs);
+                    newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             case DEPSEUDONYMIZE -> recordMapProcessor = recordProcessorFactory.
-                    newDepseudonymizeRecordProcessor(pseudoConfigs);
+                    newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             default -> throw new RuntimeException(
                     String.format("Pseudo operation \"%s\" not supported for this method", pseudoOperation));
         }
         Completable preprocessor = getPreprocessor(values, recordMapProcessor);
+        // Metadata will be processes in parallel with the data, but must be collected separately
+        final PseudoMetadataProcessor metadataProcessor = recordMapProcessor.getMetadataProcessor();
+        final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor.getMetadata());
+        final Flowable<String> logs = Flowable.fromPublisher(metadataProcessor.getLogs());
+        final Flowable<String> metrics = Flowable.fromPublisher(metadataProcessor.getMetrics());
 
-        return preprocessor.andThen(Flowable.fromIterable(() ->
-                values.stream().map(value -> {
-                    if (value == null) {
-                        return Optional.empty();
-                    }
-                    return recordMapProcessor.process(Map.of(this.getName(), value)).get(this.getName()).toString();
-                }).iterator()).buffer(BUFFER_SIZE));
+        Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values.stream()
+                        .map(v -> mapOptional(v, recordMapProcessor)).toList()
+                ))
+                .map(v -> v.map(Json::from).orElse("null"))
+                .doOnError(throwable -> {
+                    log.error("Response failed", throwable);
+                    recordMapProcessor.getMetadataProcessor().onErrorAll(throwable);
+                })
+                .doOnComplete(() -> {
+                    log.info("{} took {}", pseudoOperation, stopwatch.stop().elapsed());
+                    // Signal the metadataProcessor to stop collecting metadata
+                    recordMapProcessor.getMetadataProcessor().onCompleteAll();
+                });
+
+        return PseudoResponseSerializer.serialize(result, metadata, logs, metrics);
     }
 
     /**
@@ -88,63 +111,54 @@ public class PseudoField {
      * @param values                 The values to be processed.
      * @return A Flowable stream that processes the field values by applying the configured pseudo rules, and returns them as a lists of strings.
      */
-    public Flowable<List<Object>> process(RecordMapProcessorFactory recordProcessorFactory,
+    public Flowable<String> process(RecordMapProcessorFactory recordProcessorFactory,
                                           List<String> values,
-                                          PseudoField targetPseudoField) {
+                                          PseudoField targetPseudoField,
+                                          String correlationId) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
         PseudoConfig targetPseudoConfig = targetPseudoField.getPseudoConfig();
-        RecordMapProcessor recordMapProcessor = recordProcessorFactory.
-                newRepseudonymizeRecordProcessor(this.getPseudoConfig(), targetPseudoConfig);
+        RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor = recordProcessorFactory.
+                newRepseudonymizeRecordProcessor(this.getPseudoConfig(), targetPseudoConfig, correlationId);
         Completable preprocessor = getPreprocessor(values, recordMapProcessor);
+        // Metadata will be processes in parallel with the data, but must be collected separately
+        final PseudoMetadataProcessor metadataProcessor = recordMapProcessor.getMetadataProcessor();
+        final Flowable<String> metadata = Flowable.fromPublisher(metadataProcessor.getMetadata());
+        final Flowable<String> logs = Flowable.fromPublisher(metadataProcessor.getLogs());
+        final Flowable<String> metrics = Flowable.fromPublisher(metadataProcessor.getMetrics());
 
-        return preprocessor.andThen(Flowable.fromIterable(() ->
-                values.stream().map(value -> {
-                    if (value == null) {
-                        return Optional.empty();
-                    }
-                    return recordMapProcessor.process(Map.of(this.getName(), value)).get(this.getName()).toString();
-                }).iterator()).buffer(BUFFER_SIZE));
+        Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values.stream()
+                        .map(v -> mapOptional(v, recordMapProcessor)).toList()
+                ))
+                .map(v -> v.map(Json::from).orElse("null"))
+                .doOnError(throwable -> {
+                    log.error("Response failed", throwable);
+                    metadataProcessor.onErrorAll(throwable);
+                })
+                .doOnComplete(() -> {
+                    log.info("{} took {}", PseudoOperation.REPSEUDONYMIZE, stopwatch.stop().elapsed());
+                    // Signal the metadataProcessor to stop collecting metadata
+                    metadataProcessor.onCompleteAll();
+                });
+        return PseudoResponseSerializer.serialize(result, metadata, logs, metrics);
     }
 
-    protected Completable getPreprocessor(List<String> values, RecordMapProcessor recordMapProcessor) {
-        if (recordMapProcessor.hasPreprocessors()) {
-            return Completable.fromPublisher(Flowable.fromIterable(() ->
-                    values.stream().map(value -> {
-                        if (value == null) {
-                            return Optional.ofNullable(null);
-                        }
-                        return recordMapProcessor.init(Map.of(this.getName(), value));
-                    }).iterator()));
+    private Optional<Object> mapOptional(String v, RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor) {
+        if (v == null) {
+            return Optional.empty();
         } else {
-            return Completable.complete();
+            return Optional.of(recordMapProcessor.process(Map.of(this.getName(), v)).get(this.getName()));
         }
     }
 
-    /**
-     * Creates a {@link PseudoFieldMetadata} object with the metadata about the preformed pseudo operations.
-     *
-     * @return A {@link PseudoFieldMetadata} object containing the field name and pseudo rules used.
-     */
-    public PseudoFieldMetadata getPseudoFieldMetadata() {
-        return PseudoFieldMetadata.builder()
-                .fieldName(name)
-                .pseudoRules(pseudoConfig).build();
-    }
-}
-
-@Builder
-@Data
-class PseudoFieldMetadata {
-    private String fieldName;
-    private PseudoConfig pseudoRules;
-
-    /**
-     * Converts the {@link PseudoFieldMetadata} object to a JSON string.
-     *
-     * @return A {@link String} representing the JSON representation of the PseudoFieldMetadata
-     * @throws JsonProcessingException if an error occurs during JSON processing
-     */
-    public String toJsonString() throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.writeValueAsString(this);
+    protected Completable getPreprocessor(List<String> values, RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor) {
+        if (recordMapProcessor.hasPreprocessors()) {
+            return Completable.fromPublisher(Flowable.fromIterable(values.stream()
+                    .filter(Objects::nonNull)
+                    .map(v -> recordMapProcessor.init(Map.of(this.getName(), v)))
+                    .toList())
+            );
+        } else {
+            return Completable.complete();
+        }
     }
 }

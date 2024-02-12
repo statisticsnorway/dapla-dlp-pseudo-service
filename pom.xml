@@ -3,13 +3,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>no.ssb.dapla.dlp.pseudo</groupId>
   <artifactId>dapla-dlp-pseudo-service</artifactId>
-  <version>3.0.11-SNAPSHOT</version>
+  <version>3.1.0-SNAPSHOT</version>
   <name>dapla-dlp-pseudo-service</name>
 
   <parent>
     <groupId>io.micronaut</groupId>
     <artifactId>micronaut-parent</artifactId>
-    <version>3.8.7</version>
+    <version>3.9.4</version>
   </parent>
 
   <properties>
@@ -21,12 +21,12 @@
     <artifact-registry.url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-5n/dapla-pseudo-maven</artifact-registry.url>
     <github.repository>statisticsnorway/dapla-dlp-pseudo-service</github.repository>
     <exec.mainClass>no.ssb.dlp.pseudo.service.Application</exec.mainClass>
+    <dapla-datadoc-model.version>1.2</dapla-datadoc-model.version>
 
     <artifactregistry-maven-wagon.version>2.2.1</artifactregistry-maven-wagon.version>
-    <dapla-dlp-pseudo-core.version>2.0.0</dapla-dlp-pseudo-core.version>
-    <micronaut.version>3.8.7</micronaut.version>
+    <dapla-dlp-pseudo-core.version>2.0.1-SNAPSHOT</dapla-dlp-pseudo-core.version>
+    <micronaut.version>3.9.4</micronaut.version>
     <micronaut.openapi.version>4.6.0</micronaut.openapi.version>
-    <micronaut-data.version>3.8.1</micronaut-data.version>
     <micronaut.object.storage.version>1.1.0</micronaut.object.storage.version>
     <auto-service.version>1.0.1</auto-service.version>
     <maven-javadoc-plugin.version>3.6.2</maven-javadoc-plugin.version>
@@ -62,6 +62,10 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>dapla-stat</id>
+      <url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-5n/dapla-stat-maven</url>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -84,6 +88,11 @@
       <groupId>io.micronaut</groupId>
       <artifactId>micronaut-http-client</artifactId>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>no.ssb.dapla.metadata</groupId>
+      <artifactId>datadoc-model</artifactId>
+      <version>${dapla-datadoc-model.version}</version>
     </dependency>
     <dependency>
       <groupId>io.micronaut</groupId>
