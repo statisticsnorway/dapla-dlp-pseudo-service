@@ -34,7 +34,7 @@ micronaut:
           - isAnonymous()
     authentication: bearer
     token:
-      name-key: preferred_username
+      name-key: email
       jwt:
         signatures:
           jwks:

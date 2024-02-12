@@ -43,6 +43,7 @@ Authorization: Bearer {{keycloak_token}}
 
 POST {{base_url}}/pseudonymize/file
 Content-Type: multipart/form-data; boundary=separator
+X-Correlation-Id: ad94e671-7388-4fa2-8b0a-f9f3ec970d9b
 Authorization: Bearer {{keycloak_token}}
 
 --separator
@@ -111,7 +112,7 @@ Content-Type: application/json
   "pseudoConfig": {
     "rules": [
       {
-        "pattern": "**/{fnr,fornavn,etternavn}",
+        "pattern": "**/{fnr}",
         "func": "map-sid(keyId=papis-key-1)"
       }
     ]

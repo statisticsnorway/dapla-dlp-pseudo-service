@@ -10,4 +10,5 @@ import lombok.extern.jackson.Jacksonized;
 public class SidInfo {
     private final String fnr;
     private final String snr;
+    private final String datasetExtractionSnapshotTime;
 }

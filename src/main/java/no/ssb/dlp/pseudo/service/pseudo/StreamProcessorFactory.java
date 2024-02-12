@@ -1,6 +1,5 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
-import com.univocity.parsers.csv.Csv;
 import io.micronaut.http.MediaType;
 import lombok.RequiredArgsConstructor;
 import no.ssb.dlp.pseudo.core.StreamProcessor;

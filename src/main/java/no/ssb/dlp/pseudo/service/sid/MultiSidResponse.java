@@ -34,6 +34,7 @@ public class MultiSidResponse {
             result.put(it.next(), new SidInfo.SidInfoBuilder()
                     .snr(getMapping().getSnr().get(index))
                     .fnr(getMapping().getFnr().get(index))
+                    .datasetExtractionSnapshotTime(getDatasetExtractionSnapshotTime())
                     .build());
         }
         return result;
