@@ -84,11 +84,6 @@ class PseudoFieldTest {
                 .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
                 .build());
         processor.addLog("Log line");
-        processor.addMetric(FieldMetric.NULL_VALUE);
-        processor.addMetric(FieldMetric.MISSING_SID);
-        processor.addMetric(FieldMetric.NULL_VALUE);
-        processor.addMetric(FieldMetric.NULL_VALUE);
-        processor.addMetric(FieldMetric.MISSING_SID);
         return processor;
     }
 
@@ -135,10 +130,7 @@ class PseudoFieldTest {
                    },
                    "metrics": [
                      {
-                       "MISSING_SID": 2
-                     },
-                     {
-                       "NULL_VALUE": 3
+                       "NULL_VALUE": 1
                      }
                    ],
                    "logs": [

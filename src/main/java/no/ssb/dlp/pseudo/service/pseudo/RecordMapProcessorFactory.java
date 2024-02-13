@@ -119,8 +119,9 @@ public class RecordMapProcessorFactory {
                 PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
                 final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID);
                 final String sidSnapshotDate = output.getMetadata().getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null);
-                if (isSidMapping && sidSnapshotDate == null) {
-                    // Unsuccessful SID-mapping do not have any sidSnapshotDate
+                final String mappedValue = (String) output.getFirstValue();
+                if (isSidMapping && varValue.equals(mappedValue)) {
+                    // Unsuccessful SID-mapping
                     metadataProcessor.addMetric(FieldMetric.MISSING_SID);
                 } else if (isSidMapping) {
                     metadataProcessor.addMetric(FieldMetric.MAPPED_SID);
@@ -143,10 +144,11 @@ public class RecordMapProcessorFactory {
                             .build());
                 }
                 output.getWarnings().forEach(metadataProcessor::addLog);
+                return mappedValue;
             } else {
                 output = match.getFunc().restore(PseudoFuncInput.of(varValue));
+                return (String) output.getFirstValue();
             }
-            return (String) output.getFirstValue();
         } catch (Exception e) {
             throw new PseudoException(String.format("pseudonymize error - field='%s', originalValue='%s'",
                     field.getPath(), varValue), e);

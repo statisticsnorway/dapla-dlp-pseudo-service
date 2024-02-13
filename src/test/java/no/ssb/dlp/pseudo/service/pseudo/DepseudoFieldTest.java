@@ -5,7 +5,6 @@ import io.reactivex.Flowable;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
-import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetric;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
@@ -54,7 +53,6 @@ class DepseudoFieldTest {
                 .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
             .build());
         processor.addLog("Log line");
-        processor.addMetric(FieldMetric.MISSING_SID);
         return processor;
     }
 
@@ -101,7 +99,7 @@ class DepseudoFieldTest {
                       },
                       "metrics": [
                           {
-                            "MISSING_SID": 1
+                            "NULL_VALUE": 1
                           }
                       ],
                       "logs": [
