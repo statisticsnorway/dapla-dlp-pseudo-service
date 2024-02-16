@@ -5,7 +5,7 @@ import no.ssb.dapla.dlp.pseudo.func.tink.fpe.TinkFpeFuncConfig;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncDeclaration;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import java.util.LinkedHashMap;
 import java.util.List;
 

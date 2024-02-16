@@ -7,9 +7,9 @@
   <name>dapla-dlp-pseudo-service</name>
 
   <parent>
-    <groupId>io.micronaut</groupId>
+    <groupId>io.micronaut.platform</groupId>
     <artifactId>micronaut-parent</artifactId>
-    <version>3.9.4</version>
+    <version>4.3.0</version>
   </parent>
 
   <properties>
@@ -25,7 +25,7 @@
 
     <artifactregistry-maven-wagon.version>2.2.1</artifactregistry-maven-wagon.version>
     <dapla-dlp-pseudo-core.version>2.0.1</dapla-dlp-pseudo-core.version>
-    <micronaut.version>3.9.4</micronaut.version>
+    <micronaut.version>4.3.0</micronaut.version>
     <micronaut.openapi.version>4.6.0</micronaut.openapi.version>
     <micronaut.object.storage.version>1.1.0</micronaut.object.storage.version>
     <auto-service.version>1.0.1</auto-service.version>
@@ -76,11 +76,6 @@
     </dependency>
     <dependency>
       <groupId>io.micronaut</groupId>
-      <artifactId>micronaut-validation</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.micronaut</groupId>
       <artifactId>micronaut-http-server-netty</artifactId>
       <scope>compile</scope>
     </dependency>
@@ -90,23 +85,23 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>io.micronaut</groupId>
+      <artifactId>micronaut-jackson-databind</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.micronaut.serde</groupId>
+      <artifactId>micronaut-serde-jackson</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>no.ssb.dapla.metadata</groupId>
       <artifactId>datadoc-model</artifactId>
       <version>${dapla-datadoc-model.version}</version>
     </dependency>
     <dependency>
       <groupId>io.micronaut</groupId>
-      <artifactId>micronaut-runtime</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.micronaut</groupId>
       <artifactId>micronaut-management</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>javax.annotation</groupId>
-      <artifactId>javax.annotation-api</artifactId>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -146,9 +141,9 @@
       <version>${dapla-dlp-pseudo-core.version}</version>
     </dependency>
     <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-      <version>1</version>
+      <groupId>jakarta.inject</groupId>
+      <artifactId>jakarta.inject-api</artifactId>
+      <version>2.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -162,7 +157,7 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-     <groupId>com.google.guava</groupId>
+      <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>32.0.0-jre</version>
     </dependency>
@@ -179,6 +174,11 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -297,7 +297,7 @@
                 <version>${micronaut.version}</version>
               </path>
               <path>
-                <groupId>io.micronaut</groupId>
+                <groupId>io.micronaut.validation</groupId>
                 <artifactId>micronaut-validation</artifactId>
                 <version>${micronaut.version}</version>
               </path>
@@ -337,7 +337,7 @@
                     <version>${micronaut.version}</version>
                   </path>
                   <path>
-                    <groupId>io.micronaut</groupId>
+                    <groupId>io.micronaut.validation</groupId>
                     <artifactId>micronaut-validation</artifactId>
                     <version>${micronaut.version}</version>
                   </path>
@@ -398,9 +398,9 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>io.micronaut.build</groupId>
+        <groupId>io.micronaut.maven</groupId>
         <artifactId>micronaut-maven-plugin</artifactId>
-        <version>3.5.2</version>
+        <version>${micronaut.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

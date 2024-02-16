@@ -8,12 +8,12 @@ import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.security.token.DefaultRolesFinder;
 import io.micronaut.security.token.RolesFinder;
 import io.micronaut.security.token.config.TokenConfiguration;
+import jakarta.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dlp.pseudo.service.accessgroups.CloudIdentityService;
 import no.ssb.dlp.pseudo.service.accessgroups.Membership;
 
-import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

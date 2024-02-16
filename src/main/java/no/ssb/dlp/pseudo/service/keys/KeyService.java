@@ -6,7 +6,7 @@ import no.ssb.dlp.pseudo.core.util.Json;
 import no.ssb.dlp.pseudo.core.util.TinkUtil;
 import no.ssb.dlp.pseudo.service.tink.KmsConfig;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import java.net.URI;
 
 @Singleton

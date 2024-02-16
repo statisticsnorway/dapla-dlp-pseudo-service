@@ -3,9 +3,8 @@ package no.ssb.dlp.pseudo.service.accessgroups;
 import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
-
-import javax.inject.Inject;
 
 import java.util.List;
 

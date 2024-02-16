@@ -6,13 +6,13 @@ import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.token.generator.TokenGenerator;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.restassured.specification.RequestSpecification;
+import jakarta.inject.Inject;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.sid.local.SidCache;
 import no.ssb.dlp.pseudo.service.sid.local.SidReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
 import java.util.Optional;
 import java.util.Set;
 

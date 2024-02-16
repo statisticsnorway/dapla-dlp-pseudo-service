@@ -6,11 +6,11 @@ import io.micronaut.context.annotation.Requires;
 import io.micronaut.gcp.condition.RequiresGoogleProjectId;
 import io.micronaut.gcp.secretmanager.client.SecretManagerClient;
 import io.micronaut.gcp.secretmanager.client.VersionedSecret;
+import jakarta.inject.Singleton;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
-import javax.inject.Singleton;
 import java.util.Optional;
 
 @RequiredArgsConstructor

@@ -1,10 +1,10 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
 import io.micronaut.context.annotation.Property;
+import jakarta.inject.Singleton;
 import no.ssb.dlp.pseudo.core.PseudoSecret;
 import no.ssb.dlp.pseudo.service.secrets.SecretService;
 
-import javax.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

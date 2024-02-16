@@ -8,7 +8,7 @@ import no.ssb.dlp.pseudo.core.json.JsonStreamProcessor;
 import no.ssb.dlp.pseudo.core.csv.CsvStreamProcessor;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 @RequiredArgsConstructor
 @Singleton

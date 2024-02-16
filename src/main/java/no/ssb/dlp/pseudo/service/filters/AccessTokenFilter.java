@@ -9,14 +9,14 @@ import io.micronaut.http.MutableHttpRequest;
 import io.micronaut.http.filter.ClientFilterChain;
 import io.micronaut.http.filter.HttpClientFilter;
 import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.annotation.Nullable;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import java.io.FileInputStream;
 import java.net.URI;
 import java.util.Optional;

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import no.ssb.dlp.pseudo.service.sid.local.SidCache;
 import org.reactivestreams.Publisher;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
