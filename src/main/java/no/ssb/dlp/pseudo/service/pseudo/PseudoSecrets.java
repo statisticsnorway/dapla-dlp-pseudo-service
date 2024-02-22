@@ -78,7 +78,7 @@ public class PseudoSecrets {
 
     }
 
-    class InvalidPseudoSecretException extends RuntimeException {
+    static class InvalidPseudoSecretException extends RuntimeException {
         public InvalidPseudoSecretException(String message) {
             super(message);
         }

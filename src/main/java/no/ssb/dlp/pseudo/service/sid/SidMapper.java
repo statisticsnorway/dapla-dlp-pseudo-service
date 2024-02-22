@@ -45,11 +45,11 @@ public class SidMapper implements Mapper {
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
         partitionSize = Application.getContext().getProperty("sid.mapper.partition.size", Integer.class,
-                DEFAULT_PARTITION_SIZE).intValue();
+                DEFAULT_PARTITION_SIZE);
     }
 
-    private Set<String> fnrs = ConcurrentHashMap.newKeySet();
-    private ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
+    private final Set<String> fnrs = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
 
     @Override
     public void init(PseudoFuncInput input) {
@@ -186,8 +186,7 @@ public class SidMapper implements Mapper {
 
         @Override
         public void onError(Throwable throwable) {
-            if (throwable instanceof HttpClientResponseException) {
-                HttpClientResponseException exception = (HttpClientResponseException) throwable;
+            if (throwable instanceof HttpClientResponseException exception) {
                 if (exception.getStatus() == HttpStatus.NOT_FOUND) {
                     // This may happen more frequently, so log at debug level
                     log.debug("Error was", exception);

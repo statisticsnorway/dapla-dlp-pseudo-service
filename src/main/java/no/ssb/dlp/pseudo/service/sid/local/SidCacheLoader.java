@@ -59,9 +59,8 @@ public class SidCacheLoader {
 
         sidReader.readSidsFromFile(item.getInputStream()).subscribe(
                 // onNext
-                sidItem -> {
-                    sidCache.register(sidItem, true);
-                },
+                sidItem -> sidCache.register(sidItem, true)
+                ,
 
                 // onError
                 e -> {
