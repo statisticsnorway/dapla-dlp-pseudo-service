@@ -41,7 +41,6 @@ public class Application {
 
     public static void main(String[] args) {
         log.info("pseudo-service version: {}", BuildInfo.INSTANCE.getVersionAndBuildTimestamp());
-        context = Micronaut.run(Application.class);
+        context = Micronaut.run(Application.class, args);
     }
-
 }

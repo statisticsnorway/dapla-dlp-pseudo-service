@@ -69,9 +69,7 @@ public class SidCacheLoader {
                 },
 
                 // onComplete
-                () -> {
-                    sidCache.markAsInitialized();
-                }
+                sidCache::markAsInitialized
         );
 
         log.info("Read %s sid mappings in %s".formatted(

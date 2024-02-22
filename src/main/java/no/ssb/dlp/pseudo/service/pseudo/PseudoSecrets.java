@@ -21,9 +21,13 @@ public class PseudoSecrets {
      *
      * @param configuredPseudoSecrets pseudo secrets coming from the config or environment
      */
-    public PseudoSecrets(SecretService secretService, @Property(name = "pseudo.secrets") Map<String, PseudoSecret> configuredPseudoSecrets) {
+    public PseudoSecrets(
+            SecretService secretService,
+            @Property(name = "pseudo.secrets")
+            Map<String, PseudoSecret> configuredPseudoSecrets) {
         this.secretService = secretService;
         this.configuredPseudoSecrets = Optional.ofNullable(configuredPseudoSecrets).orElse(Map.of());
+        System.out.println("TESTING");
     }
 
     /**

@@ -82,7 +82,8 @@ public class PseudoController {
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = validateOrCreate(clientCorrelationId);
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(
+                    pseudoField.process(pseudoConfigSplitter,
                     recordProcessorFactory, req.values, PseudoOperation.PSEUDONYMIZE, correlationId));
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
             mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
@@ -114,7 +115,7 @@ public class PseudoController {
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = validateOrCreate(clientCorrelationId);
-            MutableHttpResponse<Publisher<String>>  mutableHttpResponse = HttpResponse.ok(pseudoField.process(
+            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(
                     pseudoConfigSplitter, recordProcessorFactory,req.values, PseudoOperation.DEPSEUDONYMIZE, correlationId));
             // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
             mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");

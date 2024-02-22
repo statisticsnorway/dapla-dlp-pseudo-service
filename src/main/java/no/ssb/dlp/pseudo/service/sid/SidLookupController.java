@@ -39,13 +39,13 @@ public class SidLookupController {
     @Secured({PseudoServiceRole.USER, PseudoServiceRole.ADMIN})
     @Post("/lookup/batch")
     public Publisher<MultiSidLookupResponse> lookupMissing(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
-        return sidService.lookupMissing(req.getFnrList(), snapshot);
+        return sidService.lookupMissing(req.fnrList(), snapshot);
     }
 
     @ExecuteOn(TaskExecutors.IO)
     @Post("/map/batch")
     public Publisher<Map<String, SidInfo>> lookupFnrs(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
-        return sidService.lookupFnr(req.getFnrList(), snapshot);
+        return sidService.lookupFnr(req.fnrList(), snapshot);
     }
 
     @ExecuteOn(TaskExecutors.IO)

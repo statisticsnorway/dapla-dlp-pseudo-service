@@ -49,7 +49,7 @@ class LocalSidService implements SidService {
                                     new SidInfo.SidInfoBuilder().snr(currentSnr).fnr(currentFnr)
                                             .datasetExtractionSnapshotTime(snapshot.orElse(null)).build())
                             .orElse(null);
-                }).collect(Collectors.toMap(SidInfo::getFnr, sidInfo -> sidInfo))
+                }).collect(Collectors.toMap(SidInfo::fnr, sidInfo -> sidInfo))
         );
     }
 

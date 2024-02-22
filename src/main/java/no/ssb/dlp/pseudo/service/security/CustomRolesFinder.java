@@ -47,13 +47,13 @@ public class CustomRolesFinder implements RolesFinder {
         }
         if (rolesConfig.getAdminsGroup().isPresent()) {
             final List<Membership> adminMembers = cloudIdentityService.listMembers(rolesConfig.getAdminsGroup().get());
-            if (adminMembers.stream().anyMatch(value -> value.getPreferredMemberKey().getId().equals(username))) {
+            if (adminMembers.stream().anyMatch(value -> value.preferredMemberKey().id().equals(username))) {
                 roles.add(PseudoServiceRole.ADMIN);
             }
         }
         if (rolesConfig.getUsersGroup().isPresent()) {
             final List<Membership> adminMembers = cloudIdentityService.listMembers(rolesConfig.getUsersGroup().get());
-            if (adminMembers.stream().anyMatch(value -> value.getPreferredMemberKey().getId().equals(username))) {
+            if (adminMembers.stream().anyMatch(value -> value.preferredMemberKey().id().equals(username))) {
                 roles.add(PseudoServiceRole.USER);
             }
         }

@@ -91,21 +91,21 @@ public class SidMapper implements Mapper {
                 log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                 output.addWarning(String.format("No SID-mapping found for fnr %s", fnr));
                 output.add(fnr);
-            } else if (result.getSnr() == null) {
+            } else if (result.snr() == null) {
                 log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
-                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.datasetExtractionSnapshotTime());
                 output.addWarning(String.format("No SID-mapping found for fnr %s", fnr));
                 output.add(fnr);
             } else {
-                if (fnr.equals(result.getSnr())) {
+                if (fnr.equals(result.snr())) {
                     log.warn("Incorrect SID-mapping for fnr starting with {}. Mapping returned the original fnr!",
                             Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                     output.addWarning(String.format("Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!", fnr));
                 } else {
                     log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
                 }
-                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
-                output.add(result.getSnr());
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.datasetExtractionSnapshotTime());
+                output.add(result.snr());
             }
         } catch (LocalSidService.NoSidMappingFoundException e) {
             log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
