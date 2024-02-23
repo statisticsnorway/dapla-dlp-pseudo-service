@@ -53,7 +53,6 @@ class RepseudoFieldTest {
                 .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
                 .build());
         processor.addLog("Log line");
-        processor.addMetric(FieldMetric.MISSING_SID);
         return processor;
     }
     @Test
@@ -100,7 +99,7 @@ class RepseudoFieldTest {
                       },
                       "metrics": [
                           {
-                            "MISSING_SID": 1
+                            "NULL_VALUE": 1
                           }
                       ],
                       "logs": [

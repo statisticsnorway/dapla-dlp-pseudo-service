@@ -36,7 +36,6 @@ import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.sid.InvalidSidSnapshotDateException;
 import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
-import org.reactivestreams.Publisher;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -44,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
@@ -73,7 +73,7 @@ public class PseudoController {
     @Produces(MediaType.APPLICATION_JSON)
     @Post(value = "/pseudonymize/field", consumes = MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Publisher<String>> pseudonymizeField(
+    public HttpResponse<Flowable<byte[]>> pseudonymizeField(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = PseudoFieldRequest.class) String request) {
         try {
@@ -82,11 +82,12 @@ public class PseudoController {
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = validateOrCreate(clientCorrelationId);
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(
-                    pseudoField.process(pseudoConfigSplitter,
-                    recordProcessorFactory, req.values, PseudoOperation.PSEUDONYMIZE, correlationId));
-            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
+
+            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
+                    recordProcessorFactory, req.values, PseudoOperation.PSEUDONYMIZE, correlationId)
+                            .map(o -> o.getBytes(StandardCharsets.UTF_8)))
+                    .characterEncoding(StandardCharsets.UTF_8);
+
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
 
@@ -106,7 +107,7 @@ public class PseudoController {
     @Secured({PseudoServiceRole.ADMIN})
     @Post(value = "/depseudonymize/field", consumes = MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Publisher<String>> depseudonymizeField(
+    public HttpResponse<Flowable<byte[]>> depseudonymizeField(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = DepseudoFieldRequest.class) String request) {
         try {
@@ -115,10 +116,12 @@ public class PseudoController {
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = validateOrCreate(clientCorrelationId);
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(
-                    pseudoConfigSplitter, recordProcessorFactory,req.values, PseudoOperation.DEPSEUDONYMIZE, correlationId));
-            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
+
+            MutableHttpResponse<Flowable<byte[]>>  mutableHttpResponse = HttpResponse.ok(pseudoField.process(
+                    pseudoConfigSplitter, recordProcessorFactory,req.values, PseudoOperation.DEPSEUDONYMIZE, correlationId)
+                            .map(o -> o.getBytes(StandardCharsets.UTF_8)))
+                    .characterEncoding(StandardCharsets.UTF_8);
+
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
 
@@ -138,7 +141,7 @@ public class PseudoController {
     @Secured({PseudoServiceRole.ADMIN})
     @Post(value = "/repseudonymize/field", consumes = MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Publisher<String>> repseudonymizeField(
+    public HttpResponse<Flowable<byte[]>> repseudonymizeField(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = RepseudoFieldRequest.class) String request) {
         try {
@@ -148,10 +151,10 @@ public class PseudoController {
             PseudoField targetPseudoField = new PseudoField(req.getName(), req.getTargetPseudoFunc(), req.getTargetKeyset());
 
             final String correlationId = validateOrCreate(clientCorrelationId);
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(
-                    sourcePseudoField.process(recordProcessorFactory, req.values, targetPseudoField, correlationId));
-            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            mutableHttpResponse.contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
+            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(
+                    sourcePseudoField.process(recordProcessorFactory, req.values, targetPseudoField, correlationId)
+                            .map(o -> o.getBytes(StandardCharsets.UTF_8)))
+                    .characterEncoding(StandardCharsets.UTF_8);
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
 
@@ -187,7 +190,7 @@ public class PseudoController {
     @Produces(value = MediaType.APPLICATION_JSON)
     @SingleResult
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Publisher<String>> pseudonymizeFile(
+    public HttpResponse<Flowable<byte[]>> pseudonymizeFile(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data) {
         log.info(Strings.padEnd(String.format("*** Pseudonymize file: %s", data.getFilename()), 80, '*'));
@@ -199,9 +202,9 @@ public class PseudoController {
             final String correlationId = validateOrCreate(clientCorrelationId);
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.PSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(res.getResponse())
-                    .contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
+            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(res.getResponse()
+                            .map(o -> o.getBytes(StandardCharsets.UTF_8)))
+                    .characterEncoding(StandardCharsets.UTF_8);
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
         } catch (RuntimeException e) {
@@ -240,7 +243,7 @@ public class PseudoController {
     @Produces(MediaType.APPLICATION_JSON)
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Publisher<String>> depseudonymizeFile(
+    public HttpResponse<Flowable<byte[]>> depseudonymizeFile(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
         log.info(Strings.padEnd(String.format("*** Depseudonymize file: %s", data.getFilename()), 80, '*'));
@@ -253,9 +256,9 @@ public class PseudoController {
             final String correlationId = validateOrCreate(clientCorrelationId);
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(res.getResponse())
-                    .contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
+            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(res.getResponse()
+                            .map(o -> o.getBytes(StandardCharsets.UTF_8)))
+                    .characterEncoding(StandardCharsets.UTF_8);
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
         } catch (Exception e) {
@@ -295,7 +298,7 @@ public class PseudoController {
     @Produces(MediaType.APPLICATION_JSON)
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
-    public HttpResponse<Publisher<String>> repseudonymizeFile(
+    public HttpResponse<Flowable<byte[]>> repseudonymizeFile(
             @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = RepseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
         log.info(Strings.padEnd(String.format("*** Repseudonymize file: %s", data.getFilename()), 80, '*'));
@@ -306,9 +309,9 @@ public class PseudoController {
             final String correlationId = validateOrCreate(clientCorrelationId);
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig(), correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.REPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            // TODO: Must hard-code to plain text to avoid that Micronaut converts the JSON to a JSON array
-            MutableHttpResponse<Publisher<String>> mutableHttpResponse = HttpResponse.ok(res.getResponse())
-                    .contentType(MediaType.TEXT_PLAIN_TYPE).characterEncoding("UTF-8");
+            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(res.getResponse()
+                            .map(o -> o.getBytes(StandardCharsets.UTF_8)))
+                    .characterEncoding(StandardCharsets.UTF_8);
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
         } catch (Exception e) {
@@ -493,7 +496,7 @@ public class PseudoController {
         @Schema(implementation = String.class)
         private final MediaType targetContentType;
 
-        private final Publisher<String> response;
+        private final Flowable<String> response;
     }
 
     @Data

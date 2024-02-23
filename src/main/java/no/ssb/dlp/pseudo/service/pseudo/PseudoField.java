@@ -12,6 +12,7 @@ import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
 import no.ssb.dlp.pseudo.core.util.Json;
+import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetric;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 
 import java.util.List;
@@ -88,7 +89,7 @@ public class PseudoField {
         final Flowable<String> metrics = Flowable.fromPublisher(metadataProcessor.getMetrics());
 
         Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values.stream()
-                        .map(v -> mapOptional(v, recordMapProcessor)).toList()
+                        .map(v -> mapOptional(v, recordMapProcessor, metadataProcessor)).toList()
                 ))
                 .map(v -> v.map(Json::from).orElse("null"))
                 .doOnError(throwable -> {
@@ -127,7 +128,7 @@ public class PseudoField {
         final Flowable<String> metrics = Flowable.fromPublisher(metadataProcessor.getMetrics());
 
         Flowable<String> result = preprocessor.andThen(Flowable.fromIterable(values.stream()
-                        .map(v -> mapOptional(v, recordMapProcessor)).toList()
+                        .map(v -> mapOptional(v, recordMapProcessor, metadataProcessor)).toList()
                 ))
                 .map(v -> v.map(Json::from).orElse("null"))
                 .doOnError(throwable -> {
@@ -142,8 +143,10 @@ public class PseudoField {
         return PseudoResponseSerializer.serialize(result, metadata, logs, metrics);
     }
 
-    private Optional<Object> mapOptional(String v, RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor) {
+    private Optional<Object> mapOptional(String v, RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor,
+                                         PseudoMetadataProcessor metadataProcessor) {
         if (v == null) {
+            metadataProcessor.addMetric(FieldMetric.NULL_VALUE);
             return Optional.empty();
         } else {
             return Optional.of(recordMapProcessor.process(Map.of(this.getName(), v)).get(this.getName()));
