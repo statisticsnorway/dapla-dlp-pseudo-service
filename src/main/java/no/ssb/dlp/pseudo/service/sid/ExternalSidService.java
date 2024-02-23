@@ -11,15 +11,11 @@ import java.util.Map;
 import java.util.Optional;
 
 @Singleton
-//@RequiredArgsConstructor
+@RequiredArgsConstructor
 @Requires(notEnv = "local-sid")
 public class ExternalSidService implements SidService {
 
     private final SidClient sidClient;
-
-    public ExternalSidService(SidClient sc) {
-        this.sidClient = sc;
-    }
 
     @Override
     public Publisher<SidInfo> lookupFnr(String fnr, Optional<String> snapshot) {

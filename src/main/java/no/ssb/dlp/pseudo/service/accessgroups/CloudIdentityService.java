@@ -9,12 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
-// @RequiredArgsConstructor
+@RequiredArgsConstructor
 public class CloudIdentityService {
     private final CloudIdentityClient cloudIdentityClient;
-    public CloudIdentityService(CloudIdentityClient cic){
-        this.cloudIdentityClient = cic;
-    }
 
     @Cacheable(value = "cloud-identity-service-cache", parameters = {"groupEmail"})
     public List<Membership> listMembers(String groupEmail) {

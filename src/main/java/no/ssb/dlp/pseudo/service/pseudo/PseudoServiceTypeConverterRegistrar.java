@@ -14,8 +14,6 @@ import java.util.Map;
  *  Micronaut {@link io.micronaut.core.convert.TypeConverter} implementations defined in a different
  *  package like the ones from {@link no.ssb.dlp.pseudo.core} need to be manually registered
  *  using this {@link io.micronaut.core.convert.TypeConverterRegistrar} implementation.
- *
- * @author Nicholas Jaunsen
  */
 @Singleton
 public class PseudoServiceTypeConverterRegistrar implements TypeConverterRegistrar {

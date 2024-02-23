@@ -27,7 +27,6 @@ public class PseudoSecrets {
             Map<String, PseudoSecret> configuredPseudoSecrets) {
         this.secretService = secretService;
         this.configuredPseudoSecrets = Optional.ofNullable(configuredPseudoSecrets).orElse(Map.of());
-        System.out.println("TESTING");
     }
 
     /**
