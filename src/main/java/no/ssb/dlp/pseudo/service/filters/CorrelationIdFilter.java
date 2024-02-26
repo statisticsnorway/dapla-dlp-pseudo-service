@@ -14,17 +14,15 @@ import java.util.Optional;
 
 @ServerFilter(MATCH_ALL_PATTERN)
 @Slf4j
-public class TransactionIdFilter {
+public class CorrelationIdFilter {
     @RequestFilter
-    public void transactionIdFilter(HttpRequest<?> request, MutablePropagatedContext mutablePropagatedContext) {
+    public void correlationIdFilter(HttpRequest<?> request, MutablePropagatedContext mutablePropagatedContext) {
         ULID.Value correlationID = Optional
                 .ofNullable(request.getHeaders().get("X-Correlation-Id"))
                 .map(ULID::parseULID)
                 .orElse(new ULID().nextValue());
 
-        log.info("Request CorrelationID: " + correlationID.toString());
         MDC.put("CorrelationID", correlationID.toString());
-
         mutablePropagatedContext.add(new MdcPropagationContext());
         MDC.remove("CorrelationID");
     }
