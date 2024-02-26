@@ -126,6 +126,11 @@
       <version>${micronaut.version}</version>
     </dependency>
     <dependency>
+      <groupId>io.micronaut</groupId>
+      <artifactId>micronaut-context-propagation</artifactId>
+      <version>${micronaut.version}</version>
+    </dependency>
+    <dependency>
       <groupId>io.micronaut.objectstorage</groupId>
       <artifactId>micronaut-object-storage-gcp</artifactId>
     </dependency>
@@ -182,6 +187,11 @@
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.huxhorn.sulky</groupId>
+      <artifactId>de.huxhorn.sulky.ulid</artifactId>
+      <version>8.3.0</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>

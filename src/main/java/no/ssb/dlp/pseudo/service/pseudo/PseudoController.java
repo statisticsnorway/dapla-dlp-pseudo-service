@@ -39,6 +39,8 @@ import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.MDC;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,8 +50,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @Controller
@@ -74,14 +74,14 @@ public class PseudoController {
     @Post(value = "/pseudonymize/field", consumes = MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable<byte[]>> pseudonymizeField(
-            @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
-            @Schema(implementation = PseudoFieldRequest.class) String request) {
+            @Schema(implementation = PseudoFieldRequest.class) String request
+    ) {
         try {
             PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
             log.info(Strings.padEnd(String.format("*** Pseudonymize field: %s ", req.getName()), 80, '*'));
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
-            final String correlationId = validateOrCreate(clientCorrelationId);
+            final String correlationId = MDC.get("CorrelationID");
 
             MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
                     recordProcessorFactory, req.values, PseudoOperation.PSEUDONYMIZE, correlationId)
@@ -108,14 +108,14 @@ public class PseudoController {
     @Post(value = "/depseudonymize/field", consumes = MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable<byte[]>> depseudonymizeField(
-            @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
-            @Schema(implementation = DepseudoFieldRequest.class) String request) {
+            @Schema(implementation = DepseudoFieldRequest.class) String request
+    ) {
         try {
             DepseudoFieldRequest req = Json.toObject(DepseudoFieldRequest.class, request);
             log.info(Strings.padEnd(String.format("*** Depseudonymize field: %s ", req.getName()), 80, '*'));
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
-            final String correlationId = validateOrCreate(clientCorrelationId);
+            final String correlationId = MDC.get("CorrelationID");
 
             MutableHttpResponse<Flowable<byte[]>>  mutableHttpResponse = HttpResponse.ok(pseudoField.process(
                     pseudoConfigSplitter, recordProcessorFactory,req.values, PseudoOperation.DEPSEUDONYMIZE, correlationId)
@@ -142,15 +142,15 @@ public class PseudoController {
     @Post(value = "/repseudonymize/field", consumes = MediaType.APPLICATION_JSON)
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable<byte[]>> repseudonymizeField(
-            @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
-            @Schema(implementation = RepseudoFieldRequest.class) String request) {
+            @Schema(implementation = RepseudoFieldRequest.class) String request
+    ) {
         try {
             RepseudoFieldRequest req = Json.toObject(RepseudoFieldRequest.class, request);
             log.info(Strings.padEnd(String.format("*** Repseudonymize field: %s ", req.getName()), 80, '*'));
             PseudoField sourcePseudoField = new PseudoField(req.getName(), req.getSourcePseudoFunc(), req.getSourceKeyset());
             PseudoField targetPseudoField = new PseudoField(req.getName(), req.getTargetPseudoFunc(), req.getTargetKeyset());
 
-            final String correlationId = validateOrCreate(clientCorrelationId);
+            final String correlationId = MDC.get("CorrelationID");
             MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(
                     sourcePseudoField.process(recordProcessorFactory, req.values, targetPseudoField, correlationId)
                             .map(o -> o.getBytes(StandardCharsets.UTF_8)))
@@ -191,15 +191,15 @@ public class PseudoController {
     @SingleResult
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable<byte[]>> pseudonymizeFile(
-            @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
-            @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data) {
+            @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data
+    ) {
         log.info(Strings.padEnd(String.format("*** Pseudonymize file: %s", data.getFilename()), 80, '*'));
         log.debug("PseudoRequest {}", request);
         try {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
             List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
 
-            final String correlationId = validateOrCreate(clientCorrelationId);
+            final String correlationId = MDC.get("CorrelationID");
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.PSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(res.getResponse()
@@ -244,8 +244,8 @@ public class PseudoController {
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable<byte[]>> depseudonymizeFile(
-            @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
-            @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
+            @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal
+    ) {
         log.info(Strings.padEnd(String.format("*** Depseudonymize file: %s", data.getFilename()), 80, '*'));
         log.debug("User: {}\n{}", principal.getName(), request);
 
@@ -253,7 +253,7 @@ public class PseudoController {
             PseudoRequest req = Json.toObject(PseudoRequest.class, request);
             List<PseudoConfig> pseudoConfigs = pseudoConfigSplitter.splitIfNecessary(req.getPseudoConfig());
 
-            final String correlationId = validateOrCreate(clientCorrelationId);
+            final String correlationId = MDC.get("CorrelationID");
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(res.getResponse()
@@ -299,14 +299,13 @@ public class PseudoController {
     @Secured({PseudoServiceRole.ADMIN})
     @ExecuteOn(TaskExecutors.IO)
     public HttpResponse<Flowable<byte[]>> repseudonymizeFile(
-            @Header(CORRELATION_ID_HEADER) Optional<String> clientCorrelationId,
             @Schema(implementation = RepseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
         log.info(Strings.padEnd(String.format("*** Repseudonymize file: %s", data.getFilename()), 80, '*'));
         log.debug("User: {}\n{}", principal.getName(), request);
 
         try {
             RepseudoRequest req = Json.toObject(RepseudoRequest.class, request);
-            final String correlationId = validateOrCreate(clientCorrelationId);
+            final String correlationId = MDC.get("CorrelationID");
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig(), correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.REPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
             MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(res.getResponse()
@@ -318,13 +317,6 @@ public class PseudoController {
             log.error(String.format("Failed to repseudonymize:%nrequest:%n%s", request), e);
             return HttpResponse.serverError(Flowable.error(e));
         }
-    }
-
-    /*
-     * Validate clientCorrelationId if present; otherwise generate a new UUID
-     */
-    private static String validateOrCreate(Optional<String> clientCorrelationId) {
-        return clientCorrelationId.map(UUID::fromString).orElse(UUID.randomUUID()).toString();
     }
 
     private ProcessFileResult processFile(StreamingFileUpload data, PseudoOperation operation, RecordMapProcessor<PseudoMetadataProcessor> recordMapProcessor, MediaType targetContentType, TargetCompression targetCompression) {
