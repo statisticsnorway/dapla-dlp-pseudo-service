@@ -1,9 +1,9 @@
 package no.ssb.dlp.pseudo.service.secrets;
 
 import io.micronaut.context.annotation.Requires;
+import jakarta.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 
-import javax.inject.Singleton;
 import java.util.Optional;
 
 @RequiredArgsConstructor

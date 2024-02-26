@@ -30,10 +30,10 @@ public class LocalSidServiceController {
     @Post("/sid/map")
     public Publisher<SidInfo> lookup(@Body SidRequest sidRequest) {
         if (sidRequest.getFnr() != null) {
-            return sidService.lookupFnr(sidRequest.getFnr(), Optional.ofNullable(null));
+            return sidService.lookupFnr(sidRequest.getFnr(), Optional.empty());
         }
         if (sidRequest.getSnr() != null) {
-            return sidService.lookupSnr(sidRequest.getSnr(), Optional.ofNullable(null));
+            return sidService.lookupSnr(sidRequest.getSnr(), Optional.empty());
         }
         return null;
     }

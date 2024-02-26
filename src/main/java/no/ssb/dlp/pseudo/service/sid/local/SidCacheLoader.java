@@ -59,9 +59,8 @@ public class SidCacheLoader {
 
         sidReader.readSidsFromFile(item.getInputStream()).subscribe(
                 // onNext
-                sidItem -> {
-                    sidCache.register(sidItem, true);
-                },
+                sidItem -> sidCache.register(sidItem, true)
+                ,
 
                 // onError
                 e -> {
@@ -69,9 +68,7 @@ public class SidCacheLoader {
                 },
 
                 // onComplete
-                () -> {
-                    sidCache.markAsInitialized();
-                }
+                sidCache::markAsInitialized
         );
 
         log.info("Read %s sid mappings in %s".formatted(

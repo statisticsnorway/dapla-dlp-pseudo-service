@@ -37,8 +37,8 @@ import no.ssb.dlp.pseudo.service.security.PseudoServiceRole;
 import no.ssb.dlp.pseudo.service.sid.InvalidSidSnapshotDateException;
 import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,10 +82,12 @@ public class PseudoController {
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = validateOrCreate(clientCorrelationId);
+
             MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
                     recordProcessorFactory, req.values, PseudoOperation.PSEUDONYMIZE, correlationId)
                             .map(o -> o.getBytes(StandardCharsets.UTF_8)))
                     .characterEncoding(StandardCharsets.UTF_8);
+
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
 
@@ -114,10 +116,12 @@ public class PseudoController {
             PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = validateOrCreate(clientCorrelationId);
+
             MutableHttpResponse<Flowable<byte[]>>  mutableHttpResponse = HttpResponse.ok(pseudoField.process(
                     pseudoConfigSplitter, recordProcessorFactory,req.values, PseudoOperation.DEPSEUDONYMIZE, correlationId)
                             .map(o -> o.getBytes(StandardCharsets.UTF_8)))
                     .characterEncoding(StandardCharsets.UTF_8);
+
             mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
             return mutableHttpResponse;
 

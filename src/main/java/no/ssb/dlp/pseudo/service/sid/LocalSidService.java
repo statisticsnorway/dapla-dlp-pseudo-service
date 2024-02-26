@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import no.ssb.dlp.pseudo.service.sid.local.SidCache;
 import org.reactivestreams.Publisher;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,7 +49,7 @@ class LocalSidService implements SidService {
                                     new SidInfo.SidInfoBuilder().snr(currentSnr).fnr(currentFnr)
                                             .datasetExtractionSnapshotTime(snapshot.orElse(null)).build())
                             .orElse(null);
-                }).collect(Collectors.toMap(SidInfo::getFnr, sidInfo -> sidInfo))
+                }).collect(Collectors.toMap(SidInfo::fnr, sidInfo -> sidInfo))
         );
     }
 

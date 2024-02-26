@@ -3,7 +3,7 @@ package no.ssb.dlp.pseudo.service.secrets;
 import io.micronaut.context.annotation.Requires;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import java.nio.charset.StandardCharsets;
 
 @Singleton

@@ -8,10 +8,10 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MutableHttpRequest;
 import io.micronaut.http.filter.ClientFilterChain;
 import io.micronaut.http.filter.HttpClientFilter;
+import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
