@@ -80,7 +80,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr,suffix=-${{ github.event.pull_request.head.sha }}
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value={{branch}}-{{sha}},enable={{is_default_branch}}
+            type=raw,value={{branch}}-{{sha}}-{{date 'YYYYMMDDHHmmss'}},enable={{is_default_branch}}
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
