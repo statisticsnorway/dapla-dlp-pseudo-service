@@ -40,7 +40,7 @@ public class ExternalSidService implements SidService {
 
     public Publisher<Map<String, SidInfo>> lookupSnr(List<String> snrList, Optional<String> snapshot) {
         return Publishers.map(sidClient.lookup(
-                        new MultiSidRequest.MultiSidRequestBuilder().fnrList(snrList)
+                        new MultiSidRequest.MultiSidRequestBuilder().snrList(snrList)
                                 .datasetExtractionSnapshotTime(snapshot.orElse(null)).build()
                 ), MultiSidResponse::toMap
         );

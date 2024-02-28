@@ -55,14 +55,14 @@ class LocalSidService implements SidService {
 
     @Override
     public Publisher<Map<String, SidInfo>> lookupSnr(List<String> snrList, Optional<String> snapshot) {
-        return Publishers.just(snrList.stream().map(fnr -> {
-                    String currentSnr = sidCache.getCurrentFnrForSnr(fnr).orElseThrow(() ->
-                            new LocalSidService.NoSidMappingFoundException("No SID matching snr=" + fnr));
-                    return sidCache.getCurrentFnrForSnr(currentSnr).map(currentFnr ->
-                                    new SidInfo.SidInfoBuilder().snr(currentSnr).fnr(currentFnr)
+        return Publishers.just(snrList.stream().map(snr -> {
+                    String currentFnr = sidCache.getCurrentFnrForSnr(snr).orElseThrow(() ->
+                            new LocalSidService.NoSidMappingFoundException("No SID matching snr=" + snr));
+                    return sidCache.getCurrentSnrForFnr(currentFnr).map(currentSnr ->
+                                    new SidInfo.SidInfoBuilder().fnr(currentFnr).snr(currentSnr)
                                             .datasetExtractionSnapshotTime(snapshot.orElse(null)).build())
                             .orElse(null);
-                }).collect(Collectors.toMap(SidInfo::getFnr, sidInfo -> sidInfo))
+                }).collect(Collectors.toMap(SidInfo::getSnr, sidInfo -> sidInfo))
         );
     }
 

@@ -1,5 +1,6 @@
 package no.ssb.dlp.pseudo.service.sid;
 
+import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
@@ -46,7 +47,11 @@ public class SidLookupController {
     @ExecuteOn(TaskExecutors.IO)
     @Post("/map/batch")
     public Publisher<Map<String, SidInfo>> lookupFnrs(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
-        return sidService.lookupFnr(req.getFnrList(), snapshot);
+        if (CollectionUtils.isNotEmpty(req.getFnrList())){
+            return sidService.lookupFnr(req.getFnrList(), snapshot);
+        }else{
+            return sidService.lookupSnr(req.getSnrList(), snapshot);
+        }
     }
 
     @ExecuteOn(TaskExecutors.IO)
@@ -58,8 +63,7 @@ public class SidLookupController {
     @ExecuteOn(TaskExecutors.IO)
     @Get("/snr/{snr}")
     public Publisher<SidInfo> lookupSnr(@PathVariable String snr, @QueryValue Optional<String> snapshot) {
-        Publisher<SidInfo> sidInfoPublisher = sidService.lookupSnr(snr, snapshot);
-        return sidInfoPublisher;
+        return sidService.lookupSnr(snr, snapshot);
     }
 
 

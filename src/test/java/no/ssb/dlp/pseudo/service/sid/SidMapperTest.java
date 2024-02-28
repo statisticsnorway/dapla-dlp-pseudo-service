@@ -52,6 +52,24 @@ public class SidMapperTest {
     }
 
     @Test
+    public void testInvokeRestoreFunc(){
+        when(sidService.lookupSnr(anyList(), any(Optional.class))).thenReturn(Publishers.just(
+                Maps.of("0001ha3", new SidInfo.SidInfoBuilder().fnr("11854898347").build()))
+        );
+        // Use static mocking to override the application context
+        try (var application = mockStatic(Application.class)) {
+            application.when(Application::getContext).thenReturn(context);
+            Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
+                    new RuntimeException("SidMapper class not found"));
+            mapper.setConfig(new HashMap<>());
+            mapper.init(PseudoFuncInput.of("0001ha3"));
+            Object mappedSid = mapper.restore(PseudoFuncInput.of("0001ha3")).getFirstValue();
+            verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.ofNullable(null)));
+            Assertions.assertEquals("11854898347", mappedSid);
+        }
+    }
+
+    @Test
     public void testMapValidVersion() {
         when(sidService.lookupFnr(anyList(), any(Optional.class))).thenReturn(Publishers.just(
                 Maps.of("11854898347", new SidInfo.SidInfoBuilder().snr("0001ha3").build()))

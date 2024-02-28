@@ -25,6 +25,32 @@ GET {{base_url}}/sid/snr/0001ha3
 Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
+### Map batch of fnrs
+
+POST {{base_url}}/sid/map/batch
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "fnrList": [
+    "11854898347",
+    "01839899544"
+  ]
+}
+
+### Map batch of snrs
+
+POST {{base_url}}/sid/map/batch
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "snrList": [
+    "0001ha3",
+    "0006kh2"
+  ]
+}
+
 
 ### Look up SID for a list of FNRs and return those that are not found
 
@@ -35,7 +61,7 @@ Authorization: Bearer {{keycloak_token}}
 {
   "fnrList": [
     "20859374701",
-    "01234567890"
+    "01839899544"
   ]
 }
 
