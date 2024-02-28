@@ -38,6 +38,14 @@ public class ExternalSidService implements SidService {
         );
     }
 
+    public Publisher<Map<String, SidInfo>> lookupSnr(List<String> snrList, Optional<String> snapshot) {
+        return Publishers.map(sidClient.lookup(
+                        new MultiSidRequest.MultiSidRequestBuilder().fnrList(snrList)
+                                .datasetExtractionSnapshotTime(snapshot.orElse(null)).build()
+                ), MultiSidResponse::toMap
+        );
+    }
+
     @Override
     public Publisher<MultiSidLookupResponse> lookupMissing(List<String> fnrList, Optional<String> snapshot) {
         return Publishers.map(sidClient.lookup(

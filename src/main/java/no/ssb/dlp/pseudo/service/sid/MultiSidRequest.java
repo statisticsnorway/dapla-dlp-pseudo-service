@@ -11,5 +11,6 @@ import java.util.List;
 @Jacksonized
 public class MultiSidRequest {
     private final List<String> fnrList;
+    private final List<String> snrList;
     private final String datasetExtractionSnapshotTime;
 }

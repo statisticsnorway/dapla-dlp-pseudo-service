@@ -11,6 +11,7 @@ import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.rules.SecurityRule;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -57,7 +58,9 @@ public class SidLookupController {
     @ExecuteOn(TaskExecutors.IO)
     @Get("/snr/{snr}")
     public Publisher<SidInfo> lookupSnr(@PathVariable String snr, @QueryValue Optional<String> snapshot) {
-        return sidService.lookupSnr(snr, snapshot);
+        Publisher<SidInfo> sidInfoPublisher = sidService.lookupSnr(snr, snapshot);
+        return sidInfoPublisher;
     }
+
 
 }

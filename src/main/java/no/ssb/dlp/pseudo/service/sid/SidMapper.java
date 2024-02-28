@@ -11,6 +11,7 @@ import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
+import no.ssb.dlp.pseudo.core.func.PseudoFuncNames;
 import no.ssb.dlp.pseudo.service.Application;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Service Provider class that implements the {@link Mapper} pseudo function. This class will be invoked by the JDK's
- * Service Loader mechanism for {@link no.ssb.dlp.pseudo.core.func.PseudoFuncNames#MAP_SID} pseudo functions.
+ * Service Loader mechanism for {@link PseudoFuncNames#MAP_SID} pseudo functions.
  */
 @AutoService(Mapper.class)
 @Slf4j
@@ -48,13 +49,14 @@ public class SidMapper implements Mapper {
                 DEFAULT_PARTITION_SIZE).intValue();
     }
 
-    private Set<String> fnrs = ConcurrentHashMap.newKeySet();
+    private Set<String> fnrsOrsnrs = ConcurrentHashMap.newKeySet();
+
     private ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
 
     @Override
     public void init(PseudoFuncInput input) {
         for (Object inputValue : input.getValues()) {
-            fnrs.add(String.valueOf(inputValue));
+            fnrsOrsnrs.add(String.valueOf(inputValue));
         }
     }
 
@@ -63,54 +65,70 @@ public class SidMapper implements Mapper {
         PseudoFuncOutput output = new PseudoFuncOutput();
         for (Object inputValue : input.getValues()) {
             String plain = String.valueOf(inputValue);
-            mapTo(plain, output);
+            mapTo(plain, true, output);
         }
         return output;
     }
 
-    private void mapTo(String fnr, PseudoFuncOutput output) {
-        if (fnr == null) {
+    private void mapTo(String fnrOrSnr, Boolean isFnr, PseudoFuncOutput output) {
+        if (fnrOrSnr == null) {
             return;
         }
         try {
             // Execute the bulk request if necessary
             if (bulkRequest.isEmpty()) {
                 // Split fnrs into chunks of BULK_SIZE
-                for (List<String> bulkFnr: Lists.partition(List.copyOf(fnrs), partitionSize)) {
+                for (List<String> bulkFnrOrSnr: Lists.partition(List.copyOf(fnrsOrsnrs), partitionSize)) {
                     log.info("Execute SID-mapping bulk request");
                     final ObservableSubscriber<Map<String, SidInfo>> subscriber = ObservableSubscriber.subscribe(
-                            sidService.lookupFnr(bulkFnr, getSnapshot()));
-                    for (String f: bulkFnr) {
+                            sidService.lookupFnr(bulkFnrOrSnr, getSnapshot()));
+                    for (String f: bulkFnrOrSnr) {
                         bulkRequest.put(f, subscriber);
                     }
                 }
             }
-            SidInfo result = bulkRequest.get(fnr).awaitResult()
-                    .orElseThrow(() -> new RuntimeException("SID service did not respond")).get(fnr);
-            if (result == null) {
-                log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
-                output.addWarning(String.format("No SID-mapping found for fnr %s", fnr));
-                output.add(fnr);
+            SidInfo result = bulkRequest.get(fnrOrSnr).awaitResult()
+                    .orElseThrow(() -> new RuntimeException("SID service did not respond")).get(fnrOrSnr);
+            if (result == null && isFnr.booleanValue() == true) {
+                log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
+                output.addWarning(String.format("No SID-mapping found for fnr %s", fnrOrSnr));
+                output.add(fnrOrSnr);
+            } else if (result == null && isFnr.booleanValue() == false) {
+                log.warn("No SID-mapping found for snr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
+                output.addWarning(String.format("No SID-mapping found for snr %s", fnrOrSnr));
+                output.add(fnrOrSnr);
             } else if (result.getSnr() == null) {
-                log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
                 output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
-                output.addWarning(String.format("No SID-mapping found for fnr %s", fnr));
-                output.add(fnr);
-            } else {
-                if (fnr.equals(result.getSnr())) {
+                output.addWarning(String.format("No SID-mapping found for fnr %s", fnrOrSnr));
+                output.add(fnrOrSnr);
+            } else if (result.getFnr() == null) {
+                log.warn("No SID-mapping found for snr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
+                output.addWarning(String.format("No SID-mapping found for snr %s", fnrOrSnr));
+                output.add(fnrOrSnr);
+            }
+            else {
+                if (fnrOrSnr.equals(result.getSnr()) && isFnr.booleanValue() == true) {
                     log.warn("Incorrect SID-mapping for fnr starting with {}. Mapping returned the original fnr!",
-                            Strings.padEnd(fnr, 6, ' ').substring(0, 6));
-                    output.addWarning(String.format("Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!", fnr));
-                } else {
-                    log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
+                            Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
+                    output.addWarning(String.format("Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!", fnrOrSnr));
+                } else if (fnrOrSnr.equals(result.getFnr()) && isFnr.booleanValue() == false) {
+                    log.warn("Incorrect SID-mapping for snr starting with {}. Mapping returned the original snr!",
+                            Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
+                    output.addWarning(String.format("Incorrect SID-mapping for snr %s. Mapping returned the original snr!", fnrOrSnr));
+                }
+                else {
+                    log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
                 }
                 output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
                 output.add(result.getSnr());
             }
         } catch (LocalSidService.NoSidMappingFoundException e) {
-            log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnr, 6, ' ').substring(0, 6));
-            output.addWarning(String.format("No SID-mapping found for fnr %s", fnr));
-            output.add(fnr);
+
+            log.warn(isFnr ? "No SID-mapping found for fnr starting with {}": "No SID-mapping found for snr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
+            output.addWarning(isFnr ? String.format("No SID-mapping found for fnr %s", fnrOrSnr): String.format("No SID-mapping found for snr %s", fnrOrSnr));
+            output.add(fnrOrSnr);
         }
     }
 
@@ -152,7 +170,12 @@ public class SidMapper implements Mapper {
 
     @Override
     public PseudoFuncOutput restore(PseudoFuncInput input) {
-        return PseudoFuncOutput.of(input.getValues());
+        PseudoFuncOutput output = new PseudoFuncOutput();
+        for (Object inputValue : input.getValues()) {
+            String plain = String.valueOf(inputValue);
+            mapTo(plain, false, output);
+        }
+        return output;
     }
 
     /**
