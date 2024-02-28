@@ -83,14 +83,10 @@ public class PseudoController {
 
             final String correlationId = MDC.get("CorrelationID");
 
-            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
+            return HttpResponse.ok(pseudoField.process(pseudoConfigSplitter,
                     recordProcessorFactory, req.values, PseudoOperation.PSEUDONYMIZE, correlationId)
                             .map(o -> o.getBytes(StandardCharsets.UTF_8)))
                     .characterEncoding(StandardCharsets.UTF_8);
-
-            mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
-            return mutableHttpResponse;
-
         } catch (Exception e) {
             return HttpResponse.serverError(Flowable.error(e));
         }
@@ -117,14 +113,10 @@ public class PseudoController {
 
             final String correlationId = MDC.get("CorrelationID");
 
-            MutableHttpResponse<Flowable<byte[]>>  mutableHttpResponse = HttpResponse.ok(pseudoField.process(
+            return HttpResponse.ok(pseudoField.process(
                     pseudoConfigSplitter, recordProcessorFactory,req.values, PseudoOperation.DEPSEUDONYMIZE, correlationId)
                             .map(o -> o.getBytes(StandardCharsets.UTF_8)))
                     .characterEncoding(StandardCharsets.UTF_8);
-
-            mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
-            return mutableHttpResponse;
-
         } catch (Exception e) {
             return HttpResponse.serverError(Flowable.error(e));
         }
@@ -151,13 +143,10 @@ public class PseudoController {
             PseudoField targetPseudoField = new PseudoField(req.getName(), req.getTargetPseudoFunc(), req.getTargetKeyset());
 
             final String correlationId = MDC.get("CorrelationID");
-            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(
+            return HttpResponse.ok(
                     sourcePseudoField.process(recordProcessorFactory, req.values, targetPseudoField, correlationId)
                             .map(o -> o.getBytes(StandardCharsets.UTF_8)))
                     .characterEncoding(StandardCharsets.UTF_8);
-            mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
-            return mutableHttpResponse;
-
         } catch (Exception e) {
             return HttpResponse.serverError(Flowable.error(e));
         }
@@ -202,11 +191,9 @@ public class PseudoController {
             final String correlationId = MDC.get("CorrelationID");
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newPseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.PSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(res.getResponse()
+            return HttpResponse.ok(res.getResponse()
                             .map(o -> o.getBytes(StandardCharsets.UTF_8)))
                     .characterEncoding(StandardCharsets.UTF_8);
-            mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
-            return mutableHttpResponse;
         } catch (RuntimeException e) {
             log.error(String.format("Failed to pseudonymize:%nrequest:%n%s", request), e);
             throw e;
@@ -256,11 +243,8 @@ public class PseudoController {
             final String correlationId = MDC.get("CorrelationID");
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newDepseudonymizeRecordProcessor(pseudoConfigs, correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.DEPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(res.getResponse()
-                            .map(o -> o.getBytes(StandardCharsets.UTF_8)))
+            return HttpResponse.ok(res.getResponse().map(o -> o.getBytes(StandardCharsets.UTF_8)))
                     .characterEncoding(StandardCharsets.UTF_8);
-            mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
-            return mutableHttpResponse;
         } catch (Exception e) {
             log.error(String.format("Failed to depseudonymize:%nrequest:%n%s", request), e);
             return HttpResponse.serverError(Flowable.error(e));
@@ -308,11 +292,9 @@ public class PseudoController {
             final String correlationId = MDC.get("CorrelationID");
             RecordMapProcessor<PseudoMetadataProcessor> recordProcessor = recordProcessorFactory.newRepseudonymizeRecordProcessor(req.getSourcePseudoConfig(), req.getTargetPseudoConfig(), correlationId);
             ProcessFileResult res = processFile(data, PseudoOperation.REPSEUDONYMIZE, recordProcessor, req.getTargetContentType(), req.getCompression());
-            MutableHttpResponse<Flowable<byte[]>> mutableHttpResponse = HttpResponse.ok(res.getResponse()
+            return HttpResponse.ok(res.getResponse()
                             .map(o -> o.getBytes(StandardCharsets.UTF_8)))
                     .characterEncoding(StandardCharsets.UTF_8);
-            mutableHttpResponse.getHeaders().add(CORRELATION_ID_HEADER, correlationId);
-            return mutableHttpResponse;
         } catch (Exception e) {
             log.error(String.format("Failed to repseudonymize:%nrequest:%n%s", request), e);
             return HttpResponse.serverError(Flowable.error(e));
