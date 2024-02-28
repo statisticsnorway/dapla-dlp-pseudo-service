@@ -118,7 +118,27 @@
     <dependency>
       <groupId>io.micronaut.gcp</groupId>
       <artifactId>micronaut-gcp-common</artifactId>
+      <version>5.4.1</version>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.micronaut.gcp</groupId>
+      <artifactId>micronaut-gcp-secret-manager</artifactId>
+      <version>5.4.1</version>
+    </dependency>
+    <!--
+      We are override these transitive dependency versions because of an issue with micronaut-gcp libraries:
+      https://github.com/micronaut-projects/micronaut-gcp/issues/1046
+    -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-secretmanager</artifactId>
+      <version>2.35.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-core</artifactId>
+      <version>2.33.0</version>
     </dependency>
     <dependency>
       <groupId>io.micronaut</groupId>
@@ -134,10 +154,7 @@
       <groupId>io.micronaut.objectstorage</groupId>
       <artifactId>micronaut-object-storage-gcp</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.micronaut.gcp</groupId>
-      <artifactId>micronaut-gcp-secret-manager</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>io.projectreactor</groupId>
       <artifactId>reactor-core</artifactId>
