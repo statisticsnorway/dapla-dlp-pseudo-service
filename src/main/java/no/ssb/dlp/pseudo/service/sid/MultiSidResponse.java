@@ -25,6 +25,7 @@ public class MultiSidResponse {
     @Builder
     @Jacksonized
     @Introspected
+    @Serdeable
     public record Mapping (List<String> fnrList, List<String> snr, List<String> fnr) { }
 
     public Map<String, SidInfo> toMap() {
