@@ -49,14 +49,14 @@ public class SidMapper implements Mapper {
                 DEFAULT_PARTITION_SIZE).intValue();
     }
 
-    private Set<String> fnrsOrsnrs = ConcurrentHashMap.newKeySet();
+    private Set<String> fnrsOrSnrs = ConcurrentHashMap.newKeySet();
 
     private ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
 
     @Override
     public void init(PseudoFuncInput input) {
         for (Object inputValue : input.getValues()) {
-            fnrsOrsnrs.add(String.valueOf(inputValue));
+            fnrsOrSnrs.add(String.valueOf(inputValue));
         }
     }
 
@@ -87,8 +87,8 @@ public class SidMapper implements Mapper {
         try {
             // Execute the bulk request if necessary
             if (bulkRequest.isEmpty()) {
-                // Split fnrs into chunks of BULK_SIZE
-                for (List<String> bulkFnrOrSnr : Lists.partition(List.copyOf(fnrsOrsnrs), partitionSize)) {
+                // Split fnrs or snrs into chunks of BULK_SIZE
+                for (List<String> bulkFnrOrSnr : Lists.partition(List.copyOf(fnrsOrSnrs), partitionSize)) {
                     log.info("Execute SID-mapping bulk request");
                     final ObservableSubscriber<Map<String, SidInfo>> subscriber;
 
