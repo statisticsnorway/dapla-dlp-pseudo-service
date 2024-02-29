@@ -4,10 +4,9 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
+import jakarta.annotation.Nullable;
 import no.ssb.dlp.pseudo.service.filters.AccessTokenFilterMatcher;
 import org.reactivestreams.Publisher;
-
-import javax.annotation.Nullable;
 
 @Client(id="cloud-identity-service")
 @AccessTokenFilterMatcher()

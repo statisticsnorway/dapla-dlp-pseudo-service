@@ -1,5 +1,6 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
+import jakarta.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
@@ -23,7 +24,6 @@ import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetric;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 
-import javax.inject.Singleton;
 import java.util.Collection;
 import java.util.List;
 

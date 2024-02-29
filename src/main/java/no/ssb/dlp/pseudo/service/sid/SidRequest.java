@@ -1,14 +1,14 @@
 package no.ssb.dlp.pseudo.service.sid;
 
+import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
 
-@Data
 @Builder
 @Jacksonized
-public class SidRequest {
-    private final String fnr;
-    private final String snr;
-    private final String datasetExtractionSnapshotTime;
-}
+@Introspected
+@Serdeable
+public record SidRequest (String fnr, String snr, String datasetExtractionSnapshotTime){ }
+

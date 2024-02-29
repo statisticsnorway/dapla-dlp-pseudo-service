@@ -1,10 +1,10 @@
 package no.ssb.dlp.pseudo.service.pseudo;
 
 import io.micronaut.context.annotation.Property;
+import jakarta.inject.Singleton;
 import no.ssb.dlp.pseudo.core.PseudoSecret;
 import no.ssb.dlp.pseudo.service.secrets.SecretService;
 
-import javax.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +21,10 @@ public class PseudoSecrets {
      *
      * @param configuredPseudoSecrets pseudo secrets coming from the config or environment
      */
-    public PseudoSecrets(SecretService secretService, @Property(name = "pseudo.secrets") Map<String, PseudoSecret> configuredPseudoSecrets) {
+    public PseudoSecrets(
+            SecretService secretService,
+            @Property(name = "pseudo.secrets")
+            Map<String, PseudoSecret> configuredPseudoSecrets) {
         this.secretService = secretService;
         this.configuredPseudoSecrets = Optional.ofNullable(configuredPseudoSecrets).orElse(Map.of());
     }
@@ -74,7 +77,7 @@ public class PseudoSecrets {
 
     }
 
-    class InvalidPseudoSecretException extends RuntimeException {
+    static class InvalidPseudoSecretException extends RuntimeException {
         public InvalidPseudoSecretException(String message) {
             super(message);
         }

@@ -12,15 +12,15 @@ import org.reactivestreams.Publisher;
 @IdTokenFilterMatcher()
 public interface SidClient {
 
-    @Post( "/sid/map")
+    @Post("/sid/map")
     @ExecuteOn(TaskExecutors.IO)
     Publisher<SidInfo> lookup(@Body SidRequest sidRequest);
 
-    @Post( "/sid/map/batch")
+    @Post("/sid/map/batch")
     @ExecuteOn(TaskExecutors.IO)
     Publisher<MultiSidResponse> lookup(@Body MultiSidRequest multiSidRequest);
 
-    @Get( "/sid/snapshots")
+    @Get("/sid/snapshots")
     @ExecuteOn(TaskExecutors.IO)
     Publisher<SnapshotInfo> snapshots();
 

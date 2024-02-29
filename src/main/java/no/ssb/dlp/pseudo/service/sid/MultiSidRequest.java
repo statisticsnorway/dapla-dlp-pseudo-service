@@ -1,16 +1,14 @@
 package no.ssb.dlp.pseudo.service.sid;
 
+import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
 import lombok.Builder;
-import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
 
 import java.util.List;
 
-@Data
 @Builder
 @Jacksonized
-public class MultiSidRequest {
-    private final List<String> fnrList;
-    private final List<String> snrList;
-    private final String datasetExtractionSnapshotTime;
-}
+@Introspected
+@Serdeable.Deserializable
+public record MultiSidRequest(List<String> fnrList, List<String> snrList, String datasetExtractionSnapshotTime) { }

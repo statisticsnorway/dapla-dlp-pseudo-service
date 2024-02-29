@@ -12,7 +12,6 @@ import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import io.micronaut.security.annotation.Secured;
-import io.micronaut.security.rules.SecurityRule;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -41,16 +40,16 @@ public class SidLookupController {
     @Secured({PseudoServiceRole.USER, PseudoServiceRole.ADMIN})
     @Post("/lookup/batch")
     public Publisher<MultiSidLookupResponse> lookupMissing(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
-        return sidService.lookupMissing(req.getFnrList(), snapshot);
+        return sidService.lookupMissing(req.fnrList(), snapshot);
     }
 
     @ExecuteOn(TaskExecutors.IO)
     @Post("/map/batch")
     public Publisher<Map<String, SidInfo>> lookupFnrs(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
-        if (CollectionUtils.isNotEmpty(req.getFnrList())){
-            return sidService.lookupFnr(req.getFnrList(), snapshot);
+        if (CollectionUtils.isNotEmpty(req.fnrList())){
+            return sidService.lookupFnr(req.fnrList(), snapshot);
         }else{
-            return sidService.lookupSnr(req.getSnrList(), snapshot);
+            return sidService.lookupSnr(req.snrList(), snapshot);
         }
     }
 
@@ -65,6 +64,5 @@ public class SidLookupController {
     public Publisher<SidInfo> lookupSnr(@PathVariable String snr, @QueryValue Optional<String> snapshot) {
         return sidService.lookupSnr(snr, snapshot);
     }
-
 
 }

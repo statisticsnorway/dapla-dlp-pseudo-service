@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import no.ssb.crypto.tink.fpe.FpeConfig;
 import no.ssb.dlp.pseudo.core.PseudoException;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 import java.net.URI;
 import java.util.Optional;
 

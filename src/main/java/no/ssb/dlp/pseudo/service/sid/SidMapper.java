@@ -11,7 +11,6 @@ import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
-import no.ssb.dlp.pseudo.core.func.PseudoFuncNames;
 import no.ssb.dlp.pseudo.service.Application;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -31,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Service Provider class that implements the {@link Mapper} pseudo function. This class will be invoked by the JDK's
- * Service Loader mechanism for {@link PseudoFuncNames#MAP_SID} pseudo functions.
+ * Service Loader mechanism for {@link no.ssb.dlp.pseudo.core.func.PseudoFuncNames#MAP_SID} pseudo functions.
  */
 @AutoService(Mapper.class)
 @Slf4j
@@ -46,12 +45,11 @@ public class SidMapper implements Mapper {
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
         partitionSize = Application.getContext().getProperty("sid.mapper.partition.size", Integer.class,
-                DEFAULT_PARTITION_SIZE).intValue();
+                DEFAULT_PARTITION_SIZE);
     }
 
-    private Set<String> fnrsOrSnrs = ConcurrentHashMap.newKeySet();
-
-    private ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
+    private final Set<String> fnrsOrSnrs = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
 
     @Override
     public void init(PseudoFuncInput input) {
@@ -116,30 +114,30 @@ public class SidMapper implements Mapper {
                 log.warn("No SID-mapping found for snr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
                 output.addWarning(String.format("No SID-mapping found for snr %s", fnrOrSnr));
                 output.add(fnrOrSnr);
-            } else if (result.getSnr() == null && isFnr) {
+            } else if (result.snr() == null && isFnr) {
                 log.warn("No SID-mapping found for fnr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
-                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.datasetExtractionSnapshotTime());
                 output.addWarning(String.format("No SID-mapping found for fnr %s", fnrOrSnr));
                 output.add(fnrOrSnr);
-            } else if (result.getFnr() == null && !isFnr) {
+            } else if (result.fnr() == null && !isFnr) {
                 log.warn("No SID-mapping found for snr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
-                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.datasetExtractionSnapshotTime());
                 output.addWarning(String.format("No SID-mapping found for snr %s", fnrOrSnr));
                 output.add(fnrOrSnr);
             } else {
-                if (fnrOrSnr.equals(result.getSnr()) && isFnr) {
+                if (fnrOrSnr.equals(result.snr()) && isFnr) {
                     log.warn("Incorrect SID-mapping for fnr starting with {}. Mapping returned the original fnr!",
                             Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
                     output.addWarning(String.format("Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!", fnrOrSnr));
-                } else if (fnrOrSnr.equals(result.getFnr()) && !isFnr) {
+                } else if (fnrOrSnr.equals(result.fnr()) && !isFnr) {
                     log.warn("Incorrect SID-mapping for snr starting with {}. Mapping returned the original snr!",
                             Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
                     output.addWarning(String.format("Incorrect SID-mapping for snr %s. Mapping returned the original snr!", fnrOrSnr));
                 } else {
                     log.debug("Successfully mapped fnr starting with {}", Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
                 }
-                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.getDatasetExtractionSnapshotTime());
-                output.add(isFnr ? result.getSnr() : result.getFnr());
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.datasetExtractionSnapshotTime());
+                output.add(isFnr ? result.snr() : result.fnr());
             }
         } catch (LocalSidService.NoSidMappingFoundException e) {
 
@@ -216,8 +214,7 @@ public class SidMapper implements Mapper {
 
         @Override
         public void onError(Throwable throwable) {
-            if (throwable instanceof HttpClientResponseException) {
-                HttpClientResponseException exception = (HttpClientResponseException) throwable;
+            if (throwable instanceof HttpClientResponseException exception) {
                 if (exception.getStatus() == HttpStatus.NOT_FOUND) {
                     // This may happen more frequently, so log at debug level
                     log.debug("Error was", exception);
