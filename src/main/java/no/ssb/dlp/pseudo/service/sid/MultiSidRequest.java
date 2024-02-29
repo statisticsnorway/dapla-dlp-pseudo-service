@@ -10,5 +10,5 @@ import java.util.List;
 @Builder
 @Jacksonized
 @Introspected
-@Serdeable.Deserializable
+@Serdeable
 public record MultiSidRequest(List<String> fnrList, String datasetExtractionSnapshotTime) { }
