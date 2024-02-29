@@ -8,6 +8,6 @@ import lombok.extern.jackson.Jacksonized;
 
 @Builder
 @Jacksonized
-@Serdeable
 @Introspected
+@Serdeable
 public record SidRequest(String fnr, String snr, String datasetExtractionSnapshotTime) {}
