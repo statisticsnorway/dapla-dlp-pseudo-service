@@ -1,5 +1,6 @@
 package no.ssb.dlp.pseudo.service.sid;
 
+import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.Serdeable;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.util.Map;
 @Data
 @Builder
 @Jacksonized
+@Introspected
 @Serdeable
 public class MultiSidResponse {
 
@@ -20,22 +22,18 @@ public class MultiSidResponse {
     private final List<String> missing;
     private final String datasetExtractionSnapshotTime;
 
-    @Data
     @Builder
     @Jacksonized
-    public static class Mapping {
-        private final List<String> fnrList;
-        private final List<String> snr;
-        private final List<String> fnr;
-    }
+    @Introspected
+    public record Mapping (List<String> fnrList, List<String> snr, List<String> fnr) { }
 
     public Map<String, SidInfo> toMap() {
         Map<String, SidInfo> result = new HashMap<>();
-        for (ListIterator<String> it = getMapping().getFnrList().listIterator(); it.hasNext(); ) {
+        for (ListIterator<String> it = getMapping().fnrList().listIterator(); it.hasNext(); ) {
             int index = it.nextIndex();
             result.put(it.next(), new SidInfo.SidInfoBuilder()
-                    .snr(getMapping().getSnr().get(index))
-                    .fnr(getMapping().getFnr().get(index))
+                    .snr(getMapping().snr().get(index))
+                    .fnr(getMapping().snr().get(index))
                     .datasetExtractionSnapshotTime(getDatasetExtractionSnapshotTime())
                     .build());
         }
