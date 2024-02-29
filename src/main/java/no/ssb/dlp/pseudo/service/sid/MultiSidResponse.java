@@ -33,7 +33,7 @@ public class MultiSidResponse {
             int index = it.nextIndex();
             result.put(it.next(), new SidInfo.SidInfoBuilder()
                     .snr(getMapping().snr().get(index))
-                    .fnr(getMapping().snr().get(index))
+                    .fnr(getMapping().fnr().get(index))
                     .datasetExtractionSnapshotTime(getDatasetExtractionSnapshotTime())
                     .build());
         }
