@@ -29,11 +29,11 @@ public class LocalSidServiceController {
     @ExecuteOn(TaskExecutors.IO)
     @Post("/sid/map")
     public Publisher<SidInfo> lookup(@Body SidRequest sidRequest) {
-        if (sidRequest.getFnr() != null) {
-            return sidService.lookupFnr(sidRequest.getFnr(), Optional.empty());
+        if (sidRequest.fnr() != null) {
+            return sidService.lookupFnr(sidRequest.fnr(), Optional.empty());
         }
-        if (sidRequest.getSnr() != null) {
-            return sidService.lookupSnr(sidRequest.getSnr(), Optional.empty());
+        if (sidRequest.snr() != null) {
+            return sidService.lookupSnr(sidRequest.snr(), Optional.empty());
         }
         return null;
     }
