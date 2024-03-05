@@ -118,23 +118,26 @@ public class SidMapper implements Mapper {
 
         } catch (LocalSidService.NoSidMappingFoundException e) {
             log.warn(isFnr ? NO_MATCHING_FNR : NO_MATCHING_SNR, Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
-            output.addWarning(isFnr ? String.format("No SID-mapping found for fnr %s", fnrOrSnr) : String.format("No SID-mapping found for snr %s", fnrOrSnr));
+            output.addWarning(isFnr ? String.format("No SID-mapping found for fnr %s", fnrOrSnr.substring(0, 6)) : String.format("No SID-mapping found for snr %s", fnrOrSnr.substring(0, 4)));
             output.add(fnrOrSnr);
         }
     }
 
 
     private void createMappingLogsAndOutput(SidInfo sidInfo, boolean isFnr, String fnrOrSnr, PseudoFuncOutput pseudoFuncOutput) {
+        //Mapping for fnr
         if (isFnr) {
             if ((sidInfo == null || sidInfo.snr() == null)) {
                 log.warn(NO_MATCHING_FNR, Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
-                pseudoFuncOutput.addWarning(String.format("No SID-mapping found for fnr %s", fnrOrSnr));
+                pseudoFuncOutput.addWarning(String.format("No SID-mapping found for fnr %s", fnrOrSnr.substring(0, 6)));
                 pseudoFuncOutput.add(fnrOrSnr);
             } else if (fnrOrSnr.equals(sidInfo.snr())) {
                 log.warn(INCORRECT_MATCHING_FNR, Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
-                pseudoFuncOutput.addWarning(String.format("Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!", fnrOrSnr));
+                pseudoFuncOutput.addWarning(String.format("Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!", fnrOrSnr.substring(0, 6)));
             }
-        } else {
+        }
+        //Mapping for snr
+        else {
             if ((sidInfo == null || sidInfo.fnr() == null)) {
                 log.warn(NO_MATCHING_SNR, Strings.padEnd(fnrOrSnr, 4, ' ').substring(0, 4));
                 pseudoFuncOutput.addWarning(String.format("No SID-mapping found for snr"));
