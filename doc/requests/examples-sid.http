@@ -6,6 +6,15 @@ Authorization: Bearer {{keycloak_token}}
   "fnr": "11854898347"
 }
 
+###
+POST {{base_url}}/local-sid/sid/map
+Content-Type: application/json
+Authorization: Bearer {{keycloak_token}}
+
+{
+  "snr": "0001ha3"
+}
+
 ### Get SID for fnr
 
 GET {{base_url}}/sid/fnr/11854898347?snapshot=423243224
