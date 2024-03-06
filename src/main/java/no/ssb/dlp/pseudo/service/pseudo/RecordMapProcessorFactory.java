@@ -57,6 +57,7 @@ public class RecordMapProcessorFactory {
         for (PseudoConfig config : pseudoConfigs) {
             final PseudoFuncs fieldDepseudonymizer = newPseudoFuncs(config.getRules(),
                     pseudoKeysetsOf(config.getKeysets()));
+            chain.preprocessor((f, v) -> init(fieldDepseudonymizer, f, v));
             chain.register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataProcessor));
         }
 
@@ -90,7 +91,7 @@ public class RecordMapProcessorFactory {
         return varValue;
     }
 
-    private String process(PseudoOperation operation,
+    private String  process(PseudoOperation operation,
                            PseudoFuncs func,
                            FieldDescriptor field,
                            String varValue,

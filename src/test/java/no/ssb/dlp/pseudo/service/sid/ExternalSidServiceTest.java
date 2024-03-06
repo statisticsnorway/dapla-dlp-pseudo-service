@@ -27,7 +27,7 @@ public class ExternalSidServiceTest {
         when(sidClient.lookup(any(SidRequest.class))).thenReturn(Publishers.just(
                 SidInfo.builder().fnr("11854898347").snr("0001ha3").build())
         );
-        sidService.lookupFnr("11854898347", Optional.ofNullable(null));
+        sidService.lookupFnr("11854898347", Optional.empty());
 
         verify(sidClient, times(1)).lookup(any(SidRequest.class));
     }
@@ -42,10 +42,35 @@ public class ExternalSidServiceTest {
                         .snr(Arrays.asList("0001ha3"))
                         .build()).build())
         );
-        sidService.lookupFnr(List.of("11854898347"), Optional.ofNullable(null));
+        sidService.lookupFnr(List.of("11854898347"), Optional.empty());
 
         verify(sidClient, times(1)).lookup(any(MultiSidRequest.class));
     }
+
+    @Test
+    public void testInvokeSingleSnr() {
+        when(sidClient.lookup(any(SidRequest.class))).thenReturn(Publishers.just(
+                SidInfo.builder().snr("0001ha3").fnr("11854898347").build())
+        );
+        sidService.lookupSnr("0001ha3", Optional.empty());
+
+        verify(sidClient, times(1)).lookup(any(SidRequest.class));
+    }
+
+    @Test
+    public void testInvokeMultiSnr() {
+        // sidService should call our sidClient mock
+        when(sidClient.lookup(any(MultiSidRequest.class))).thenReturn(Publishers.just(
+                MultiSidResponse.builder().mapping(MultiSidResponse.Mapping.builder()
+                        .snr(List.of("0001ha3", "0006kh2"))
+                        .fnr(List.of("11854898347"))
+                        .build()).build())
+        );
+        sidService.lookupSnr(List.of("0001ha3"),Optional.empty());
+
+        verify(sidClient, times(1)).lookup(any(MultiSidRequest.class));
+    }
+
     @MockBean(SidClient.class)
     SidClient sidClient() {
         return mock(SidClient.class);

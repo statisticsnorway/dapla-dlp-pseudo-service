@@ -1,5 +1,6 @@
 package no.ssb.dlp.pseudo.service.sid;
 
+import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
@@ -45,7 +46,9 @@ public class SidLookupController {
     @ExecuteOn(TaskExecutors.IO)
     @Post("/map/batch")
     public Publisher<Map<String, SidInfo>> lookupFnrs(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
-        return sidService.lookupFnr(req.fnrList(), snapshot);
+        return CollectionUtils.isNotEmpty(req.fnrList())
+                ? sidService.lookupFnr(req.fnrList(), snapshot)
+                : sidService.lookupSnr(req.snrList(), snapshot);
     }
 
     @ExecuteOn(TaskExecutors.IO)
