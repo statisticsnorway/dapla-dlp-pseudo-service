@@ -43,7 +43,7 @@ public class SidMapperTest {
                 Maps.of("11854898347", new SidInfo.SidInfoBuilder().snr("0001ha3").build()))
         );
         // Use static mocking to override the application context
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -51,7 +51,7 @@ public class SidMapperTest {
             mapper.init(PseudoFuncInput.of("11854898347"));
             Object mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getFirstValue();
 
-            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.ofNullable(null)));
+            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("0001ha3", mappedSid);
             assertLogsForFnrOrSnr("11854898347", "0001ha3");
         }
@@ -63,7 +63,7 @@ public class SidMapperTest {
                 Maps.of("0001ha3", new SidInfo.SidInfoBuilder().fnr("11854898347").build()))
         );
         // Use static mocking to override the application context
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -71,7 +71,7 @@ public class SidMapperTest {
             mapper.init(PseudoFuncInput.of("0001ha3"));
             Object mappedSid = mapper.restore(PseudoFuncInput.of("0001ha3")).getFirstValue();
 
-            verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.ofNullable(null)));
+            verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("11854898347", mappedSid);
             assertLogsForFnrOrSnr( "11854898347", "0001ha3");
         }
@@ -85,7 +85,7 @@ public class SidMapperTest {
         when(sidService.getSnapshots()).thenReturn(Publishers.just(
                 SnapshotInfo.builder().items(List.of("2023-04-25")).build()
         ));
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -103,7 +103,7 @@ public class SidMapperTest {
         when(sidService.getSnapshots()).thenReturn(Publishers.just(
                 SnapshotInfo.builder().items(List.of("2023-04-25")).build()
         ));
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -119,7 +119,7 @@ public class SidMapperTest {
         when(sidService.getSnapshots()).thenReturn(Publishers.just(
                 SnapshotInfo.builder().items(List.of("2023-04-25")).build()
         ));
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -136,7 +136,7 @@ public class SidMapperTest {
                 Maps.of("11854898347", new SidInfo.SidInfoBuilder().snr("0001ha3").build()))
         );
 
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -144,7 +144,7 @@ public class SidMapperTest {
             mapper.init(PseudoFuncInput.of("11854898347"));
             Object mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getFirstValue();
 
-            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.ofNullable(null)));
+            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("0001ha3", mappedSid);
             assertLogsForFnrOrSnr("11854898347", "0001ha3");
         }
@@ -156,7 +156,7 @@ public class SidMapperTest {
                 Maps.of("11854898346", new SidInfo.SidInfoBuilder().snr("11854898346").build()))
         );
 
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -166,7 +166,7 @@ public class SidMapperTest {
 
 
             Assertions.assertEquals("Incorrect SID-mapping for fnr 118548. Mapping returned the original fnr!", output.getWarnings().getFirst());
-            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.ofNullable(null)));
+            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "");
         }
     }
@@ -176,7 +176,7 @@ public class SidMapperTest {
                 Maps.of("11854898346", new SidInfo.SidInfoBuilder().snr(null).build()))
         );
 
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -185,7 +185,7 @@ public class SidMapperTest {
             PseudoFuncOutput output = mapper.map(PseudoFuncInput.of("11854898346"));
 
             Assertions.assertEquals("No SID-mapping found for fnr 118548", output.getWarnings().getFirst());
-            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.ofNullable(null)));
+            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "");
         }
     }
@@ -195,14 +195,14 @@ public class SidMapperTest {
                 Maps.of("0001ha3", new SidInfo.SidInfoBuilder().fnr("11854898347").build()))
         );
 
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
             mapper.init(PseudoFuncInput.of("0001ha3"));
             Object mappedSid = mapper.restore(PseudoFuncInput.of("0001ha3")).getFirstValue();
-            verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.ofNullable(null)));
+            verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("11854898347", mappedSid);
             assertLogsForFnrOrSnr("11854898346", "");
         }
@@ -214,7 +214,7 @@ public class SidMapperTest {
                 Maps.of("0001ha3", new SidInfo.SidInfoBuilder().fnr("0001ha3").build()))
         );
 
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -222,8 +222,8 @@ public class SidMapperTest {
             mapper.init(PseudoFuncInput.of("0001ha3"));
             PseudoFuncOutput output = mapper.restore(PseudoFuncInput.of("0001ha3"));
 
-            Assertions.assertEquals("Incorrect SID-mapping for snr. Mapping returned the original snr!", output.getWarnings().getFirst());
-            verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.ofNullable(null)));
+            Assertions.assertEquals("Incorrect SID-mapping for snr 0001. Mapping returned the original snr!", output.getWarnings().getFirst());
+            verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "0001ha3");
         }
     }
@@ -233,7 +233,7 @@ public class SidMapperTest {
                 Maps.of("0001ha3", new SidInfo.SidInfoBuilder().fnr(null).build()))
         );
 
-        try (var application = mockStatic(Application.class)) {
+        try (final var application = mockStatic(Application.class)) {
             application.when(Application::getContext).thenReturn(context);
             Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
                     new RuntimeException("SidMapper class not found"));
@@ -241,8 +241,8 @@ public class SidMapperTest {
             mapper.init(PseudoFuncInput.of("0001ha3"));
             PseudoFuncOutput output = mapper.restore(PseudoFuncInput.of("0001ha3"));
 
-            Assertions.assertEquals("No SID-mapping found for snr", output.getWarnings().getFirst());
-            verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.ofNullable(null)));
+            Assertions.assertEquals("No SID-mapping found for snr 0001", output.getWarnings().getFirst());
+            verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "0001ha3");
         }
     }

@@ -46,11 +46,9 @@ public class SidLookupController {
     @ExecuteOn(TaskExecutors.IO)
     @Post("/map/batch")
     public Publisher<Map<String, SidInfo>> lookupFnrs(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
-        if (CollectionUtils.isNotEmpty(req.fnrList())){
-            return sidService.lookupFnr(req.fnrList(), snapshot);
-        }else{
-            return sidService.lookupSnr(req.snrList(), snapshot);
-        }
+        return CollectionUtils.isNotEmpty(req.fnrList())
+                ? sidService.lookupFnr(req.fnrList(), snapshot)
+                : sidService.lookupSnr(req.snrList(), snapshot);
     }
 
     @ExecuteOn(TaskExecutors.IO)

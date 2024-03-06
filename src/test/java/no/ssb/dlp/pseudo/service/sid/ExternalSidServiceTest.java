@@ -62,9 +62,8 @@ public class ExternalSidServiceTest {
         // sidService should call our sidClient mock
         when(sidClient.lookup(any(MultiSidRequest.class))).thenReturn(Publishers.just(
                 MultiSidResponse.builder().mapping(MultiSidResponse.Mapping.builder()
-                        .snr(Arrays.asList("0001ha3"))
-                        .snr(Arrays.asList("0006kh2"))
-                        .fnr(Arrays.asList("11854898347"))
+                        .snr(List.of("0001ha3", "0006kh2"))
+                        .fnr(List.of("11854898347"))
                         .build()).build())
         );
         sidService.lookupSnr(List.of("0001ha3"), Optional.ofNullable(null));

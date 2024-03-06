@@ -127,7 +127,7 @@ public class SidMapper implements Mapper {
     private void createMappingLogsAndOutput(SidInfo sidInfo, boolean isFnr, String fnrOrSnr, PseudoFuncOutput pseudoFuncOutput) {
         //Mapping for fnr
         if (isFnr) {
-            if ((sidInfo == null || sidInfo.snr() == null)) {
+            if (sidInfo == null || sidInfo.snr() == null) {
                 log.warn(NO_MATCHING_FNR, Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
                 pseudoFuncOutput.addWarning(String.format("No SID-mapping found for fnr %s", fnrOrSnr.substring(0, 6)));
                 pseudoFuncOutput.add(fnrOrSnr);
@@ -138,12 +138,12 @@ public class SidMapper implements Mapper {
         }
         //Mapping for snr
         else {
-            if ((sidInfo == null || sidInfo.fnr() == null)) {
+            if (sidInfo == null || sidInfo.fnr() == null) {
                 log.warn(NO_MATCHING_SNR, Strings.padEnd(fnrOrSnr, 4, ' ').substring(0, 4));
-                pseudoFuncOutput.addWarning(String.format("No SID-mapping found for snr"));
+                pseudoFuncOutput.addWarning(String.format("No SID-mapping found for snr %s", fnrOrSnr.substring(0, 4)));
             } else if (fnrOrSnr.equals(sidInfo.fnr())) {
                 log.warn(INCORRECT_MATCHING_SNR, Strings.padEnd(fnrOrSnr, 4, ' ').substring(0, 4));
-                pseudoFuncOutput.addWarning(String.format("Incorrect SID-mapping for snr. Mapping returned the original snr!"));
+                pseudoFuncOutput.addWarning(String.format("Incorrect SID-mapping for snr %s. Mapping returned the original snr!", fnrOrSnr.substring(0, 4)));
             }
         }
     }
