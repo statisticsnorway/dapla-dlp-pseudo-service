@@ -10,5 +10,4 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 @Introspected
 @Serdeable
-public record SidRequest (String fnr, String snr, String datasetExtractionSnapshotTime){ }
-
+public record SidRequest(String fnr, String snr, String datasetExtractionSnapshotTime) {}
