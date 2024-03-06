@@ -27,7 +27,7 @@ public class ExternalSidServiceTest {
         when(sidClient.lookup(any(SidRequest.class))).thenReturn(Publishers.just(
                 SidInfo.builder().fnr("11854898347").snr("0001ha3").build())
         );
-        sidService.lookupFnr("11854898347", Optional.ofNullable(null));
+        sidService.lookupFnr("11854898347", Optional.empty());
 
         verify(sidClient, times(1)).lookup(any(SidRequest.class));
     }
@@ -42,7 +42,7 @@ public class ExternalSidServiceTest {
                         .snr(Arrays.asList("0001ha3"))
                         .build()).build())
         );
-        sidService.lookupFnr(List.of("11854898347"), Optional.ofNullable(null));
+        sidService.lookupFnr(List.of("11854898347"), Optional.empty());
 
         verify(sidClient, times(1)).lookup(any(MultiSidRequest.class));
     }
@@ -52,7 +52,7 @@ public class ExternalSidServiceTest {
         when(sidClient.lookup(any(SidRequest.class))).thenReturn(Publishers.just(
                 SidInfo.builder().snr("0001ha3").fnr("11854898347").build())
         );
-        sidService.lookupSnr("0001ha3", Optional.ofNullable(null));
+        sidService.lookupSnr("0001ha3", Optional.empty());
 
         verify(sidClient, times(1)).lookup(any(SidRequest.class));
     }
@@ -66,7 +66,7 @@ public class ExternalSidServiceTest {
                         .fnr(List.of("11854898347"))
                         .build()).build())
         );
-        sidService.lookupSnr(List.of("0001ha3"), Optional.ofNullable(null));
+        sidService.lookupSnr(List.of("0001ha3"),Optional.empty());
 
         verify(sidClient, times(1)).lookup(any(MultiSidRequest.class));
     }
