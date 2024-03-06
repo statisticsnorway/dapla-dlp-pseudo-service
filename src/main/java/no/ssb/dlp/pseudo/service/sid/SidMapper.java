@@ -166,9 +166,9 @@ public class SidMapper implements Mapper {
                         parse(config.get(MapFuncConfig.Param.SNAPSHOT_DATE).toString()));
             } catch (DateTimeParseException e) {
                 throw new InvalidSidSnapshotDateException(String.format("Invalid snapshot date format. Valid dates are: %s",
-                        String.join(", ", availableSnapshots.getItems())));
+                        String.join(", ", availableSnapshots.items())));
             }
-            List<LocalDate> availableSnapshotDates = availableSnapshots.getItems().stream()
+            List<LocalDate> availableSnapshotDates = availableSnapshots.items().stream()
                     .map(snapshot -> {
                         try {
                             return LocalDate.from(formatter.parse(snapshot));
@@ -178,7 +178,7 @@ public class SidMapper implements Mapper {
                     }).toList();
             if (availableSnapshotDates.stream().allMatch(requestedSnapshotDate::isBefore)) {
                 throw new InvalidSidSnapshotDateException(String.format("Requested date is of an earlier date than all available SID dates. Valid dates are: %s",
-                        String.join(", ", availableSnapshots.getItems())));
+                        String.join(", ", availableSnapshots.items())));
             }
         }
         this.config = config;
