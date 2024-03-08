@@ -18,6 +18,6 @@ public class RedactorTest {
     }
     @Test
     public void redactSnr() {
-        Assertions.assertEquals("0001***", Redactor.redactSnr("0001ha3"));
+        Assertions.assertEquals("000****", Redactor.redactSnr("0001ha3"));
     }
 }
