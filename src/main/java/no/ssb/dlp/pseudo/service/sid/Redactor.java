@@ -8,7 +8,7 @@ import com.google.common.base.Strings;
 public class Redactor {
 
     static int MAX_VISIBLE_CHARS_FNR = 6;
-    static int MAX_VISIBLE_CHARS_SNR = 4;
+    static int MAX_VISIBLE_CHARS_SNR = 3;
 
     private Redactor() {
     }
