@@ -91,7 +91,7 @@ public class RecordMapProcessorFactory {
         return varValue;
     }
 
-    private String  process(PseudoOperation operation,
+    private String process(PseudoOperation operation,
                            PseudoFuncs func,
                            FieldDescriptor field,
                            String varValue,
@@ -114,11 +114,12 @@ public class RecordMapProcessorFactory {
             return varValue;
         }
         try {
-            PseudoFuncOutput output;
+            PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
+            final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID);
+
             if (operation == PSEUDONYMIZE) {
-                output = match.getFunc().apply(PseudoFuncInput.of(varValue));
-                PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
-                final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID);
+                PseudoFuncOutput output = match.getFunc().apply(PseudoFuncInput.of(varValue));
+                output.getWarnings().forEach(metadataProcessor::addLog);
                 final String sidSnapshotDate = output.getMetadata().getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null);
                 final String mappedValue = (String) output.getFirstValue();
                 if (isSidMapping && varValue.equals(mappedValue)) {
@@ -144,10 +145,22 @@ public class RecordMapProcessorFactory {
                             .encryptionAlgorithmParameters(funcDeclaration.getArgs())
                             .build());
                 }
+                return mappedValue;
+
+            } else if (operation == DEPSEUDONYMIZE) {
+                PseudoFuncOutput output = match.getFunc().restore(PseudoFuncInput.of(varValue));
                 output.getWarnings().forEach(metadataProcessor::addLog);
+                final String mappedValue = (String) output.getFirstValue();
+                if (isSidMapping && varValue.equals(mappedValue)) {
+                    // Unsuccessful SID-mapping. Can not return original SNR, so return null
+                    metadataProcessor.addMetric(FieldMetric.MISSING_SID);
+                    return null;
+                } else if (isSidMapping) {
+                    metadataProcessor.addMetric(FieldMetric.MAPPED_SID);
+                }
                 return mappedValue;
             } else {
-                output = match.getFunc().restore(PseudoFuncInput.of(varValue));
+                PseudoFuncOutput output = match.getFunc().restore(PseudoFuncInput.of(varValue));
                 return (String) output.getFirstValue();
             }
         } catch (Exception e) {

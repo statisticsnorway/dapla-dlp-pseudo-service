@@ -2,7 +2,6 @@ package no.ssb.dlp.pseudo.service.sid;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Stopwatch;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
@@ -42,10 +41,10 @@ public class SidMapper implements Mapper {
     private final int partitionSize;
     private Map<String, Object> config = Collections.emptyMap();
 
-    static final String NO_MATCHING_FNR = "No SID-mapping found for fnr starting with {}";
-    static final String NO_MATCHING_SNR = "No SID-mapping found for snr starting with {}";
-    static final String INCORRECT_MATCHING_FNR = "Incorrect SID-mapping for fnr starting with {}";
-    static final String INCORRECT_MATCHING_SNR = "Incorrect SID-mapping for snr starting with {}";
+    static final String NO_MATCHING_FNR = "No SID-mapping found for fnr %s";
+    static final String NO_MATCHING_SNR = "No SID-mapping found for snr %s";
+    static final String INCORRECT_MATCHING_FNR = "Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!";
+    static final String INCORRECT_MATCHING_SNR = "Incorrect SID-mapping for snr %s. Mapping returned the original snr!";
 
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
@@ -53,13 +52,13 @@ public class SidMapper implements Mapper {
                 DEFAULT_PARTITION_SIZE);
     }
 
-    private final Set<String> fnrsOrSnrs = ConcurrentHashMap.newKeySet();
+    private final Set<String> identifiers = ConcurrentHashMap.newKeySet();
     private final ConcurrentHashMap<String, ObservableSubscriber<Map<String, SidInfo>>> bulkRequest = new ConcurrentHashMap<>();
 
     @Override
     public void init(PseudoFuncInput input) {
         for (Object inputValue : input.getValues()) {
-            fnrsOrSnrs.add(String.valueOf(inputValue));
+            identifiers.add(String.valueOf(inputValue));
         }
     }
 
@@ -83,67 +82,74 @@ public class SidMapper implements Mapper {
         return output;
     }
 
-    private void mapTo(String fnrOrSnr, boolean isFnr, PseudoFuncOutput output) {
-        if (fnrOrSnr == null) {
+    private void mapTo(String identifier, boolean isFnr, PseudoFuncOutput output) {
+        if (identifier == null) {
             return;
         }
         try {
             // Execute the bulk request if necessary
             if (bulkRequest.isEmpty()) {
                 // Split fnrs or snrs into chunks of BULK_SIZE
-                for (List<String> bulkFnrOrSnr : Lists.partition(List.copyOf(fnrsOrSnrs), partitionSize)) {
+                for (List<String> bulkIdentifiers : Lists.partition(List.copyOf(identifiers), partitionSize)) {
                     log.info("Execute SID-mapping bulk request");
                     final ObservableSubscriber<Map<String, SidInfo>> subscriber;
 
                     if (isFnr) {
                         subscriber = ObservableSubscriber.subscribe(
-                                sidService.lookupFnr(bulkFnrOrSnr, getSnapshot()));
+                                sidService.lookupFnr(bulkIdentifiers, getSnapshot()));
                     } else {
                         subscriber = ObservableSubscriber.subscribe(
-                                sidService.lookupSnr(bulkFnrOrSnr, getSnapshot()));
+                                sidService.lookupSnr(bulkIdentifiers, getSnapshot()));
                     }
 
-                    for (String f : bulkFnrOrSnr) {
-                        bulkRequest.put(f, subscriber);
+                    for (String id : bulkIdentifiers) {
+                        bulkRequest.put(id, subscriber);
                     }
                 }
             }
-            SidInfo result = bulkRequest.get(fnrOrSnr).awaitResult()
-                    .orElseThrow(() -> new RuntimeException("SID service did not respond")).get(fnrOrSnr);
+            SidInfo result = bulkRequest.get(identifier).awaitResult()
+                    .orElseThrow(() -> new RuntimeException("SID service did not respond")).get(identifier);
 
-            createMappingLogsAndOutput(result, isFnr, fnrOrSnr, output);
+            createMappingLogsAndOutput(result, isFnr, identifier, output);
 
             output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.datasetExtractionSnapshotTime());
             output.add(isFnr ? result.snr() : result.fnr());
 
         } catch (LocalSidService.NoSidMappingFoundException e) {
-            log.warn(isFnr ? NO_MATCHING_FNR : NO_MATCHING_SNR, Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
-            output.addWarning(isFnr ? String.format("No SID-mapping found for fnr %s", fnrOrSnr.substring(0, 6)) : String.format("No SID-mapping found for snr %s", fnrOrSnr.substring(0, 4)));
-            output.add(fnrOrSnr);
+            String message = isFnr ?
+                    String.format(NO_MATCHING_FNR, Redactor.redactFnr(identifier)) :
+                    String.format(NO_MATCHING_SNR, Redactor.redactSnr(identifier));
+            log.warn(message);
+            output.addWarning(message);
+            output.add(identifier);
         }
     }
 
 
-    private void createMappingLogsAndOutput(SidInfo sidInfo, boolean isFnr, String fnrOrSnr, PseudoFuncOutput pseudoFuncOutput) {
+    private void createMappingLogsAndOutput(SidInfo sidInfo, boolean isFnr, String identifier, PseudoFuncOutput pseudoFuncOutput) {
         //Mapping for fnr
         if (isFnr) {
             if (sidInfo == null || sidInfo.snr() == null) {
-                log.warn(NO_MATCHING_FNR, Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
-                pseudoFuncOutput.addWarning(String.format("No SID-mapping found for fnr %s", fnrOrSnr.substring(0, 6)));
-                pseudoFuncOutput.add(fnrOrSnr);
-            } else if (fnrOrSnr.equals(sidInfo.snr())) {
-                log.warn(INCORRECT_MATCHING_FNR, Strings.padEnd(fnrOrSnr, 6, ' ').substring(0, 6));
-                pseudoFuncOutput.addWarning(String.format("Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!", fnrOrSnr.substring(0, 6)));
+                String message = String.format(NO_MATCHING_FNR, Redactor.redactFnr(identifier));
+                log.warn(message);
+                pseudoFuncOutput.addWarning(message);
+                pseudoFuncOutput.add(identifier);
+            } else if (identifier.equals(sidInfo.snr())) {
+                String message = String.format(INCORRECT_MATCHING_FNR, Redactor.redactFnr(identifier));
+                log.warn(message);
+                pseudoFuncOutput.addWarning(message);
             }
         }
         //Mapping for snr
         else {
             if (sidInfo == null || sidInfo.fnr() == null) {
-                log.warn(NO_MATCHING_SNR, Strings.padEnd(fnrOrSnr, 4, ' ').substring(0, 4));
-                pseudoFuncOutput.addWarning(String.format("No SID-mapping found for snr %s", fnrOrSnr.substring(0, 4)));
-            } else if (fnrOrSnr.equals(sidInfo.fnr())) {
-                log.warn(INCORRECT_MATCHING_SNR, Strings.padEnd(fnrOrSnr, 4, ' ').substring(0, 4));
-                pseudoFuncOutput.addWarning(String.format("Incorrect SID-mapping for snr %s. Mapping returned the original snr!", fnrOrSnr.substring(0, 4)));
+                String message = String.format(NO_MATCHING_SNR, Redactor.redactSnr(identifier));
+                log.warn(message);
+                pseudoFuncOutput.addWarning(message);
+            } else if (identifier.equals(sidInfo.fnr())) {
+                String message = String.format(INCORRECT_MATCHING_SNR, Redactor.redactSnr(identifier));
+                log.warn(message);
+                pseudoFuncOutput.addWarning(message);
             }
         }
     }
