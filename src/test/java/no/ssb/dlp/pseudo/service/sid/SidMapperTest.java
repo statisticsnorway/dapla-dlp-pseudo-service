@@ -165,7 +165,7 @@ public class SidMapperTest {
             PseudoFuncOutput output = mapper.map(PseudoFuncInput.of("11854898346"));
 
 
-            Assertions.assertEquals("Incorrect SID-mapping for fnr 118548. Mapping returned the original fnr!", output.getWarnings().getFirst());
+            Assertions.assertEquals("Incorrect SID-mapping for fnr 118548*****. Mapping returned the original fnr!", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "");
         }
@@ -184,7 +184,7 @@ public class SidMapperTest {
             mapper.init(PseudoFuncInput.of("11854898346"));
             PseudoFuncOutput output = mapper.map(PseudoFuncInput.of("11854898346"));
 
-            Assertions.assertEquals("No SID-mapping found for fnr 118548", output.getWarnings().getFirst());
+            Assertions.assertEquals("No SID-mapping found for fnr 118548*****", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "");
         }
@@ -222,7 +222,7 @@ public class SidMapperTest {
             mapper.init(PseudoFuncInput.of("0001ha3"));
             PseudoFuncOutput output = mapper.restore(PseudoFuncInput.of("0001ha3"));
 
-            Assertions.assertEquals("Incorrect SID-mapping for snr 0001. Mapping returned the original snr!", output.getWarnings().getFirst());
+            Assertions.assertEquals("Incorrect SID-mapping for snr 0001***. Mapping returned the original snr!", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "0001ha3");
         }
@@ -241,7 +241,7 @@ public class SidMapperTest {
             mapper.init(PseudoFuncInput.of("0001ha3"));
             PseudoFuncOutput output = mapper.restore(PseudoFuncInput.of("0001ha3"));
 
-            Assertions.assertEquals("No SID-mapping found for snr 0001", output.getWarnings().getFirst());
+            Assertions.assertEquals("No SID-mapping found for snr 0001***", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "0001ha3");
         }
