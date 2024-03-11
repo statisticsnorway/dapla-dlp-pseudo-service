@@ -57,36 +57,25 @@ public class SidMapper implements Mapper {
 
     @Override
     public void init(PseudoFuncInput input) {
-        for (Object inputValue : input.getValues()) {
-            identifiers.add(String.valueOf(inputValue));
-        }
+        identifiers.add(input.value());
     }
 
     @Override
     public PseudoFuncOutput map(PseudoFuncInput input) {
-        PseudoFuncOutput output = new PseudoFuncOutput();
-        for (Object inputValue : input.getValues()) {
-            String plain = String.valueOf(inputValue);
-            mapTo(plain, true, output);
-        }
-        return output;
+        return mapTo(input.value(), true);
     }
 
     @Override
     public PseudoFuncOutput restore(PseudoFuncInput input) {
-        PseudoFuncOutput output = new PseudoFuncOutput();
-        for (Object inputValue : input.getValues()) {
-            String plain = String.valueOf(inputValue);
-            mapTo(plain, false, output);
-        }
-        return output;
+        return mapTo(input.value(), false);
     }
 
-    private void mapTo(String identifier, boolean isFnr, PseudoFuncOutput output) {
+    private PseudoFuncOutput mapTo(String identifier, boolean isFnr) {
         if (identifier == null) {
-            return;
+            return PseudoFuncOutput.of(null);
         }
         try {
+            PseudoFuncOutput output;
             // Execute the bulk request if necessary
             if (bulkRequest.isEmpty()) {
                 // Split fnrs or snrs into chunks of BULK_SIZE
@@ -110,18 +99,19 @@ public class SidMapper implements Mapper {
             SidInfo result = bulkRequest.get(identifier).awaitResult()
                     .orElseThrow(() -> new RuntimeException("SID service did not respond")).get(identifier);
 
+            output = PseudoFuncOutput.of(isFnr ? result.snr() : result.fnr());
             createMappingLogsAndOutput(result, isFnr, identifier, output);
-
             output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.datasetExtractionSnapshotTime());
-            output.add(isFnr ? result.snr() : result.fnr());
+            return output;
 
         } catch (LocalSidService.NoSidMappingFoundException e) {
             String message = isFnr ?
                     String.format(NO_MATCHING_FNR, Redactor.redactFnr(identifier)) :
                     String.format(NO_MATCHING_SNR, Redactor.redactSnr(identifier));
             log.warn(message);
+            PseudoFuncOutput output = PseudoFuncOutput.of(identifier);
             output.addWarning(message);
-            output.add(identifier);
+            return output;
         }
     }
 
@@ -133,7 +123,6 @@ public class SidMapper implements Mapper {
                 String message = String.format(NO_MATCHING_FNR, Redactor.redactFnr(identifier));
                 log.warn(message);
                 pseudoFuncOutput.addWarning(message);
-                pseudoFuncOutput.add(identifier);
             } else if (identifier.equals(sidInfo.snr())) {
                 String message = String.format(INCORRECT_MATCHING_FNR, Redactor.redactFnr(identifier));
                 log.warn(message);

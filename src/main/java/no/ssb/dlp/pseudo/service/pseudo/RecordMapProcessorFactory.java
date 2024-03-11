@@ -121,7 +121,7 @@ public class RecordMapProcessorFactory {
                 PseudoFuncOutput output = match.getFunc().apply(PseudoFuncInput.of(varValue));
                 output.getWarnings().forEach(metadataProcessor::addLog);
                 final String sidSnapshotDate = output.getMetadata().getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null);
-                final String mappedValue = (String) output.getFirstValue();
+                final String mappedValue = output.getValue();
                 if (isSidMapping && varValue.equals(mappedValue)) {
                     // Unsuccessful SID-mapping
                     metadataProcessor.addMetric(FieldMetric.MISSING_SID);
@@ -150,7 +150,7 @@ public class RecordMapProcessorFactory {
             } else if (operation == DEPSEUDONYMIZE) {
                 PseudoFuncOutput output = match.getFunc().restore(PseudoFuncInput.of(varValue));
                 output.getWarnings().forEach(metadataProcessor::addLog);
-                final String mappedValue = (String) output.getFirstValue();
+                final String mappedValue = output.getValue();
                 if (isSidMapping && varValue.equals(mappedValue)) {
                     // Unsuccessful SID-mapping. Can not return original SNR, so return null
                     metadataProcessor.addMetric(FieldMetric.MISSING_SID);
@@ -161,7 +161,7 @@ public class RecordMapProcessorFactory {
                 return mappedValue;
             } else {
                 PseudoFuncOutput output = match.getFunc().restore(PseudoFuncInput.of(varValue));
-                return (String) output.getFirstValue();
+                return output.getValue();
             }
         } catch (Exception e) {
             throw new PseudoException(String.format("pseudonymize error - field='%s', originalValue='%s'",
