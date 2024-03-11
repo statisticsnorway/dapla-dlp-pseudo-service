@@ -49,7 +49,7 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
             mapper.init(PseudoFuncInput.of("11854898347"));
-            Object mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getValue();
+            String mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getValue();
 
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("0001ha3", mappedSid);
@@ -69,7 +69,7 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
             mapper.init(PseudoFuncInput.of("0001ha3"));
-            Object mappedSid = mapper.restore(PseudoFuncInput.of("0001ha3")).getValue();
+            String mappedSid = mapper.restore(PseudoFuncInput.of("0001ha3")).getValue();
 
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("11854898347", mappedSid);
@@ -91,7 +91,7 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(Map.of("snapshotDate", "2023-04-25"));
             mapper.init(PseudoFuncInput.of("11854898347"));
-            Object mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getValue();
+            String mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getValue();
 
             verify(sidService, times(1)).getSnapshots();
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.of("2023-04-25")));
@@ -142,7 +142,7 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
             mapper.init(PseudoFuncInput.of("11854898347"));
-            Object mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getValue();
+            String mappedSid = mapper.map(PseudoFuncInput.of("11854898347")).getValue();
 
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("0001ha3", mappedSid);
@@ -201,7 +201,7 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
             mapper.init(PseudoFuncInput.of("0001ha3"));
-            Object mappedSid = mapper.restore(PseudoFuncInput.of("0001ha3")).getValue();
+            String mappedSid = mapper.restore(PseudoFuncInput.of("0001ha3")).getValue();
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("11854898347", mappedSid);
             assertLogsForFnrOrSnr("11854898346", "");
