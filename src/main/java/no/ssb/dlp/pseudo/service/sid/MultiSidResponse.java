@@ -26,11 +26,15 @@ public class MultiSidResponse {
     @Jacksonized
     @Introspected
     @Serdeable
-    public record Mapping (List<String> fnrList, List<String> snr, List<String> fnr) { }
+    public record Mapping (List<String> fnrList, List<String> snrList, List<String> snr, List<String> fnr) { }
 
     public Map<String, SidInfo> toMap() {
         Map<String, SidInfo> result = new HashMap<>();
-        for (ListIterator<String> it = getMapping().fnrList().listIterator(); it.hasNext(); ) {
+
+        ListIterator<String> identifierIterator = getMapping().fnrList != null ?
+                getMapping().fnrList().listIterator() : getMapping().snrList().listIterator();
+
+        for (ListIterator<String> it = identifierIterator; it.hasNext(); ) {
             int index = it.nextIndex();
             result.put(it.next(), new SidInfo.SidInfoBuilder()
                     .snr(getMapping().snr().get(index))
