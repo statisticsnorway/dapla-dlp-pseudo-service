@@ -37,9 +37,9 @@ public class ExternalSidServiceTest {
         // sidService should call our sidClient mock
         when(sidClient.lookup(any(MultiSidRequest.class))).thenReturn(Publishers.just(
                 MultiSidResponse.builder().mapping(MultiSidResponse.Mapping.builder()
-                        .fnrList(Arrays.asList("11854898347"))
-                        .fnr(Arrays.asList("11854898347"))
-                        .snr(Arrays.asList("0001ha3"))
+                        .fnrList(Arrays.asList("01839899544","11854898347"))
+                        .fnr(Arrays.asList("01839899544","11854898347"))
+                        .snr(Arrays.asList("0006kh2","0001ha3"))
                         .build()).build())
         );
         sidService.lookupFnr(List.of("11854898347"), Optional.empty());
@@ -62,8 +62,9 @@ public class ExternalSidServiceTest {
         // sidService should call our sidClient mock
         when(sidClient.lookup(any(MultiSidRequest.class))).thenReturn(Publishers.just(
                 MultiSidResponse.builder().mapping(MultiSidResponse.Mapping.builder()
-                        .snr(List.of("0001ha3", "0006kh2"))
-                        .fnr(List.of("11854898347"))
+                        .snrList(Arrays.asList("0006kh2", "0001ha3"))
+                        .snr(List.of("0006kh2", "0001ha3"))
+                        .fnr(List.of("01839899544","11854898347"))
                         .build()).build())
         );
         sidService.lookupSnr(List.of("0001ha3"),Optional.empty());

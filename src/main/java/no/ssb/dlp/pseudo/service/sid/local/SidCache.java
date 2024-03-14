@@ -7,6 +7,7 @@ import no.ssb.dlp.pseudo.service.sid.SidIndexUnavailableException;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,7 +59,18 @@ public class SidCache {
 
         return Optional.ofNullable(currentFnr);
     }
-
+    public List<String> getCurrentSnrList(List<String> fnrs) {
+        return fnrToCurrentSnr.entrySet().stream()
+                .filter(entry -> fnrs.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .toList();
+    }
+    public List<String> getCurrentFnrList(List<String> snrs) {
+        return snrToCurrentFnr.entrySet().stream()
+                .filter(entry -> snrs.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .toList();
+    }
     private void validateCacheReady() throws SidIndexUnavailableException {
         if (state != State.INITIALIZED) {
             throw new SidIndexUnavailableException("SID index is not currently available. Wait a minute and retry. State=" + state);
