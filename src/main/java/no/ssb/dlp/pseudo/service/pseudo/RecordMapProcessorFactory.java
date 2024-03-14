@@ -117,7 +117,8 @@ public class RecordMapProcessorFactory {
         try {
             PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
             final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID)
-                    || funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID_FF31) ;
+                    || funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID_FF31)
+                    || funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID_DAEAD);
 
             if (operation == PSEUDONYMIZE) {
                 PseudoFuncOutput output = match.getFunc().apply(PseudoFuncInput.of(varValue));
