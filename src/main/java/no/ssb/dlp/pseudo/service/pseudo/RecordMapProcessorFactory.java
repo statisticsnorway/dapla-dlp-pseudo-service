@@ -45,7 +45,7 @@ public class RecordMapProcessorFactory {
         for (PseudoConfig config : pseudoConfigs) {
             final PseudoFuncs fieldPseudonymizer = newPseudoFuncs(config.getRules(),
                     pseudoKeysetsOf(config.getKeysets()));
-            chain.preprocessor((f, v) -> init(fieldPseudonymizer, f, v, TransformDirection.APPLY));
+            chain.preprocessor((f, v) -> init(fieldPseudonymizer,TransformDirection.APPLY, f, v));
             chain.register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataProcessor));
         }
         return new RecordMapProcessor<>(chain, metadataProcessor);
@@ -58,7 +58,7 @@ public class RecordMapProcessorFactory {
         for (PseudoConfig config : pseudoConfigs) {
             final PseudoFuncs fieldDepseudonymizer = newPseudoFuncs(config.getRules(),
                     pseudoKeysetsOf(config.getKeysets()));
-            chain.preprocessor((f, v) -> init(fieldDepseudonymizer, f, v, TransformDirection.RESTORE));
+            chain.preprocessor((f, v) -> init(fieldDepseudonymizer,  TransformDirection.RESTORE, f, v));
             chain.register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataProcessor));
         }
 
@@ -84,7 +84,7 @@ public class RecordMapProcessorFactory {
         return new PseudoFuncs(rules, pseudoSecrets.resolve(), keysets);
     }
 
-    private String init(PseudoFuncs pseudoFuncs, FieldDescriptor field, String varValue, TransformDirection direction) {
+    private String init(PseudoFuncs pseudoFuncs, TransformDirection direction, FieldDescriptor field, String varValue) {
         if (varValue != null) {
             pseudoFuncs.findPseudoFunc(field).ifPresent(pseudoFunc ->
                     pseudoFunc.getFunc().init(PseudoFuncInput.of(varValue), direction));
