@@ -46,6 +46,8 @@ public class SidMapper implements Mapper {
     static final String NO_MATCHING_SNR = "No SID-mapping found for snr %s";
     static final String INCORRECT_MATCHING_FNR = "Incorrect SID-mapping for fnr %s. Mapping returned the original fnr!";
     static final String INCORRECT_MATCHING_SNR = "Incorrect SID-mapping for snr %s. Mapping returned the original snr!";
+    static final String CORRECT_MATCHED_FNR = "Successfully mapped fnr starting with %s";
+    static final String CORRECT_MATCHED_SNR = "Successfully mapped snr starting with %s";
 
     public SidMapper() {
         sidService = Application.getContext().getBean(SidService.class);
@@ -99,9 +101,9 @@ public class SidMapper implements Mapper {
                 .orElseThrow(() -> new RuntimeException("SID service did not respond"))
                 .get(identifier);
 
-        PseudoFuncOutput output = createMappingLogsAndOutput(result, isFnr, identifier);
-        output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, result.datasetExtractionSnapshotTime());
-        return output;
+        return createMappingLogsAndOutput(result, isFnr, identifier);
+
+
     }
 
 
@@ -116,8 +118,13 @@ public class SidMapper implements Mapper {
                 PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.snr());
                 output.addWarning(message);
                 return output;
+            } else {
+                String message = String.format(CORRECT_MATCHED_FNR, Redactor.redactFnr(identifier));
+                log.debug(message);
+                PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.snr());
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, sidInfo.datasetExtractionSnapshotTime());
+                return output;
             }
-            return PseudoFuncOutput.of(sidInfo.snr());
         }
         //Mapping for snr
         else {
@@ -129,8 +136,13 @@ public class SidMapper implements Mapper {
                 PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.fnr());
                 output.addWarning(message);
                 return output;
+            } else {
+                String message = String.format(CORRECT_MATCHED_SNR, Redactor.redactFnr(identifier));
+                log.debug(message);
+                PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.fnr());
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, sidInfo.datasetExtractionSnapshotTime());
+                return output;
             }
-            return PseudoFuncOutput.of(sidInfo.fnr());
         }
     }
 
