@@ -102,13 +102,13 @@ public class SidMapper implements Mapper {
                 .orElseThrow(() -> new RuntimeException("SID service did not respond"))
                 .get(identifier);
 
-           return createMappingLogsAndOutput(result, isFnr, identifier,PseudoFuncOutput.of(identifier));
+           return createMappingLogsAndOutput(result, isFnr, identifier);
 
 
     }
 
 
-    private PseudoFuncOutput createMappingLogsAndOutput(SidInfo sidInfo, boolean isFnr, String identifier,PseudoFuncOutput pseudoFuncOutput) {
+    private PseudoFuncOutput createMappingLogsAndOutput(SidInfo sidInfo, boolean isFnr, String identifier) {
         //Mapping for fnr
         if (isFnr) {
             if (sidInfo == null || sidInfo.snr() == null) {
