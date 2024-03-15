@@ -11,7 +11,6 @@ import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
 import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
-import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
 import no.ssb.dlp.pseudo.service.Application;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
