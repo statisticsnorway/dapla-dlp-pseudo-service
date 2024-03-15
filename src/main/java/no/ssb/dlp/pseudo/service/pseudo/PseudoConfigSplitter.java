@@ -18,8 +18,11 @@ import static no.ssb.dlp.pseudo.core.func.PseudoFuncNames.MAP_SID;
  * Disclaimer: This is a stop gap "solution", used to support chaining of SID Mapping with pseudonymization.
  * The API contract could be changed to support multiple PseudoConfig transformations, but we need to think more aobut
  * exactly how this should be expressed.
+ *
+ * @deprecated This class will be removed after the SID Mapping function is rewritten
  */
 @Singleton
+@Deprecated
 public class PseudoConfigSplitter {
 
     public List<PseudoConfig> splitIfNecessary(PseudoConfig pseudoConfig) {
@@ -37,7 +40,7 @@ public class PseudoConfigSplitter {
     private static PseudoConfig filterMappingRules(PseudoConfig pseudoConfig) {
         PseudoConfig filteredPseudoConfig = new PseudoConfig();
         filteredPseudoConfig.setRules(pseudoConfig.getRules().stream()
-                .filter(r -> r.getFunc().startsWith(MAP_SID))
+                .filter(r -> r.getFunc().startsWith(MAP_SID + "("))
                 .toList()
         );
 
@@ -56,7 +59,7 @@ public class PseudoConfigSplitter {
     private static PseudoConfig replaceSidMappingRules(PseudoConfig pseudoConfig, String newName) {
         pseudoConfig.setRules(pseudoConfig.getRules().stream()
                 .map(r -> {
-                    if (r.getFunc().startsWith(MAP_SID)) {
+                    if (r.getFunc().startsWith(MAP_SID + "(")) {
                         return new PseudoFuncRule(r.getName(), r.getPattern(), convertMapSidFuncToFf31Func(r.getFunc()));
                     }
                     else {
