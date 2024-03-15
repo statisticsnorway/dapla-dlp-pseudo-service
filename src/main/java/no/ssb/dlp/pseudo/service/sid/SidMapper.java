@@ -10,6 +10,8 @@ import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
+import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
+import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
 import no.ssb.dlp.pseudo.service.Application;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -76,107 +78,74 @@ public class SidMapper implements Mapper {
         if (identifier == null) {
             return PseudoFuncOutput.of(null);
         }
-        try {
-            // Execute the bulk request if necessary
-            if (bulkRequest.isEmpty()) {
-                // Split fnrs or snrs into chunks of BULK_SIZE
-                for (List<String> bulkIdentifiers : Lists.partition(List.copyOf(identifiers), partitionSize)) {
-                    log.info("Execute SID-mapping bulk request");
-                    final ObservableSubscriber<Map<String, SidInfo>> subscriber;
+        // Execute the bulk request if necessary
+        if (bulkRequest.isEmpty()) {
+            // Split fnrs or snrs into chunks of BULK_SIZE
+            for (List<String> bulkIdentifiers : Lists.partition(List.copyOf(identifiers), partitionSize)) {
+                log.info("Execute SID-mapping bulk request");
+                final ObservableSubscriber<Map<String, SidInfo>> subscriber;
 
-                    if (isFnr) {
-                        subscriber = ObservableSubscriber.subscribe(
-                                sidService.lookupFnr(bulkIdentifiers, getSnapshot()));
-                    } else {
-                        subscriber = ObservableSubscriber.subscribe(
-                                sidService.lookupSnr(bulkIdentifiers, getSnapshot()));
-                    }
+                if (isFnr) {
+                    subscriber = ObservableSubscriber.subscribe(
+                            sidService.lookupFnr(bulkIdentifiers, getSnapshot()));
+                } else {
+                    subscriber = ObservableSubscriber.subscribe(
+                            sidService.lookupSnr(bulkIdentifiers, getSnapshot()));
+                }
 
-                    for (String id : bulkIdentifiers) {
-                        bulkRequest.put(id, subscriber);
-                    }
+                for (String id : bulkIdentifiers) {
+                    bulkRequest.put(id, subscriber);
                 }
             }
-            SidInfo result = bulkRequest.get(identifier).awaitResult()
-                    .orElseThrow(() -> new RuntimeException("SID service did not respond")).get(identifier);
-
-            PseudoFuncOutput pseudoFuncOutput = PseudoFuncOutput.of(identifier);
-
-            return createMappingLogsAndOutput(result, isFnr, identifier,pseudoFuncOutput);
-
-        } catch (LocalSidService.NoSidMappingFoundException e) {
-            String message = isFnr ?
-                    String.format(NO_MATCHING_FNR, Redactor.redactFnr(identifier)) :
-                    String.format(NO_MATCHING_SNR, Redactor.redactSnr(identifier));
-            log.warn(message);
-            PseudoFuncOutput output = PseudoFuncOutput.of(identifier);
-            output.addWarning(message);
-            return output;
         }
+        SidInfo result = bulkRequest.get(identifier).awaitResult()
+                .orElseThrow(() -> new RuntimeException("SID service did not respond"))
+                .get(identifier);
+
+           return createMappingLogsAndOutput(result, isFnr, identifier,PseudoFuncOutput.of(identifier));
+
+
     }
 
 
     private PseudoFuncOutput createMappingLogsAndOutput(SidInfo sidInfo, boolean isFnr, String identifier,PseudoFuncOutput pseudoFuncOutput) {
         //Mapping for fnr
         if (isFnr) {
-            if (sidInfo == null) {
-                String message = String.format(NO_MATCHING_FNR, Redactor.redactFnr(identifier));
+            if (sidInfo == null || sidInfo.snr() == null) {
+                throw new MappingNotFoundException(String.format(NO_MATCHING_FNR, Redactor.redactFnr(identifier)));
+            } else if (identifier.equals(sidInfo.snr())) {
+                String message = String.format(INCORRECT_MATCHING_FNR, Redactor.redactFnr(identifier));
                 log.warn(message);
-                pseudoFuncOutput.addWarning(message);
-                return pseudoFuncOutput;
-            } else if (sidInfo.snr() == null) {
-                String message = String.format(NO_MATCHING_FNR, Redactor.redactFnr(identifier));
-                log.warn(message);
-                pseudoFuncOutput.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, sidInfo.datasetExtractionSnapshotTime());
-                pseudoFuncOutput.addWarning(message);
-                return pseudoFuncOutput;
-            } else {
-                String message;
-                if (identifier.equals(sidInfo.snr())) {
-                    message = String.format(INCORRECT_MATCHING_FNR, Redactor.redactFnr(identifier));
-                    log.warn(message);
-                    pseudoFuncOutput.addWarning(message);
-                    return pseudoFuncOutput;
-
-                } else {
-                    message = String.format(CORRECT_MATCHED_FNR, Redactor.redactFnr(identifier));
-                    log.debug(message);
-                    PseudoFuncOutput matchedOutput = PseudoFuncOutput.of(sidInfo.snr());
-                    matchedOutput.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, sidInfo.datasetExtractionSnapshotTime());
-                    return matchedOutput;
-                }
-
+                PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.snr());
+                output.addWarning(message);
+                return output;
+            }else{
+                String message = String.format(CORRECT_MATCHED_FNR, Redactor.redactFnr(identifier));
+                log.debug(message);
+                PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.snr());
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, sidInfo.datasetExtractionSnapshotTime());
+                return output;
             }
         }
         //Mapping for snr
         else {
-            if (sidInfo == null) {
-                String message = String.format(NO_MATCHING_SNR, Redactor.redactFnr(identifier));
+            if (sidInfo == null || sidInfo.fnr() == null) {
+                throw new MappingNotFoundException(String.format(NO_MATCHING_SNR, Redactor.redactSnr(identifier)));
+            } else if (identifier.equals(sidInfo.fnr())) {
+                String message = String.format(INCORRECT_MATCHING_SNR, Redactor.redactSnr(identifier));
                 log.warn(message);
-                pseudoFuncOutput.addWarning(message);
-                return pseudoFuncOutput;
-            } else if (sidInfo.fnr() == null) {
-                String message = String.format(NO_MATCHING_SNR, Redactor.redactSnr(identifier));
-                log.warn(message);
-                pseudoFuncOutput.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, sidInfo.datasetExtractionSnapshotTime());
-                pseudoFuncOutput.addWarning(message);
-                return pseudoFuncOutput;
-            } else {
-                if (identifier.equals(sidInfo.fnr())) {
-                    String message = String.format(INCORRECT_MATCHING_SNR, Redactor.redactSnr(identifier));
-                    log.warn(message);
-                    pseudoFuncOutput.addWarning(message);
-                    return pseudoFuncOutput;
-                } else {
-                    String message = String.format(CORRECT_MATCHED_SNR, Redactor.redactSnr(identifier));
-                    log.debug(message);
-                    PseudoFuncOutput matchedOutput = PseudoFuncOutput.of(sidInfo.fnr());
-                    matchedOutput.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, sidInfo.datasetExtractionSnapshotTime());
-                    return matchedOutput;
-
-                }
+                PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.fnr());
+                output.addWarning(message);
+                return output;
             }
-        }
+            else{
+                String message = String.format(CORRECT_MATCHED_SNR, Redactor.redactFnr(identifier));
+                log.debug(message);
+                PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.fnr());
+                output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, sidInfo.datasetExtractionSnapshotTime());
+                return output;
+            }
+         }
     }
 
     private Optional<String> getSnapshot() {

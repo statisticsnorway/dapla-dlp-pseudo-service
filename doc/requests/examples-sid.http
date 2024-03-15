@@ -96,7 +96,7 @@ Content-Type: application/json
       {
         "name": "fnr",
         "pattern": "**/fnr",
-        "func": "map-sid(keyId=papis-key-1,snapshotDate=2023-07-05)"
+        "func": "map-sid-ff31(keyId=papis-key-1,snapshotDate=2023-07-05)"
       }
     ]
   }
@@ -125,7 +125,7 @@ Content-Type: application/json
       {
         "name": "fnr",
         "pattern": "**/fnr",
-        "func": "map-sid(keyId=papis-key-1)"
+        "func": "map-sid-ff31(keyId=papis-key-1)"
       }
     ]
   }

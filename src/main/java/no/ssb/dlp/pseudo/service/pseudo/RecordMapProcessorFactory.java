@@ -2,12 +2,14 @@ package no.ssb.dlp.pseudo.service.pseudo;
 
 import jakarta.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.TransformDirection;
 import no.ssb.dapla.dlp.pseudo.func.fpe.FpeFunc;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFunc;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
+import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
 import no.ssb.dapla.dlp.pseudo.func.tink.fpe.TinkFpeFunc;
 import no.ssb.dlp.pseudo.core.PseudoException;
 import no.ssb.dlp.pseudo.core.PseudoKeyset;
@@ -35,6 +37,7 @@ import static no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata.*;
 
 @RequiredArgsConstructor
 @Singleton
+@Slf4j
 public class RecordMapProcessorFactory {
     private final PseudoSecrets pseudoSecrets;
 
@@ -45,7 +48,7 @@ public class RecordMapProcessorFactory {
         for (PseudoConfig config : pseudoConfigs) {
             final PseudoFuncs fieldPseudonymizer = newPseudoFuncs(config.getRules(),
                     pseudoKeysetsOf(config.getKeysets()));
-            chain.preprocessor((f, v) -> init(fieldPseudonymizer,TransformDirection.APPLY, f, v));
+            chain.preprocessor((f, v) -> init(fieldPseudonymizer, TransformDirection.APPLY, f, v));
             chain.register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataProcessor));
         }
         return new RecordMapProcessor<>(chain, metadataProcessor);
@@ -58,7 +61,7 @@ public class RecordMapProcessorFactory {
         for (PseudoConfig config : pseudoConfigs) {
             final PseudoFuncs fieldDepseudonymizer = newPseudoFuncs(config.getRules(),
                     pseudoKeysetsOf(config.getKeysets()));
-            chain.preprocessor((f, v) -> init(fieldDepseudonymizer,  TransformDirection.RESTORE, f, v));
+            chain.preprocessor((f, v) -> init(fieldDepseudonymizer, TransformDirection.RESTORE, f, v));
             chain.register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataProcessor));
         }
 
@@ -116,7 +119,9 @@ public class RecordMapProcessorFactory {
         }
         try {
             PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
-            final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID);
+            final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID)
+                    || funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID_FF31)
+                    || funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID_DAEAD);
 
             if (operation == PSEUDONYMIZE) {
                 PseudoFuncOutput output = match.getFunc().apply(PseudoFuncInput.of(varValue));
@@ -135,6 +140,7 @@ public class RecordMapProcessorFactory {
                             .encryptionAlgorithm(match.getFunc().getAlgorithm())
                             .stableIdentifierVersion(sidSnapshotDate)
                             .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
+                            .encryptionAlgorithmParameters(funcDeclaration.getArgs())
                             .build());
                 } else {
                     metadataProcessor.addMetadata(FieldMetadata.builder()
@@ -164,6 +170,12 @@ public class RecordMapProcessorFactory {
                 PseudoFuncOutput output = match.getFunc().restore(PseudoFuncInput.of(varValue));
                 return output.getValue();
             }
+        } catch (MappingNotFoundException e) {
+            // Unsuccessful SID-mapping
+            log.warn(e.getMessage());
+            metadataProcessor.addMetric(FieldMetric.MISSING_SID);
+            metadataProcessor.addLog(e.getMessage());
+            return null;
         } catch (Exception e) {
             throw new PseudoException(String.format("pseudonymize error - field='%s', originalValue='%s'",
                     field.getPath(), varValue), e);
