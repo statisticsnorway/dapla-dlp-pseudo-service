@@ -2,10 +2,8 @@ package no.ssb.dlp.pseudo.service.pseudo;
 
 import com.google.common.collect.Lists;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import io.reactivex.processors.ReplayProcessor;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata;
-import no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetric;
 import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
@@ -19,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata.*;
 import static org.mockito.Mockito.*;
 
 @MicronautTest
@@ -50,7 +47,7 @@ class RepseudoFieldTest {
                 .encryptionAlgorithm("algorithm")
                 .encryptionAlgorithmParameters(Map.of("key", "value"))
                 .stableIdentifierVersion("stableIdVersion")
-                .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
+                .stableIdentifierType(true)
                 .build());
         processor.addLog("Log line");
         return processor;
