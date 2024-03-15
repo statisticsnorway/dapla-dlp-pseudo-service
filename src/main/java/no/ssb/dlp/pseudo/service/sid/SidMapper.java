@@ -101,7 +101,7 @@ public class SidMapper implements Mapper {
                 .orElseThrow(() -> new RuntimeException("SID service did not respond"))
                 .get(identifier);
 
-           return createMappingLogsAndOutput(result, isFnr, identifier);
+        return createMappingLogsAndOutput(result, isFnr, identifier);
 
 
     }
@@ -118,7 +118,7 @@ public class SidMapper implements Mapper {
                 PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.snr());
                 output.addWarning(message);
                 return output;
-            }else{
+            } else {
                 String message = String.format(CORRECT_MATCHED_FNR, Redactor.redactFnr(identifier));
                 log.debug(message);
                 PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.snr());
@@ -136,15 +136,14 @@ public class SidMapper implements Mapper {
                 PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.fnr());
                 output.addWarning(message);
                 return output;
-            }
-            else{
+            } else {
                 String message = String.format(CORRECT_MATCHED_SNR, Redactor.redactFnr(identifier));
                 log.debug(message);
                 PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.fnr());
                 output.addMetadata(MapFuncConfig.Param.SNAPSHOT_DATE, sidInfo.datasetExtractionSnapshotTime());
                 return output;
             }
-         }
+        }
     }
 
     private Optional<String> getSnapshot() {
