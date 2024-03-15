@@ -8,6 +8,7 @@ import nl.altindag.log.LogCaptor;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
+import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
 import no.ssb.dlp.pseudo.service.Application;
 import org.apache.groovy.util.Maps;
 import org.junit.Assert;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -182,9 +184,10 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
             mapper.init(PseudoFuncInput.of("11854898346"));
-            PseudoFuncOutput output = mapper.map(PseudoFuncInput.of("11854898346"));
+            assertThrows(MappingNotFoundException.class, () ->
+                    mapper.map(PseudoFuncInput.of("11854898346"))
+            );
 
-            Assertions.assertEquals("No SID-mapping found for fnr 118548*****", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "");
         }
@@ -239,9 +242,9 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
             mapper.init(PseudoFuncInput.of("0001ha3"));
-            PseudoFuncOutput output = mapper.restore(PseudoFuncInput.of("0001ha3"));
-
-            Assertions.assertEquals("No SID-mapping found for snr 000****", output.getWarnings().getFirst());
+            assertThrows(MappingNotFoundException.class, () ->
+                    mapper.restore(PseudoFuncInput.of("0001ha3"))
+            );
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             assertLogsForFnrOrSnr("11854898346", "0001ha3");
         }

@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.async.publisher.Publishers;
 import lombok.RequiredArgsConstructor;
+import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
 import no.ssb.dlp.pseudo.service.sid.local.SidCache;
 import org.reactivestreams.Publisher;
 
@@ -26,7 +27,7 @@ class LocalSidService implements SidService {
     @Override
     public Publisher<SidInfo> lookupFnr(String fnr, Optional<String> snapshot) {
         String currentSnr = sidCache.getCurrentSnrForFnr(fnr)
-                .orElseThrow(() -> new LocalSidService.NoSidMappingFoundException("No SID matching fnr starting from="
+                .orElseThrow(() -> new MappingNotFoundException("No SID matching fnr starting from="
                         + Strings.padEnd(fnr, 6, ' ').substring(0, 6)));
         return Publishers.just(sidCache.getCurrentFnrForSnr(currentSnr).map(currentFnr ->
                         new SidInfo.SidInfoBuilder().snr(currentSnr).fnr(currentFnr).build())
@@ -36,7 +37,7 @@ class LocalSidService implements SidService {
     @Override
     public Publisher<SidInfo> lookupSnr(String snr, Optional<String> snapshot) {
         String currentFnr = sidCache.getCurrentFnrForSnr(snr)
-                .orElseThrow(() -> new LocalSidService.NoSidMappingFoundException("No SID matching snr starting from="
+                .orElseThrow(() -> new MappingNotFoundException("No SID matching snr starting from="
                         + Strings.padEnd(snr, 4, ' ').substring(0, 4)));
         return Publishers.just(sidCache.getCurrentSnrForFnr(currentFnr).map(currentSnr ->
                         new SidInfo.SidInfoBuilder().snr(currentSnr).fnr(currentFnr).build())
@@ -75,12 +76,6 @@ class LocalSidService implements SidService {
     @Override
     public Publisher<SnapshotInfo> getSnapshots() {
         return Publishers.just(SnapshotInfo.builder().items(List.of("2023-04-25")).build());
-    }
-
-    public static class NoSidMappingFoundException extends RuntimeException {
-        public NoSidMappingFoundException(String message) {
-            super(message);
-        }
     }
 
 }

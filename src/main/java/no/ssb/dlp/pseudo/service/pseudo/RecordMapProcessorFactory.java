@@ -2,12 +2,14 @@ package no.ssb.dlp.pseudo.service.pseudo;
 
 import jakarta.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.TransformDirection;
 import no.ssb.dapla.dlp.pseudo.func.fpe.FpeFunc;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFunc;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
+import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
 import no.ssb.dapla.dlp.pseudo.func.tink.fpe.TinkFpeFunc;
 import no.ssb.dlp.pseudo.core.PseudoException;
 import no.ssb.dlp.pseudo.core.PseudoKeyset;
@@ -35,6 +37,7 @@ import static no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata.*;
 
 @RequiredArgsConstructor
 @Singleton
+@Slf4j
 public class RecordMapProcessorFactory {
     private final PseudoSecrets pseudoSecrets;
 
@@ -167,6 +170,12 @@ public class RecordMapProcessorFactory {
                 PseudoFuncOutput output = match.getFunc().restore(PseudoFuncInput.of(varValue));
                 return output.getValue();
             }
+        } catch (MappingNotFoundException e) {
+            // Unsuccessful SID-mapping
+            log.warn(e.getMessage());
+            metadataProcessor.addMetric(FieldMetric.MISSING_SID);
+            metadataProcessor.addLog(e.getMessage());
+            return null;
         } catch (Exception e) {
             throw new PseudoException(String.format("pseudonymize error - field='%s', originalValue='%s'",
                     field.getPath(), varValue), e);
