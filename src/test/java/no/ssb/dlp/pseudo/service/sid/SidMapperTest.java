@@ -53,7 +53,7 @@ public class SidMapperTest {
 
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("0001ha3", mappedSid);
-            assertLogsForFnrOrSnr("11854898347", "0001ha3");
+            assertLogsForIdentifiers("11854898347", "0001ha3");
         }
     }
 
@@ -73,7 +73,7 @@ public class SidMapperTest {
 
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("11854898347", mappedSid);
-            assertLogsForFnrOrSnr( "11854898347", "0001ha3");
+            assertLogsForIdentifiers( "11854898347", "0001ha3");
         }
     }
 
@@ -146,7 +146,7 @@ public class SidMapperTest {
 
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("0001ha3", mappedSid);
-            assertLogsForFnrOrSnr("11854898347", "0001ha3");
+            assertLogsForIdentifiers("11854898347", "0001ha3");
         }
 
     }
@@ -167,7 +167,7 @@ public class SidMapperTest {
 
             Assertions.assertEquals("Incorrect SID-mapping for fnr 118548*****. Mapping returned the original fnr!", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
-            assertLogsForFnrOrSnr("11854898346", "");
+            assertLogsForIdentifiers("11854898346", "");
         }
     }
     @Test
@@ -186,7 +186,7 @@ public class SidMapperTest {
 
             Assertions.assertEquals("No SID-mapping found for fnr 118548*****", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
-            assertLogsForFnrOrSnr("11854898346", "");
+            assertLogsForIdentifiers("11854898346", "");
         }
     }
     @Test
@@ -204,7 +204,7 @@ public class SidMapperTest {
             String mappedSid = mapper.restore(PseudoFuncInput.of("0001ha3")).getValue();
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             Assertions.assertEquals("11854898347", mappedSid);
-            assertLogsForFnrOrSnr("11854898346", "");
+            assertLogsForIdentifiers("11854898346", "");
         }
 
     }
@@ -224,7 +224,7 @@ public class SidMapperTest {
 
             Assertions.assertEquals("Incorrect SID-mapping for snr 000****. Mapping returned the original snr!", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
-            assertLogsForFnrOrSnr("11854898346", "0001ha3");
+            assertLogsForIdentifiers("11854898346", "0001ha3");
         }
     }
     @Test
@@ -243,10 +243,10 @@ public class SidMapperTest {
 
             Assertions.assertEquals("No SID-mapping found for snr 000****", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
-            assertLogsForFnrOrSnr("11854898346", "0001ha3");
+            assertLogsForIdentifiers("11854898346", "0001ha3");
         }
     }
-    private void assertLogsForFnrOrSnr(String fnr, String snr) {
+    private void assertLogsForIdentifiers(String fnr, String snr) {
        for(String infoLog : logCaptor.getInfoLogs()){
            if(!fnr.isEmpty())
                Assertions.assertEquals(false, infoLog.contains(fnr),"Info logs must not log fnr in original format");

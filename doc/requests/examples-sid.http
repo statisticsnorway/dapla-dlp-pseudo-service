@@ -3,7 +3,7 @@ Content-Type: application/json
 Authorization: Bearer {{keycloak_token}}
 
 {
-  "fnr": "11854898347"
+  "fnr": "16510599481"
 }
 
 ###
@@ -43,7 +43,9 @@ Authorization: Bearer {{keycloak_token}}
 {
   "fnrList": [
     "11854898347",
-    "01839899544"
+    "01839899544",
+    "16910599481",
+    "03874398920"
   ]
 }
 
@@ -69,8 +71,10 @@ Authorization: Bearer {{keycloak_token}}
 
 {
   "fnrList": [
-    "20859374701",
-    "01839899544"
+    "11854898347",
+    "01839899544",
+    "16910599481",
+    "03874398920"
   ]
 }
 
