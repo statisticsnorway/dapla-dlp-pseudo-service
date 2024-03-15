@@ -33,7 +33,6 @@ import java.util.List;
 import static no.ssb.dlp.pseudo.core.PseudoOperation.DEPSEUDONYMIZE;
 import static no.ssb.dlp.pseudo.core.PseudoOperation.PSEUDONYMIZE;
 import static no.ssb.dlp.pseudo.core.func.PseudoFuncDeclaration.*;
-import static no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata.*;
 
 @RequiredArgsConstructor
 @Singleton
@@ -131,17 +130,6 @@ public class RecordMapProcessorFactory {
                 if (isSidMapping && varValue.equals(mappedValue)) {
                     // Unsuccessful SID-mapping
                     metadataProcessor.addMetric(FieldMetric.MISSING_SID);
-                } else if (isSidMapping) {
-                    metadataProcessor.addMetric(FieldMetric.MAPPED_SID);
-                    metadataProcessor.addMetadata(FieldMetadata.builder()
-                            .shortName(field.getName())
-                            .dataElementPath(field.getPath().substring(1).replace('/', '.')) // Skip leading slash and use dot as separator
-                            .dataElementPattern(match.getRule().getPattern())
-                            .encryptionAlgorithm(match.getFunc().getAlgorithm())
-                            .stableIdentifierVersion(sidSnapshotDate)
-                            .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
-                            .encryptionAlgorithmParameters(funcDeclaration.getArgs())
-                            .build());
                 } else {
                     metadataProcessor.addMetadata(FieldMetadata.builder()
                             .shortName(field.getName())
@@ -149,8 +137,13 @@ public class RecordMapProcessorFactory {
                             .dataElementPattern(match.getRule().getPattern())
                             .encryptionKeyReference(funcDeclaration.getArgs().getOrDefault(KEY_REFERENCE, null))
                             .encryptionAlgorithm(match.getFunc().getAlgorithm())
+                            .stableIdentifierVersion(sidSnapshotDate)
+                            .stableIdentifierType(isSidMapping)
                             .encryptionAlgorithmParameters(funcDeclaration.getArgs())
                             .build());
+                }
+                if (isSidMapping) {
+                    metadataProcessor.addMetric(FieldMetric.MAPPED_SID);
                 }
                 return mappedValue;
 

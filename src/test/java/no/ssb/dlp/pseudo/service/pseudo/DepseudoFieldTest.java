@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static no.ssb.dlp.pseudo.service.pseudo.metadata.FieldMetadata.*;
 import static org.mockito.Mockito.*;
 
 @MicronautTest
@@ -50,7 +49,7 @@ class DepseudoFieldTest {
                 .encryptionAlgorithm("algorithm")
                 .encryptionAlgorithmParameters(Map.of("key", "value"))
                 .stableIdentifierVersion("stableIdVersion")
-                .stableIdentifierType(STABLE_IDENTIFIER_TYPE)
+                .stableIdentifierType(true)
             .build());
         processor.addLog("Log line");
         return processor;

@@ -13,7 +13,7 @@ import java.util.Map;
 public class FieldMetadata {
 
     // Type of stable ID identifier that is used prior to pseudonymization. Currently only FREG_SNR is supported.
-    public static final String STABLE_IDENTIFIER_TYPE = "FREG_SNR";
+    private static final String STABLE_IDENTIFIER_TYPE = "FREG_SNR";
 
     String shortName;
     String dataElementPath;
@@ -21,7 +21,7 @@ public class FieldMetadata {
     String encryptionKeyReference;
     String encryptionAlgorithm;
     String stableIdentifierVersion;
-    String stableIdentifierType;
+    boolean stableIdentifierType;
     Map<String, String> encryptionAlgorithmParameters;
 
     public PseudoVariable toDatadocPseudoVariable() {
@@ -34,7 +34,7 @@ public class FieldMetadata {
                 .withEncryptionAlgorithmParameters(
                         toEncryptionAlgorithmParameters())
                 .withStableIdentifierVersion(stableIdentifierVersion)
-                .withStableIdentifierType(stableIdentifierType)
+                .withStableIdentifierType(stableIdentifierType ? STABLE_IDENTIFIER_TYPE : null)
                 .build();
     }
 
