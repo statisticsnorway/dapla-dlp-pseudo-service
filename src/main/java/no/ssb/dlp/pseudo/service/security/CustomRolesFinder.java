@@ -1,5 +1,6 @@
 package no.ssb.dlp.pseudo.service.security;
 
+import com.nimbusds.jwt.JWTClaimNames;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requirements;
 import io.micronaut.context.annotation.Requires;
@@ -37,11 +38,13 @@ public class CustomRolesFinder implements RolesFinder {
         List<String> roles = new ArrayList<>();
 
         Object username = attributes.get(tokenConfiguration.getNameKey());
-        if (rolesConfig.getAdmins().contains(SecurityRule.IS_AUTHENTICATED)
-                ||rolesConfig.getAdmins().contains(username)) {
+        boolean trustedIssuer = isTrustedIssuer(attributes);
+        log.debug("User {} has a trusted issuer? {}", username, trustedIssuer);
+        if (rolesConfig.getAdmins().contains(SecurityRule.IS_AUTHENTICATED) && trustedIssuer
+                || rolesConfig.getAdmins().contains(username)) {
             roles.add(PseudoServiceRole.ADMIN);
         }
-        if (rolesConfig.getUsers().contains(SecurityRule.IS_AUTHENTICATED)
+        if (rolesConfig.getUsers().contains(SecurityRule.IS_AUTHENTICATED) && trustedIssuer
                 || rolesConfig.getUsers().contains(username)) {
             roles.add(PseudoServiceRole.USER);
         }
@@ -62,5 +65,9 @@ public class CustomRolesFinder implements RolesFinder {
         }
         log.debug("Resolved roles {} for user {}", roles, username);
         return roles;
+    }
+
+    private boolean isTrustedIssuer(Map<String, Object> attributes) {
+        return rolesConfig.getTrustedIssuers().contains(String.valueOf(attributes.get(JWTClaimNames.ISSUER)));
     }
 }
