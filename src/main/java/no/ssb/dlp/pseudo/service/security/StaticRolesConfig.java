@@ -10,6 +10,7 @@ import java.util.Optional;
 @ConfigurationProperties("app-roles")
 @Data
 public class StaticRolesConfig {
+    private List<String> trustedIssuers = new ArrayList<>();
     private List<String> users = new ArrayList<>();
     private List<String> admins = new ArrayList<>();
 

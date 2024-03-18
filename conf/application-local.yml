@@ -40,6 +40,8 @@ micronaut:
           jwks:
             keycloak-staging:
               url: 'https://keycloak.staging-bip-app.ssb.no/auth/realms/ssb/protocol/openid-connect/certs'
+            google:
+              url: 'https://www.googleapis.com/oauth2/v3/certs'
 
   http:
     services:
@@ -117,6 +119,9 @@ pseudo.secrets:
     type: TINK_WDEK
 
 app-roles:
+  # When using isAuthenticated() the JWT token must be signed by one of the trusted-issuers
+  trusted-issuers:
+    - https://keycloak.staging-bip-app.ssb.no/auth/realms/ssb
   users:
     - isAuthenticated()
   admins:
