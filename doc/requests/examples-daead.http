@@ -44,7 +44,6 @@ Content-Type: application/zip
 < ../../src/test/resources/data/kontaktopplysninger_1000000.json.zip
 --separator--
 
-
 ### Pseudonymize using DAEAD
 
 POST {{base_url}}/pseudonymize/file
@@ -77,8 +76,18 @@ Content-Type: application/json
     ],
     "rules": [
       {
-        "name": "navn",
-        "pattern": "**/navn",
+        "name": "fnr",
+        "pattern": "**/fnr",
+        "func": "daead(keyId=1403797237)"
+      },
+      {
+        "name": "fornavn",
+        "pattern": "**/fornavn",
+        "func": "daead(keyId=1403797237)"
+      },
+      {
+        "name": "etternavn",
+        "pattern": "**/etternavn",
         "func": "daead(keyId=1403797237)"
       }
     ]
@@ -88,9 +97,8 @@ Content-Type: application/json
 Content-Disposition: form-data; name="data"; filename="data.json"
 Content-Type: application/json
 
-< ../../src/test/resources/data/somedata.json
+< ../../src/test/resources/data/person_3.json
 --separator--
-
 
 ### Depseudonymize using DAEAD
 
@@ -124,8 +132,18 @@ Content-Type: application/json
     ],
     "rules": [
       {
-        "name": "navn",
-        "pattern": "**/navn",
+        "name": "fnr",
+        "pattern": "**/fnr",
+        "func": "daead(keyId=1403797237)"
+      },
+      {
+        "name": "fornavn",
+        "pattern": "**/fornavn",
+        "func": "daead(keyId=1403797237)"
+      },
+      {
+        "name": "etternavn",
+        "pattern": "**/etternavn",
         "func": "daead(keyId=1403797237)"
       }
     ]
@@ -135,14 +153,96 @@ Content-Type: application/json
 Content-Disposition: form-data; name="data"; filename="data.json"
 Content-Type: application/json
 
-< ../../src/test/resources/data/somedata-daead-encrypted.json
+< ../../src/test/resources/data/person_3-deid.json
 
 --separator--
 
+### Repseudonymize using DAEAD
 
-### Pseudonymize using DAEAD - person
+POST {{base_url}}/repseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
 
-POST {{base_url}}/pseudonymize/file
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "sourcePseudoConfig": {
+    "keysets": [
+{
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
+  "encryptedKeyset": "CiQAp91NBuNVCGWtVTE2FAhoRcbbcp+uXgolonL0ojTstS/UKcMStwEAZ30rtXO/8lcBShpbcZ9/pouaX3tgJNxZiy1U1cykPrhhqzpFzCAsrJJNkzwgniqGDOLq+9KzOkj7xoP2V7xKBco/ySzyl0gCpnovBRLCUgq5OMNh/rpKqIr7lMVZfsCVLNPupacSaLoPM+F5DMijAkk7NDTBGwkrRNO34Ev0Kkv/drt+G4DUfdBKLe2QUrEUE0vVfsBw+EZzTC8G3CYemYXC5GYdpTglk0oFDMDs25lBL65SfVQ=",
+  "keysetInfo": {
+    "primaryKeyId": 1403797237,
+    "keyInfo": [
+      {
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 1403797237,
+        "outputPrefixType": "TINK"
+      }
+    ]
+  }
+}
+    ],
+    "rules": [
+      {
+        "name": "fnr",
+        "pattern": "**/fnr",
+        "func": "daead(keyId=1403797237)"
+      },
+      {
+        "name": "fornavn",
+        "pattern": "**/fornavn",
+        "func": "daead(keyId=1403797237)"
+      },
+      {
+        "name": "etternavn",
+        "pattern": "**/etternavn",
+        "func": "daead(keyId=1403797237)"
+      }
+    ]
+  },
+  "targetPseudoConfig": {
+    "keysets": [
+{
+  "kekUri": "gcp-kms://projects/dev-sirius/locations/europe-north1/keyRings/pseudo-service-common-keyring/cryptoKeys/pseudo-service-common-kek-1",
+  "encryptedKeyset": "CiQAp91NBuNVCGWtVTE2FAhoRcbbcp+uXgolonL0ojTstS/UKcMStwEAZ30rtXO/8lcBShpbcZ9/pouaX3tgJNxZiy1U1cykPrhhqzpFzCAsrJJNkzwgniqGDOLq+9KzOkj7xoP2V7xKBco/ySzyl0gCpnovBRLCUgq5OMNh/rpKqIr7lMVZfsCVLNPupacSaLoPM+F5DMijAkk7NDTBGwkrRNO34Ev0Kkv/drt+G4DUfdBKLe2QUrEUE0vVfsBw+EZzTC8G3CYemYXC5GYdpTglk0oFDMDs25lBL65SfVQ=",
+  "keysetInfo": {
+    "primaryKeyId": 1403797237,
+    "keyInfo": [
+      {
+        "typeUrl": "type.googleapis.com/google.crypto.tink.AesSivKey",
+        "status": "ENABLED",
+        "keyId": 1403797237,
+        "outputPrefixType": "TINK"
+      }
+    ]
+  }
+}
+    ],
+    "rules": [
+      {
+        "name": "rule-1",
+        "pattern": "**/{fnr,fornavn,etternavn}",
+        "func": "daead(keyId=1403797237)"
+      }
+    ]
+  }
+}
+
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/person_3-deid.json
+--separator--
+
+### Depseudonymize using DAEAD after repseudo
+
+POST {{base_url}}/depseudonymize/file
 Content-Type: multipart/form-data; boundary=separator
 Authorization: Bearer {{keycloak_token}}
 
@@ -172,7 +272,18 @@ Content-Type: application/json
     ],
     "rules": [
       {
-        "pattern": "**/{fnr,fornavn,etternavn}",
+        "name": "fnr",
+        "pattern": "**/fnr",
+        "func": "daead(keyId=1403797237)"
+      },
+      {
+        "name": "fornavn",
+        "pattern": "**/fornavn",
+        "func": "daead(keyId=1403797237)"
+      },
+      {
+        "name": "etternavn",
+        "pattern": "**/etternavn",
         "func": "daead(keyId=1403797237)"
       }
     ]
@@ -182,7 +293,8 @@ Content-Type: application/json
 Content-Disposition: form-data; name="data"; filename="data.json"
 Content-Type: application/json
 
-< ../../src/test/resources/data/person_3.json
+< ../../src/test/resources/data/person_3_repseudo.json
+
 --separator--
 
 

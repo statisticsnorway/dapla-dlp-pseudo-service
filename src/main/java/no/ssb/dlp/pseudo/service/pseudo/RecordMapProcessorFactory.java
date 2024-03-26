@@ -76,6 +76,7 @@ public class RecordMapProcessorFactory {
         PseudoMetadataProcessor metadataProcessor = new PseudoMetadataProcessor(correlationId);
         return new RecordMapProcessor<>(
                 new ValueInterceptorChain()
+                        .preprocessor((f, v) -> init(fieldDepseudonymizer, TransformDirection.RESTORE, f, v))
                         .register((f, v) -> process(DEPSEUDONYMIZE, fieldDepseudonymizer, f, v, metadataProcessor))
                         .register((f, v) -> process(PSEUDONYMIZE, fieldPseudonymizer, f, v, metadataProcessor)),
                 metadataProcessor);
