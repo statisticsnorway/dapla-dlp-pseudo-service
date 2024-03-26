@@ -97,6 +97,16 @@ Content-Type: application/json
         "name": "fnr",
         "pattern": "**/fnr",
         "func": "map-sid-ff31(keyId=papis-key-1,snapshotDate=2023-07-05)"
+      },
+       {
+        "name": "fornavn",
+        "pattern": "**/fornavn",
+        "func": "daead(keyId=ssb-common-key-1)"
+      },
+       {
+        "name": "etternavn",
+        "pattern": "**/etternavn",
+        "func": "daead(keyId=ssb-common-key-1)"
       }
     ]
   }
@@ -126,6 +136,55 @@ Content-Type: application/json
         "name": "fnr",
         "pattern": "**/fnr",
         "func": "map-sid-ff31(keyId=papis-key-1)"
+      },
+      {
+        "name": "fornavn",
+        "pattern": "**/fornavn",
+        "func": "daead(keyId=ssb-common-key-1)"
+      },
+      {
+        "name": "etternavn",
+        "pattern": "**/etternavn",
+        "func": "daead(keyId=ssb-common-key-1)"
+      }
+
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/person_3_sid_deid.json
+--separator--
+
+### Repseudonymize using SID mapping
+
+POST {{base_url}}/repseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "sourcePseudoConfig": {
+   "rules": [
+      {
+        "name": "rule-1",
+        "pattern": "**/fnr",
+        "func": "map-sid-ff31(keyId=papis-key-1)"
+      }
+    ]
+  },
+  "targetPseudoConfig": {
+    "rules": [
+      {
+        "name": "rule-1",
+        "pattern": "**/fnr",
+        "func": "daead(keyId=ssb-common-key-1)"
       }
     ]
   }
@@ -135,6 +194,45 @@ Content-Disposition: form-data; name="data"; filename="data.json"
 Content-Type: application/json
 
 < ../../src/test/resources/data/person_3_sid_deid.json
+--separator--
+
+### Depseudonymize after repseudo
+
+POST {{base_url}}/depseudonymize/file
+Content-Type: multipart/form-data; boundary=separator
+Authorization: Bearer {{keycloak_token}}
+
+--separator
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "targetContentType": "application/json",
+  "pseudoConfig": {
+    "rules": [
+      {
+        "name": "fnr",
+        "pattern": "**/fnr",
+        "func": "daead(keyId=ssb-common-key-1)"
+      },
+      {
+        "name": "fornavn",
+        "pattern": "**/fornavn",
+        "func": "daead(keyId=ssb-common-key-1)"
+      },
+      {
+        "name": "etternavn",
+        "pattern": "**/etternavn",
+        "func": "daead(keyId=ssb-common-key-1)"
+      }
+    ]
+  }
+}
+--separator
+Content-Disposition: form-data; name="data"; filename="data.json"
+Content-Type: application/json
+
+< ../../src/test/resources/data/person_3_repseudo_sid.json
 --separator--
 
 ### Null value: Map to SID and pseudonymize SID values with papis-key
