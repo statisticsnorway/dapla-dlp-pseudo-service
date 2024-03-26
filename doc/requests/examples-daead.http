@@ -352,7 +352,7 @@ Content-Type: application/json
 
 POST {{base_url}}/repseudonymize/file
 Content-Type: multipart/form-data; boundary=separator
-Authorizatixon: Bearer {{keycloak_token}}
+Authorization: Bearer {{keycloak_token}}
 
 --separator
 Content-Disposition: form-data; name="request"
