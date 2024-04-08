@@ -8,9 +8,9 @@ import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
+import no.ssb.dapla.dlp.pseudo.func.map.MapFailureStrategy;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
-import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
 import no.ssb.dlp.pseudo.service.Application;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -36,6 +36,12 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class SidMapper implements Mapper {
 
+    /**
+     * If mapping fails, the SidMapper will be instructed to return a value dependent on a given
+     * {@link MapFailureStrategy}. When doing so, the SidMapper will also write to the {@link PseudoFuncOutput}'s
+     * metadata using this key to signal which {@link MapFailureStrategy} was used.
+     */
+    public static final String MAP_FAILURE_METADATA = "map-failure-metadata";
     private final SidService sidService;
 
     private static final int DEFAULT_PARTITION_SIZE = 50000;
@@ -111,12 +117,22 @@ public class SidMapper implements Mapper {
         //Mapping for fnr
         if (isFnr) {
             if (sidInfo == null || sidInfo.snr() == null) {
-                throw new MappingNotFoundException(String.format(NO_MATCHING_FNR, Redactor.redactFnr(identifier)));
+                String message = String.format(NO_MATCHING_FNR, Redactor.redactSnr(identifier));
+                log.warn(message);
+                final MapFailureStrategy mapFailureStrategy = getMapFailureStrategy();
+                PseudoFuncOutput output = PseudoFuncOutput.of(
+                        mapFailureStrategy == MapFailureStrategy.RETURN_NULL ? null : identifier);
+                output.addWarning(message);
+                output.addMetadata(MAP_FAILURE_METADATA, mapFailureStrategy.name());
+                return output;
             } else if (identifier.equals(sidInfo.snr())) {
                 String message = String.format(INCORRECT_MATCHING_FNR, Redactor.redactFnr(identifier));
                 log.warn(message);
-                PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.snr());
+                final MapFailureStrategy mapFailureStrategy = getMapFailureStrategy();
+                PseudoFuncOutput output = PseudoFuncOutput.of(
+                        mapFailureStrategy == MapFailureStrategy.RETURN_NULL ? null : identifier);
                 output.addWarning(message);
+                output.addMetadata(MAP_FAILURE_METADATA, mapFailureStrategy.name());
                 return output;
             } else {
                 String message = String.format(CORRECT_MATCHED_FNR, Redactor.redactFnr(identifier));
@@ -129,12 +145,22 @@ public class SidMapper implements Mapper {
         //Mapping for snr
         else {
             if (sidInfo == null || sidInfo.fnr() == null) {
-                throw new MappingNotFoundException(String.format(NO_MATCHING_SNR, Redactor.redactSnr(identifier)));
+                String message = String.format(NO_MATCHING_SNR, Redactor.redactSnr(identifier));
+                log.warn(message);
+                final MapFailureStrategy mapFailureStrategy = getMapFailureStrategy();
+                PseudoFuncOutput output = PseudoFuncOutput.of(
+                        mapFailureStrategy == MapFailureStrategy.RETURN_NULL ? null : identifier);
+                output.addWarning(message);
+                output.addMetadata(MAP_FAILURE_METADATA, mapFailureStrategy.name());
+                return output;
             } else if (identifier.equals(sidInfo.fnr())) {
                 String message = String.format(INCORRECT_MATCHING_SNR, Redactor.redactSnr(identifier));
                 log.warn(message);
-                PseudoFuncOutput output = PseudoFuncOutput.of(sidInfo.fnr());
+                final MapFailureStrategy mapFailureStrategy = getMapFailureStrategy();
+                PseudoFuncOutput output = PseudoFuncOutput.of(
+                        mapFailureStrategy == MapFailureStrategy.RETURN_NULL ? null : identifier);
                 output.addWarning(message);
+                output.addMetadata(MAP_FAILURE_METADATA, mapFailureStrategy.name());
                 return output;
             } else {
                 String message = String.format(CORRECT_MATCHED_SNR, Redactor.redactFnr(identifier));
@@ -150,6 +176,12 @@ public class SidMapper implements Mapper {
         return Optional.ofNullable(
                 this.config.getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null)
         ).map(String::valueOf);
+    }
+
+    private MapFailureStrategy getMapFailureStrategy() {
+        return Optional.ofNullable(
+                this.config.getOrDefault(MapFuncConfig.Param.MAP_FAILURE_STRATEGY, null)
+        ).map(String::valueOf).map(MapFailureStrategy::valueOf).orElse(MapFailureStrategy.RETURN_ORIGINAL);
     }
 
     @Override

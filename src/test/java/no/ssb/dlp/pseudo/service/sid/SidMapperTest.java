@@ -7,8 +7,9 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import nl.altindag.log.LogCaptor;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
+import no.ssb.dapla.dlp.pseudo.func.map.MapFailureStrategy;
+import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.map.Mapper;
-import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
 import no.ssb.dlp.pseudo.service.Application;
 import org.apache.groovy.util.Maps;
 import org.junit.Assert;
@@ -22,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static no.ssb.dlp.pseudo.service.sid.SidMapper.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -166,7 +167,6 @@ public class SidMapperTest {
             mapper.init(PseudoFuncInput.of("11854898346"));
             PseudoFuncOutput output = mapper.map(PseudoFuncInput.of("11854898346"));
 
-
             Assertions.assertEquals("Incorrect SID-mapping for fnr 118548*****. Mapping returned the original fnr!", output.getWarnings().getFirst());
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             assertLogsForIdentifiers("11854898346", "");
@@ -184,9 +184,34 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
             mapper.init(PseudoFuncInput.of("11854898346"));
-            assertThrows(MappingNotFoundException.class, () ->
-                    mapper.map(PseudoFuncInput.of("11854898346"))
-            );
+            // Mapping should not be found - return original (default behaviour)
+            PseudoFuncOutput output = mapper.map(PseudoFuncInput.of("11854898346"));
+            Assertions.assertEquals("11854898346", output.getValue());
+            Assertions.assertEquals(MapFailureStrategy.RETURN_ORIGINAL.name(),
+                    output.getMetadata().get(MAP_FAILURE_METADATA));
+
+            verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
+            assertLogsForIdentifiers("11854898346", "");
+        }
+    }
+
+    @Test
+    public void testMapForFnrWithNoSnrAndFailureStrategyReturnNull(){
+        when(sidService.lookupFnr(anyList(), any(Optional.class))).thenReturn(Publishers.just(
+                Maps.of("11854898346", new SidInfo.SidInfoBuilder().snr(null).build()))
+        );
+
+        try (final var application = mockStatic(Application.class)) {
+            application.when(Application::getContext).thenReturn(context);
+            Mapper mapper = ServiceLoader.load(Mapper.class).findFirst().orElseThrow(() ->
+                    new RuntimeException("SidMapper class not found"));
+            mapper.setConfig(Maps.of(MapFuncConfig.Param.MAP_FAILURE_STRATEGY, MapFailureStrategy.RETURN_NULL));
+            mapper.init(PseudoFuncInput.of("11854898346"));
+            // Mapping should not be found - return null as instructed
+            PseudoFuncOutput output = mapper.map(PseudoFuncInput.of("11854898346"));
+            Assertions.assertNull(output.getValue());
+            Assertions.assertEquals(MapFailureStrategy.RETURN_NULL.name(),
+                    output.getMetadata().get(MAP_FAILURE_METADATA));
 
             verify(sidService, times(1)).lookupFnr(anyList(), eq(Optional.empty()));
             assertLogsForIdentifiers("11854898346", "");
@@ -242,9 +267,12 @@ public class SidMapperTest {
                     new RuntimeException("SidMapper class not found"));
             mapper.setConfig(new HashMap<>());
             mapper.init(PseudoFuncInput.of("0001ha3"));
-            assertThrows(MappingNotFoundException.class, () ->
-                    mapper.restore(PseudoFuncInput.of("0001ha3"))
-            );
+            // Mapping should not be found - return original
+            PseudoFuncOutput output = mapper.restore(PseudoFuncInput.of("0001ha3"));
+            Assertions.assertEquals("0001ha3", output.getValue());
+            Assertions.assertEquals(MapFailureStrategy.RETURN_ORIGINAL.name(),
+                    output.getMetadata().get(MAP_FAILURE_METADATA));
+
             verify(sidService, times(1)).lookupSnr(anyList(), eq(Optional.empty()));
             assertLogsForIdentifiers("11854898346", "0001ha3");
         }
