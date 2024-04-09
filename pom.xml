@@ -24,7 +24,7 @@
     <dapla-datadoc-model.version>1.2</dapla-datadoc-model.version>
 
     <artifactregistry-maven-wagon.version>2.2.1</artifactregistry-maven-wagon.version>
-    <dapla-dlp-pseudo-core.version>2.0.6-SNAPSHOT</dapla-dlp-pseudo-core.version>
+    <dapla-dlp-pseudo-core.version>2.0.6</dapla-dlp-pseudo-core.version>
     <micronaut.version>4.3.7</micronaut.version>
     <micronaut.openapi.version>5.0.1</micronaut.openapi.version>
     <micronaut.object.storage.version>2.3.0</micronaut.object.storage.version>
