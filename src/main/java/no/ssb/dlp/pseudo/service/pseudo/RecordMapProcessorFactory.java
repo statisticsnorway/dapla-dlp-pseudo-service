@@ -139,21 +139,19 @@ public class RecordMapProcessorFactory {
                 if (isSidMapping && mapFailureMetadata != null) {
                     // There has been an unsuccessful SID-mapping
                     metadataProcessor.addMetric(FieldMetric.MISSING_SID);
-                } else {
-                    metadataProcessor.addMetadata(FieldMetadata.builder()
-                            .shortName(field.getName())
-                            .dataElementPath(field.getPath().substring(1).replace('/', '.')) // Skip leading slash and use dot as separator
-                            .dataElementPattern(match.getRule().getPattern())
-                            .encryptionKeyReference(funcDeclaration.getArgs().getOrDefault(KEY_REFERENCE, null))
-                            .encryptionAlgorithm(match.getFunc().getAlgorithm())
-                            .stableIdentifierVersion(sidSnapshotDate)
-                            .stableIdentifierType(isSidMapping)
-                            .encryptionAlgorithmParameters(funcDeclaration.getArgs())
-                            .build());
-                }
-                if (isSidMapping) {
+                } else if (isSidMapping) {
                     metadataProcessor.addMetric(FieldMetric.MAPPED_SID);
                 }
+                metadataProcessor.addMetadata(FieldMetadata.builder()
+                        .shortName(field.getName())
+                        .dataElementPath(field.getPath().substring(1).replace('/', '.')) // Skip leading slash and use dot as separator
+                        .dataElementPattern(match.getRule().getPattern())
+                        .encryptionKeyReference(funcDeclaration.getArgs().getOrDefault(KEY_REFERENCE, null))
+                        .encryptionAlgorithm(match.getFunc().getAlgorithm())
+                        .stableIdentifierVersion(sidSnapshotDate)
+                        .stableIdentifierType(isSidMapping)
+                        .encryptionAlgorithmParameters(funcDeclaration.getArgs())
+                        .build());
                 return mappedValue;
 
             } else if (operation == DEPSEUDONYMIZE) {
