@@ -115,8 +115,8 @@ public class RecordMapProcessorFactory {
         try {
             PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
 
-            // Due to FPE limitations, we can not pseudonymize values shorter than 2 characters
-            if (varValue.length() <= 2 && (
+            // FPE requires minimum two bytes/chars to perform encryption and minimum four bytes in case of Unicode.
+            if (varValue.length() <= 4 && (
                     match.getFunc() instanceof FpeFunc ||
                             match.getFunc() instanceof TinkFpeFunc ||
                             funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID) ||
