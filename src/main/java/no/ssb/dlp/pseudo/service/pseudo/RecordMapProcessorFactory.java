@@ -116,7 +116,7 @@ public class RecordMapProcessorFactory {
             PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
 
             // FPE requires minimum two bytes/chars to perform encryption and minimum four bytes in case of Unicode.
-            if (varValue.length() <= 4 && (
+            if (varValue.length() < 4 && (
                     match.getFunc() instanceof FpeFunc ||
                             match.getFunc() instanceof TinkFpeFunc ||
                             funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID) ||
