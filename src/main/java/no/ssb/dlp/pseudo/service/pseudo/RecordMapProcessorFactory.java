@@ -9,7 +9,6 @@ import no.ssb.dapla.dlp.pseudo.func.TransformDirection;
 import no.ssb.dapla.dlp.pseudo.func.fpe.FpeFunc;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFunc;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
-import no.ssb.dapla.dlp.pseudo.func.map.MappingNotFoundException;
 import no.ssb.dapla.dlp.pseudo.func.tink.fpe.TinkFpeFunc;
 import no.ssb.dlp.pseudo.core.PseudoException;
 import no.ssb.dlp.pseudo.core.PseudoKeyset;
@@ -33,6 +32,7 @@ import java.util.List;
 import static no.ssb.dlp.pseudo.core.PseudoOperation.DEPSEUDONYMIZE;
 import static no.ssb.dlp.pseudo.core.PseudoOperation.PSEUDONYMIZE;
 import static no.ssb.dlp.pseudo.core.func.PseudoFuncDeclaration.*;
+import static no.ssb.dlp.pseudo.service.sid.SidMapper.*;
 
 @RequiredArgsConstructor
 @Singleton
@@ -112,13 +112,20 @@ public class RecordMapProcessorFactory {
             }
             return varValue;
         }
-        // Due to FPE limitations, we can not pseudonymize values shorter than 2 characters
-        if (varValue.length() <= 2 && (match.getFunc() instanceof FpeFunc || match.getFunc() instanceof TinkFpeFunc)) {
-            metadataProcessor.addMetric(FieldMetric.FPE_LIMITATION);
-            return varValue;
-        }
         try {
             PseudoFuncDeclaration funcDeclaration = PseudoFuncDeclaration.fromString(match.getRule().getFunc());
+
+            // Due to FPE limitations, we can not pseudonymize values shorter than 2 characters
+            if (varValue.length() <= 2 && (
+                    match.getFunc() instanceof FpeFunc ||
+                            match.getFunc() instanceof TinkFpeFunc ||
+                            funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID) ||
+                            funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID_FF31)
+            )) {
+                metadataProcessor.addMetric(FieldMetric.FPE_LIMITATION);
+                return varValue;
+            }
+
             final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID)
                     || funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID_FF31)
                     || funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID_DAEAD);
@@ -127,9 +134,10 @@ public class RecordMapProcessorFactory {
                 PseudoFuncOutput output = match.getFunc().apply(PseudoFuncInput.of(varValue));
                 output.getWarnings().forEach(metadataProcessor::addLog);
                 final String sidSnapshotDate = output.getMetadata().getOrDefault(MapFuncConfig.Param.SNAPSHOT_DATE, null);
+                final String mapFailureMetadata = output.getMetadata().getOrDefault(MAP_FAILURE_METADATA, null);
                 final String mappedValue = output.getValue();
-                if (isSidMapping && varValue.equals(mappedValue)) {
-                    // Unsuccessful SID-mapping
+                if (isSidMapping && mapFailureMetadata != null) {
+                    // There has been an unsuccessful SID-mapping
                     metadataProcessor.addMetric(FieldMetric.MISSING_SID);
                 } else {
                     metadataProcessor.addMetadata(FieldMetadata.builder()
@@ -152,10 +160,10 @@ public class RecordMapProcessorFactory {
                 PseudoFuncOutput output = match.getFunc().restore(PseudoFuncInput.of(varValue));
                 output.getWarnings().forEach(metadataProcessor::addLog);
                 final String mappedValue = output.getValue();
-                if (isSidMapping && varValue.equals(mappedValue)) {
-                    // Unsuccessful SID-mapping. Can not return original SNR, so return null
+                final String mapFailureMetadata = output.getMetadata().getOrDefault(MAP_FAILURE_METADATA, null);
+                if (isSidMapping && mapFailureMetadata != null) {
+                    // There has been an unsuccessful SID-mapping
                     metadataProcessor.addMetric(FieldMetric.MISSING_SID);
-                    return null;
                 } else if (isSidMapping) {
                     metadataProcessor.addMetric(FieldMetric.MAPPED_SID);
                 }
@@ -164,12 +172,6 @@ public class RecordMapProcessorFactory {
                 PseudoFuncOutput output = match.getFunc().restore(PseudoFuncInput.of(varValue));
                 return output.getValue();
             }
-        } catch (MappingNotFoundException e) {
-            // Unsuccessful SID-mapping
-            log.warn(e.getMessage());
-            metadataProcessor.addMetric(FieldMetric.MISSING_SID);
-            metadataProcessor.addLog(e.getMessage());
-            return null;
         } catch (Exception e) {
             throw new PseudoException(String.format("pseudonymize error - field='%s', originalValue='%s'",
                     field.getPath(), varValue), e);
