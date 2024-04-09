@@ -149,7 +149,7 @@ public class PseudoField {
             metadataProcessor.addMetric(FieldMetric.NULL_VALUE);
             return Optional.empty();
         } else {
-            return Optional.of(recordMapProcessor.process(Map.of(this.getName(), v)).get(this.getName()));
+            return Optional.ofNullable(recordMapProcessor.process(Map.of(this.getName(), v)).get(this.getName()));
         }
     }
 
