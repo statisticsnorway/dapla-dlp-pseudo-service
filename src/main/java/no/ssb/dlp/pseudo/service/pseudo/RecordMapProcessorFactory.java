@@ -7,6 +7,7 @@ import no.ssb.dapla.dlp.pseudo.func.PseudoFuncInput;
 import no.ssb.dapla.dlp.pseudo.func.PseudoFuncOutput;
 import no.ssb.dapla.dlp.pseudo.func.TransformDirection;
 import no.ssb.dapla.dlp.pseudo.func.fpe.FpeFunc;
+import no.ssb.dapla.dlp.pseudo.func.map.MapFailureStrategy;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFunc;
 import no.ssb.dapla.dlp.pseudo.func.map.MapFuncConfig;
 import no.ssb.dapla.dlp.pseudo.func.tink.fpe.TinkFpeFunc;
@@ -28,6 +29,8 @@ import no.ssb.dlp.pseudo.service.pseudo.metadata.PseudoMetadataProcessor;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static no.ssb.dlp.pseudo.core.PseudoOperation.DEPSEUDONYMIZE;
 import static no.ssb.dlp.pseudo.core.PseudoOperation.PSEUDONYMIZE;
@@ -123,7 +126,7 @@ public class RecordMapProcessorFactory {
                             funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID_FF31)
             )) {
                 metadataProcessor.addMetric(FieldMetric.FPE_LIMITATION);
-                return varValue;
+                return getMapFailureStrategy(funcDeclaration.getArgs()) == MapFailureStrategy.RETURN_ORIGINAL ? varValue : null;
             }
 
             final boolean isSidMapping = funcDeclaration.getFuncName().equals(PseudoFuncNames.MAP_SID)
@@ -182,6 +185,12 @@ public class RecordMapProcessorFactory {
         return encryptedKeysets.stream()
                 .map(e -> (PseudoKeyset) e)
                 .toList();
+    }
+
+    private MapFailureStrategy getMapFailureStrategy(Map<String, String> config) {
+        return Optional.ofNullable(
+                config.getOrDefault(MapFuncConfig.Param.MAP_FAILURE_STRATEGY, null)
+        ).map(String::valueOf).map(MapFailureStrategy::valueOf).orElse(MapFailureStrategy.RETURN_ORIGINAL);
     }
 
 }
