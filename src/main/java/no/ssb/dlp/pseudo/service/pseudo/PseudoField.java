@@ -39,21 +39,26 @@ public class PseudoField {
      * a default pseudo configuration is used.
      *
      * @param name       The name of the field.
+     * @param pattern    The pattern that matched the field.
      * @param pseudoFunc The pseudo function definition.
      * @param keyset     The encrypted keyset to be used for pseudonymization.
      */
-    public PseudoField(String name, String pseudoFunc, EncryptedKeysetWrapper keyset) {
+    public PseudoField(String name, String pattern, String pseudoFunc, EncryptedKeysetWrapper keyset) {
         this.name = name;
 
         pseudoConfig = new PseudoConfig();
 
+        // For backwards compatibility
+        if (pattern == null) {
+            pattern = "**";
+        }
         if (pseudoFunc == null) {
             pseudoFunc = DEFAULT_PSEUDO_FUNC;
         }
         if (keyset != null) {
             pseudoConfig.getKeysets().add(keyset);
         }
-        pseudoConfig.getRules().add(new PseudoFuncRule(name, "**", pseudoFunc));
+        pseudoConfig.getRules().add(new PseudoFuncRule(name, pattern, pseudoFunc));
     }
 
     /**

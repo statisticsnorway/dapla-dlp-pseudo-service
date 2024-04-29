@@ -38,7 +38,7 @@ class PseudoFieldTest {
 
     @Test
     void UsesDefaultPseudoConfigWhenNoKeysetIsSupplied() {
-        PseudoField pseudoField = new PseudoField(null, null, null);
+        PseudoField pseudoField = new PseudoField(null, "**", null, null);
         assertEquals(PseudoField.getDEFAULT_PSEUDO_FUNC(), pseudoField.getPseudoConfig().getRules().get(0).getFunc());
     }
 
@@ -46,7 +46,7 @@ class PseudoFieldTest {
     void usesCustomPseudoFuncWhenPseudoFuncIsSupplied() {
         int keySetPrimaryKey = 12345;
 
-        PseudoField pseudoSIDField = new PseudoField(null,  String.format("map-sid(keyId=%s)", keySetPrimaryKey), null);
+        PseudoField pseudoSIDField = new PseudoField(null, "**", String.format("map-sid(keyId=%s)", keySetPrimaryKey), null);
 
         assertEquals(String.format("map-sid(keyId=%s)", keySetPrimaryKey),
                 pseudoSIDField.getPseudoConfig().getRules().get(0).getFunc());
@@ -55,7 +55,7 @@ class PseudoFieldTest {
     @Test
     void setCustomKeysetWhenKeysetIsSupplied() {
         EncryptedKeysetWrapper encryptedKeysetWrapper = mock(EncryptedKeysetWrapper.class);
-        PseudoField pseudoField = new PseudoField(null, null, encryptedKeysetWrapper);
+        PseudoField pseudoField = new PseudoField(null, "**", null, encryptedKeysetWrapper);
 
         assertEquals(encryptedKeysetWrapper,
                 pseudoField.getPseudoConfig().getKeysets().get(0));
@@ -97,7 +97,7 @@ class PseudoFieldTest {
             return Collections.singletonMap("testField", "processedValue " + originalValue);
         });
 
-        PseudoField pseudoField = new PseudoField("testField", null, null);
+        PseudoField pseudoField = new PseudoField("testField", "**", null, null);
         List<String> values = Arrays.asList("v1", null, "v2");
 
         String want = """
@@ -153,7 +153,7 @@ class PseudoFieldTest {
         when(recordMapProcessor.hasPreprocessors()).thenReturn(true);
         when(recordMapProcessor.init(any())).thenReturn(Collections.singletonMap("testField", "initializedValue"));
 
-        PseudoField pseudoField = new PseudoField("testField", null, null);
+        PseudoField pseudoField = new PseudoField("testField", "**", null, null);
         List<String> values = Arrays.asList("v1", null, "v2");
 
         Completable result = pseudoField.getPreprocessor(values, recordMapProcessor);
