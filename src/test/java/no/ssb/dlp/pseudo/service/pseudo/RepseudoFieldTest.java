@@ -65,8 +65,8 @@ class RepseudoFieldTest {
             return Collections.singletonMap("testField", "processedValue " + originalValue);
         });
 
-        PseudoField sourcePseudoField = new PseudoField("testField", null, null);
-        PseudoField targetPseudoField = new PseudoField("testField", null, null);
+        PseudoField sourcePseudoField = new PseudoField("testField", "**", null, null);
+        PseudoField targetPseudoField = new PseudoField("testField", "**", null, null);
         List<String> values = Arrays.asList("v1", null, "v2");
 
         String want = """

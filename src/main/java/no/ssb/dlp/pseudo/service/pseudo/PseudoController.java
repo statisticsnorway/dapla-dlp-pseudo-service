@@ -79,7 +79,7 @@ public class PseudoController {
         try {
             PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
             log.info(Strings.padEnd(String.format("*** Pseudonymize field: %s ", req.getName()), 80, '*'));
-            PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
+            PseudoField pseudoField = new PseudoField(req.getName(), req.getPattern(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = MDC.get("CorrelationID");
 
@@ -109,7 +109,7 @@ public class PseudoController {
         try {
             DepseudoFieldRequest req = Json.toObject(DepseudoFieldRequest.class, request);
             log.info(Strings.padEnd(String.format("*** Depseudonymize field: %s ", req.getName()), 80, '*'));
-            PseudoField pseudoField = new PseudoField(req.getName(), req.getPseudoFunc(), req.getKeyset());
+            PseudoField pseudoField = new PseudoField(req.getName(), req.getPattern(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = MDC.get("CorrelationID");
 
@@ -139,8 +139,8 @@ public class PseudoController {
         try {
             RepseudoFieldRequest req = Json.toObject(RepseudoFieldRequest.class, request);
             log.info(Strings.padEnd(String.format("*** Repseudonymize field: %s ", req.getName()), 80, '*'));
-            PseudoField sourcePseudoField = new PseudoField(req.getName(), req.getSourcePseudoFunc(), req.getSourceKeyset());
-            PseudoField targetPseudoField = new PseudoField(req.getName(), req.getTargetPseudoFunc(), req.getTargetKeyset());
+            PseudoField sourcePseudoField = new PseudoField(req.getName(), req.getPattern(), req.getSourcePseudoFunc(), req.getSourceKeyset());
+            PseudoField targetPseudoField = new PseudoField(req.getName(), req.getPattern(), req.getTargetPseudoFunc(), req.getTargetKeyset());
 
             final String correlationId = MDC.get("CorrelationID");
             return HttpResponse.ok(
@@ -436,6 +436,7 @@ public class PseudoController {
         private String pseudoFunc;
         private EncryptedKeysetWrapper keyset;
         private String name;
+        private String pattern;
         private List<String> values;
     }
 
@@ -448,6 +449,7 @@ public class PseudoController {
         private String pseudoFunc;
         private EncryptedKeysetWrapper keyset;
         private String name;
+        private String pattern;
         private List<String> values;
     }
 
@@ -462,6 +464,7 @@ public class PseudoController {
         private EncryptedKeysetWrapper sourceKeyset;
         private EncryptedKeysetWrapper targetKeyset;
         private String name;
+        private String pattern;
         private List<String> values;
     }
 

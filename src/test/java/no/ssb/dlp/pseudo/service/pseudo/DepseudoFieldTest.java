@@ -68,7 +68,7 @@ class DepseudoFieldTest {
             return Collections.singletonMap("testField", "processedValue " + originalValue);
         });
 
-        PseudoField pseudoField = new PseudoField("testField", null, null);
+        PseudoField pseudoField = new PseudoField("testField", "**", null, null);
         List<String> values = Arrays.asList("v1", null, "v2");
 
         String want = """
