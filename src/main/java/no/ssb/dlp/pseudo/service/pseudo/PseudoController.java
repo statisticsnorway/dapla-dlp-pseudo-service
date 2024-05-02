@@ -76,10 +76,10 @@ public class PseudoController {
     public HttpResponse<Flowable<byte[]>> pseudonymizeField(
             @Schema(implementation = PseudoFieldRequest.class) String request
     ) {
+        PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
+        log.info(Strings.padEnd(String.format("*** Pseudonymize field: %s ", req.getName()), 80, '*'));
+        PseudoField pseudoField = new PseudoField(req.getName(), req.getPattern(), req.getPseudoFunc(), req.getKeyset());
         try {
-            PseudoFieldRequest req = Json.toObject(PseudoFieldRequest.class, request);
-            log.info(Strings.padEnd(String.format("*** Pseudonymize field: %s ", req.getName()), 80, '*'));
-            PseudoField pseudoField = new PseudoField(req.getName(), req.getPattern(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = MDC.get("CorrelationID");
 
@@ -106,10 +106,10 @@ public class PseudoController {
     public HttpResponse<Flowable<byte[]>> depseudonymizeField(
             @Schema(implementation = DepseudoFieldRequest.class) String request
     ) {
+        DepseudoFieldRequest req = Json.toObject(DepseudoFieldRequest.class, request);
+        log.info(Strings.padEnd(String.format("*** Depseudonymize field: %s ", req.getName()), 80, '*'));
+        PseudoField pseudoField = new PseudoField(req.getName(), req.getPattern(), req.getPseudoFunc(), req.getKeyset());
         try {
-            DepseudoFieldRequest req = Json.toObject(DepseudoFieldRequest.class, request);
-            log.info(Strings.padEnd(String.format("*** Depseudonymize field: %s ", req.getName()), 80, '*'));
-            PseudoField pseudoField = new PseudoField(req.getName(), req.getPattern(), req.getPseudoFunc(), req.getKeyset());
 
             final String correlationId = MDC.get("CorrelationID");
 
@@ -136,11 +136,11 @@ public class PseudoController {
     public HttpResponse<Flowable<byte[]>> repseudonymizeField(
             @Schema(implementation = RepseudoFieldRequest.class) String request
     ) {
+        RepseudoFieldRequest req = Json.toObject(RepseudoFieldRequest.class, request);
+        log.info(Strings.padEnd(String.format("*** Repseudonymize field: %s ", req.getName()), 80, '*'));
+        PseudoField sourcePseudoField = new PseudoField(req.getName(), req.getPattern(), req.getSourcePseudoFunc(), req.getSourceKeyset());
+        PseudoField targetPseudoField = new PseudoField(req.getName(), req.getPattern(), req.getTargetPseudoFunc(), req.getTargetKeyset());
         try {
-            RepseudoFieldRequest req = Json.toObject(RepseudoFieldRequest.class, request);
-            log.info(Strings.padEnd(String.format("*** Repseudonymize field: %s ", req.getName()), 80, '*'));
-            PseudoField sourcePseudoField = new PseudoField(req.getName(), req.getPattern(), req.getSourcePseudoFunc(), req.getSourceKeyset());
-            PseudoField targetPseudoField = new PseudoField(req.getName(), req.getPattern(), req.getTargetPseudoFunc(), req.getTargetKeyset());
 
             final String correlationId = MDC.get("CorrelationID");
             return HttpResponse.ok(

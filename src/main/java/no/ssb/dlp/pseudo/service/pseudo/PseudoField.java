@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import no.ssb.dlp.pseudo.core.PseudoOperation;
+import no.ssb.dlp.pseudo.core.field.FieldDescriptor;
 import no.ssb.dlp.pseudo.core.func.PseudoFuncRule;
 import no.ssb.dlp.pseudo.core.map.RecordMapProcessor;
 import no.ssb.dlp.pseudo.core.tink.model.EncryptedKeysetWrapper;
@@ -57,6 +58,11 @@ public class PseudoField {
         }
         if (keyset != null) {
             pseudoConfig.getKeysets().add(keyset);
+        }
+        final boolean validPattern = new FieldDescriptor(name).globMatches(pattern);
+        if (!validPattern) {
+            throw new IllegalArgumentException(String.format("The pattern '%s' will not match the field name '%s'. " +
+                    "Are you sure you didn't mean to use '/%s'?", pattern, name, pattern));
         }
         pseudoConfig.getRules().add(new PseudoFuncRule(name, pattern, pseudoFunc));
     }
