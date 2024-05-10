@@ -147,7 +147,7 @@ public class RecordMapProcessorFactory {
                 }
                 metadataProcessor.addMetadata(FieldMetadata.builder()
                         .shortName(field.getName())
-                        .dataElementPath(field.getPath().substring(1).replace('/', '.')) // Skip leading slash and use dot as separator
+                        .dataElementPath(normalizePath(field.getPath())) // Skip leading slash and use dot as separator
                         .dataElementPattern(match.getRule().getPattern())
                         .encryptionKeyReference(funcDeclaration.getArgs().getOrDefault(KEY_REFERENCE, null))
                         .encryptionAlgorithm(match.getFunc().getAlgorithm())
@@ -179,6 +179,13 @@ public class RecordMapProcessorFactory {
         }
     }
 
+    private static String normalizePath(String path) {
+        // Normalize the path by skipping leading '/' and use dot as separator
+        return path.substring(1).replace('/', '.')
+               // Also replace the [] separator in nested structs
+               .replaceAll("\\[\\d*]", "");
+    }
+
 
     // TODO: This should not be needed
     protected static List<PseudoKeyset> pseudoKeysetsOf(List<EncryptedKeysetWrapper> encryptedKeysets) {
@@ -193,4 +200,8 @@ public class RecordMapProcessorFactory {
         ).map(String::valueOf).map(MapFailureStrategy::valueOf).orElse(MapFailureStrategy.RETURN_ORIGINAL);
     }
 
+
+    public static void main(String[] args) {
+        System.out.println(RecordMapProcessorFactory.normalizePath("/test[0]/path[]/too"));
+    }
 }
