@@ -199,9 +199,4 @@ public class RecordMapProcessorFactory {
                 config.getOrDefault(MapFuncConfig.Param.MAP_FAILURE_STRATEGY, null)
         ).map(String::valueOf).map(MapFailureStrategy::valueOf).orElse(MapFailureStrategy.RETURN_ORIGINAL);
     }
-
-
-    public static void main(String[] args) {
-        System.out.println(RecordMapProcessorFactory.normalizePath("/test[0]/path[]/too"));
-    }
 }
