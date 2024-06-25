@@ -167,7 +167,7 @@ class PseudoFieldTest {
     }
 
     @Test
-    void patternWithIndices() {
+    void nameWithIndices() {
         setUpProcessorMocks();
 
         when(recordMapProcessor.hasPreprocessors()).thenReturn(true);
