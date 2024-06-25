@@ -166,4 +166,21 @@ class PseudoFieldTest {
         verify(recordMapProcessor, times(2)).init(any());
     }
 
+    @Test
+    void nameWithIndices() {
+        setUpProcessorMocks();
+
+        when(recordMapProcessor.hasPreprocessors()).thenReturn(true);
+        when(recordMapProcessor.init(any())).thenReturn(Collections.singletonMap("testField", "initializedValue"));
+
+        PseudoField pseudoField = new PseudoField("path[9]/thing", "**/path/thing", null, null);
+        List<String> values = Arrays.asList("v1", null, "v2");
+
+        Completable result = pseudoField.getPreprocessor(values, recordMapProcessor);
+
+        TestObserver<Void> testObserver = result.test();
+        testObserver.assertComplete();
+        testObserver.assertNoErrors();
+    }
+
 }

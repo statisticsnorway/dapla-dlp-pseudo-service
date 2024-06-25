@@ -59,10 +59,15 @@ public class PseudoField {
         if (keyset != null) {
             pseudoConfig.getKeysets().add(keyset);
         }
-        final boolean validPattern = new FieldDescriptor(name).globMatches(pattern);
-        if (!validPattern) {
-            throw new IllegalArgumentException(String.format("The pattern '%s' will not match the field name '%s'. " +
-                    "Are you sure you didn't mean to use '/%s'?", pattern, name, pattern));
+
+        if (name != null) {
+            // Regex replace such that "path[9]/thing" -> "path/thing"
+            String nameNoIndices = name.replaceAll("\\[.*?]", "");
+            final boolean validPattern = new FieldDescriptor(nameNoIndices).globMatches(pattern);
+            if (!validPattern) {
+                throw new IllegalArgumentException(String.format("The pattern '%s' will not match the field name '%s'. " +
+                        "Are you sure you didn't mean to use '/%s'?", pattern, name, pattern));
+            }
         }
         pseudoConfig.getRules().add(new PseudoFuncRule(name, pattern, pseudoFunc));
     }
