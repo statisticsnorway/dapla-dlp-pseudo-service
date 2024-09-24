@@ -72,7 +72,7 @@ public class PseudoController {
     @Operation(summary = "Pseudonymize field", description = "Pseudonymize a field.")
     @Produces(MediaType.APPLICATION_JSON)
     @Post(value = "/pseudonymize/field", consumes = MediaType.APPLICATION_JSON)
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     public HttpResponse<Flowable<byte[]>> pseudonymizeField(
             @Schema(implementation = PseudoFieldRequest.class) String request
     ) {
