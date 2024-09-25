@@ -102,7 +102,7 @@ public class PseudoController {
     @Produces(MediaType.APPLICATION_JSON)
     @Secured({PseudoServiceRole.ADMIN})
     @Post(value = "/depseudonymize/field", consumes = MediaType.APPLICATION_JSON)
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     public HttpResponse<Flowable<byte[]>> depseudonymizeField(
             @Schema(implementation = DepseudoFieldRequest.class) String request
     ) {
@@ -132,7 +132,7 @@ public class PseudoController {
     @Produces(MediaType.APPLICATION_JSON)
     @Secured({PseudoServiceRole.ADMIN})
     @Post(value = "/repseudonymize/field", consumes = MediaType.APPLICATION_JSON)
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     public HttpResponse<Flowable<byte[]>> repseudonymizeField(
             @Schema(implementation = RepseudoFieldRequest.class) String request
     ) {
@@ -178,7 +178,7 @@ public class PseudoController {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(value = MediaType.APPLICATION_JSON)
     @SingleResult
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     public HttpResponse<Flowable<byte[]>> pseudonymizeFile(
             @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data
     ) {
@@ -229,7 +229,7 @@ public class PseudoController {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Secured({PseudoServiceRole.ADMIN})
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     public HttpResponse<Flowable<byte[]>> depseudonymizeFile(
             @Schema(implementation = PseudoRequest.class) String request, StreamingFileUpload data, Principal principal
     ) {
@@ -281,7 +281,7 @@ public class PseudoController {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     @Secured({PseudoServiceRole.ADMIN})
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     public HttpResponse<Flowable<byte[]>> repseudonymizeFile(
             @Schema(implementation = RepseudoRequest.class) String request, StreamingFileUpload data, Principal principal) {
         log.info(Strings.padEnd(String.format("*** Repseudonymize file: %s", data.getFilename()), 80, '*'));

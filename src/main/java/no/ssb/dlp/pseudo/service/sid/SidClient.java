@@ -13,15 +13,15 @@ import org.reactivestreams.Publisher;
 public interface SidClient {
 
     @Post("/sid/map")
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     Publisher<SidInfo> lookup(@Body SidRequest sidRequest);
 
     @Post("/sid/map/batch")
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     Publisher<MultiSidResponse> lookup(@Body MultiSidRequest multiSidRequest);
 
     @Get("/sid/snapshots")
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     Publisher<SnapshotInfo> snapshots();
 
 }

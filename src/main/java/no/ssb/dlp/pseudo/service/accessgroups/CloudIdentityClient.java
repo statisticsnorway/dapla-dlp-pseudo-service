@@ -19,7 +19,7 @@ public interface CloudIdentityClient {
      * @return a {@link Publisher} of {@link LookupResponse}
      */
     @Get( "/groups:lookup?groupKey.id={groupKeyId}")
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     Publisher<LookupResponse> lookup(String groupKeyId);
 
     /**
@@ -31,6 +31,6 @@ public interface CloudIdentityClient {
      * @return a {@link Publisher} of {@link MembershipResponse}
      */
     @Get( "/groups/{groupId}/memberships?pageToken={pageToken}")
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     Publisher<MembershipResponse> listMembers(String groupId, @Nullable String pageToken);
 }

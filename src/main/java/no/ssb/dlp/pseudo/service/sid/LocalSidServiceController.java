@@ -26,7 +26,7 @@ public class LocalSidServiceController {
     private final SidService sidService;
 
     @Secured({PseudoServiceRole.ADMIN})
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     @Post("/sid/map")
     public Publisher<SidInfo> lookup(@Body SidRequest sidRequest) {
         if (sidRequest.fnr() != null) {
