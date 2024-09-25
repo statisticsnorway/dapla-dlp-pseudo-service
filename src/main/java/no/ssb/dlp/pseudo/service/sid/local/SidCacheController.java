@@ -41,7 +41,7 @@ public class SidCacheController {
     }
 
     @Secured({PseudoServiceRole.ADMIN})
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     @Post("/reload")
     public HttpResponse<String> reloadSidCache() {
         sidCacheLoader.loadSidData(null);

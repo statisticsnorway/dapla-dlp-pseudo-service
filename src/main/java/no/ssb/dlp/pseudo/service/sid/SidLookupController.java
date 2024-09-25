@@ -36,14 +36,14 @@ public class SidLookupController {
     @Operation(summary = "Look up missing FNRs", description = "Look FNRs that are not in the SID catalog")
     @Parameter(name = "snapshot", in = ParameterIn.QUERY, description = "Snapshot date of the SID catalog version")
     @Produces(MediaType.APPLICATION_JSON)
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     @Secured({PseudoServiceRole.USER, PseudoServiceRole.ADMIN})
     @Post("/lookup/batch")
     public Publisher<MultiSidLookupResponse> lookupMissing(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
         return sidService.lookupMissing(req.fnrList(), snapshot);
     }
 
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     @Post("/map/batch")
     public Publisher<Map<String, SidInfo>> lookupFnrs(@QueryValue Optional<String> snapshot, @Body MultiSidRequest req) {
         return CollectionUtils.isNotEmpty(req.fnrList())
@@ -51,13 +51,13 @@ public class SidLookupController {
                 : sidService.lookupSnr(req.snrList(), snapshot);
     }
 
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     @Get("/fnr/{fnr}")
     public Publisher<SidInfo> lookupFnr(@PathVariable String fnr, @QueryValue Optional<String> snapshot) {
         return sidService.lookupFnr(fnr, snapshot);
     }
 
-    @ExecuteOn(TaskExecutors.IO)
+    @ExecuteOn(TaskExecutors.BLOCKING)
     @Get("/snr/{snr}")
     public Publisher<SidInfo> lookupSnr(@PathVariable String snr, @QueryValue Optional<String> snapshot) {
         return sidService.lookupSnr(snr, snapshot);
