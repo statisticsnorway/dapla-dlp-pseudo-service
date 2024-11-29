@@ -1,0 +1,84 @@
+name: Deploy to NAIS
+
+on:
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: Registry, for example "europe-north1-docker.pkg.dev"
+        required: true
+        type: string
+      repository:
+        description: Registry repository
+        required: true
+        type: string
+      image-name:
+        description: Image name
+        required: true
+        type: string
+      image-tag:
+        description: Tag for the image
+        required: true
+        type: string
+      cluster:
+        description: NAIS cluster environment
+        required: true
+        type: string
+      nais-config-path:
+        description: Path to the NAIS configuration file
+        required: true
+        type: string
+      ref:
+        description: Commit reference of the deployment
+        required: false
+        default: master
+        type: string
+
+  workflow_call:
+    inputs:
+      registry:
+        description: Registry, for example "europe-north1-docker.pkg.dev"
+        required: true
+        type: string
+      repository:
+        description: Registry repository
+        required: true
+        type: string
+      image-name:
+        description: Image name
+        required: true
+        type: string
+      image-tag:
+        description: Tag for the image
+        required: true
+        type: string
+      cluster:
+        description: NAIS cluster environment
+        required: true
+        type: string
+      nais-config-path:
+        description: Path to the NAIS configuration file
+        required: true
+        type: string
+      ref:
+        description: Commit reference of the deployment
+        required: false
+        default: master
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy to NAIS cluster
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: ${{ inputs.cluster }}
+          RESOURCE: ${{ inputs.nais-config-path }}
+          VAR: image=${{ inputs.registry }}/${{ secrets.NAIS_MANAGEMENT_PROJECT_ID }}/${{ inputs.repository }}/${{ inputs.image-name }}:${{ inputs.image-tag }}
+          DEPLOY_SERVER: deploy.ssb.cloud.nais.io:443
+          REF: ${{ inputs.ref }}

@@ -1,0 +1,17 @@
+{
+  "template": "https://github.com/statisticsnorway/cookiecutter-maven-build-deploy",
+  "commit": "fa739ee448b267b18bae8fe8a8e980cd9bd301fb",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "repo_name": "dapla-dlp-pseudo-service",
+      "team_uniform_name": "dapla-stat",
+      "program_type": "APPLICATION",
+      "java_version": "21",
+      "default_branch_name": "master",
+      "__gha_folder_name": ".github",
+      "_template": "https://github.com/statisticsnorway/cookiecutter-maven-build-deploy"
+    }
+  },
+  "directory": null
+}
