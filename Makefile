@@ -14,7 +14,7 @@ build-mvn: ## Build project and install to you local maven repo
 
 .PHONY: build-docker
 build-docker: ## Build dev docker image
-	docker build -t dapla-dlp-pseudo-service:dev -f Dockerfile .
+	docker build -t pseudo-service:dev -f Dockerfile .
 
 .PHONY: init-local-config
 init-local-config: ## Initialize the private folder to hold your local offline untracked configuration
@@ -28,7 +28,7 @@ validate-local-config: ## Validate and echo local app config
 
 .PHONY: run-local
 run-local: validate-local-config
-	java ${JAVA_OPTS} --enable-preview -Dmicronaut.config.files=conf/application-local.yml  -Dmicronaut.environments=local,local-sid -jar target/dapla-dlp-pseudo-service-*-SNAPSHOT.jar
+	java ${JAVA_OPTS} --enable-preview -Dmicronaut.config.files=conf/application-local.yml  -Dmicronaut.environments=local,local-sid -jar target/pseudo-service-*-SNAPSHOT.jar
 
 .PHONY: release-dryrun
 release-dryrun: ## Simulate a release in order to detect any issues
