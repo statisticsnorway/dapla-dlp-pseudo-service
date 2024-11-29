@@ -486,19 +486,6 @@
                 </execution>
               </executions>
             </plugin>
-            <plugin>
-              <groupId>org.cyclonedx</groupId>
-              <artifactId>cyclonedx-maven-plugin</artifactId>
-              <version>${cyclonedx-maven-plugin.version}</version>
-              <executions>
-                <execution>
-                  <phase>package</phase>
-                  <goals>
-                    <goal>makeAggregateBom</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -592,6 +579,19 @@
             <phase>process-classes</phase>
             <goals>
               <goal>inject</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <version>${cyclonedx-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>makeAggregateBom</goal>
             </goals>
           </execution>
         </executions>
