@@ -4,7 +4,7 @@
   <groupId>no.ssb.dapla.dlp.pseudo</groupId>
   <artifactId>dapla-dlp-pseudo-service</artifactId>
   <version>3.1.11-SNAPSHOT</version>
-  <name>dapla-dlp-pseudo-service</name>
+  <name>pseudo-service</name>
 
   <parent>
     <groupId>io.micronaut.platform</groupId>
@@ -18,7 +18,7 @@
     <maven.compiler.source>${jdk.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <artifact-registry.url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-5n/dapla-pseudo-maven</artifact-registry.url>
+    <dapla-artifact-registry.url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-5n/dapla-pseudo-maven</dapla-artifact-registry.url>
     <github.repository>statisticsnorway/dapla-dlp-pseudo-service</github.repository>
     <exec.mainClass>no.ssb.dlp.pseudo.service.Application</exec.mainClass>
     <dapla-datadoc-model.version>1.2</dapla-datadoc-model.version>
@@ -39,6 +39,7 @@
     <maven-failsafe-plugin.version>3.2.2</maven-failsafe-plugin.version>
     <lombok.version>1.18.30</lombok.version>
     <mockito.version>5.7.0</mockito.version>
+    <cyclonedx-maven-plugin.version>2.8.1</cyclonedx-maven-plugin.version>
   </properties>
 
   <scm>
@@ -53,8 +54,8 @@
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
     <repository>
-      <id>artifact-registry</id>
-      <url>${artifact-registry.url}</url>
+      <id>dapla-artifact-registry</id>
+      <url>${dapla-artifact-registry.url}</url>
       <releases>
         <enabled>true</enabled>
         <updatePolicy>always</updatePolicy>
@@ -485,6 +486,19 @@
                 </execution>
               </executions>
             </plugin>
+            <plugin>
+              <groupId>org.cyclonedx</groupId>
+              <artifactId>cyclonedx-maven-plugin</artifactId>
+              <version>${cyclonedx-maven-plugin.version}</version>
+              <executions>
+                <execution>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>makeAggregateBom</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -595,25 +609,31 @@
 
   <profiles>
     <profile>
-      <id>ssb-bip</id>
+      <id>github</id>
       <distributionManagement>
         <repository>
-          <id>artifact-registry</id>
-          <url>${artifact-registry.url}</url>
+          <id>github</id>
+          <name>GitHub Packages</name>
+          <url>https://maven.pkg.github.com/${github.repository}</url>
         </repository>
-        <snapshotRepository>
-          <id>artifact-registry-snapshots</id>
-          <url>${artifact-registry.url}</url>
-        </snapshotRepository>
       </distributionManagement>
     </profile>
+    <profile>
+      <id>dapla-artifact-registry</id>
+      <distributionManagement>
+        <repository>
+          <id>dapla-artifact-registry</id>
+          <url>${dapla-artifact-registry.url}</url>
+        </repository>
+        <snapshotRepository>
+          <id>dapla-artifact-registry-snapshots</id>
+          <url>${dapla-artifact-registry.url}</url>
+        </snapshotRepository>
+      </distributionManagement>
+      <properties>
+        <skip.it>true</skip.it>
+      </properties>
+    </profile>
   </profiles>
-  <distributionManagement>
-    <repository>
-      <id>github</id>
-      <name>GitHub Packages</name>
-      <url>https://maven.pkg.github.com/${github.repository}</url>
-    </repository>
-  </distributionManagement>
 
 </project>
