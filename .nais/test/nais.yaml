@@ -41,7 +41,7 @@ spec:
 
   env:
     - name: MICRONAUT_CONFIG_FILES
-      value: /conf/bootstrap-test.yaml,/conf/application-test.yaml
+      value: /conf/bootstrap-test.yml,/conf/application-test.yml
     - name: LOGBACK_CONFIGURATION_FILE
       value: /conf/logback-test.xml
 
