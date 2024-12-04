@@ -1,6 +1,8 @@
 on:
   release:
     types: [ published ]
+  pull_request: ## ONLY FOR TESTING, SHOULD BE REMOVED AFTER DEPLOY PR IS MERGED
+    branches: [nais-deploy]
   push:
     branches:
       - master
@@ -52,10 +54,10 @@ jobs:
 
       - name: Maven build and install
         run: |
-          if [[ ${{github.event_name}} == "push" ]]; then
-            mvn --batch-mode -P dapla-artifact-registry deploy
-          else
+          if [[ ${{github.event_name}} == "release" ]]; then
             mvn --batch-mode clean package
+          else
+            mvn --batch-mode -P dapla-artifact-registry deploy
           fi
       
       - name: Add optional extra tag
