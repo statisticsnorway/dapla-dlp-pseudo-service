@@ -24,6 +24,7 @@ spec:
   accessPolicy:
     outbound:
       external:
+        - host: "auth.test.ssb.no"
         - host: "cloudkms.googleapis.com"
         - host: "secretmanager.googleapis.com"
         - host: "www.googleapis.com"
