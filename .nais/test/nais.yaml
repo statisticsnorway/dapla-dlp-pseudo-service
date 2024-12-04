@@ -203,6 +203,7 @@ data:
       # When using isAuthenticated() the JWT token must be signed by this trusted-issuer
       trusted-issuers:
         - https://keycloak.staging-bip-app.ssb.no/auth/realms/ssb
+        - https://auth.test.ssb.no/realms/ssb
       users:
         - isAuthenticated()
       admins:
