@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="pseudo-service-local-gcp" type="MicronautRunConfigurationType" factoryName="Micronaut">
-    <module name="dapla-dlp-pseudo-service" />
+    <module name="pseudo-service" />
     <option name="alternativeJrePath" />
     <option name="alternativeJrePathEnabled" value="false" />
     <option name="includeProvidedScope" value="true" />

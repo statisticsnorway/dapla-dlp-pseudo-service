@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>no.ssb.dapla.dlp.pseudo</groupId>
-  <artifactId>dapla-dlp-pseudo-service</artifactId>
+  <artifactId>pseudo-service</artifactId>
   <version>3.1.11-SNAPSHOT</version>
   <name>pseudo-service</name>
 
@@ -19,7 +19,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <dapla-artifact-registry.url>artifactregistry://europe-north1-maven.pkg.dev/artifact-registry-5n/dapla-pseudo-maven</dapla-artifact-registry.url>
-    <github.repository>statisticsnorway/dapla-dlp-pseudo-service</github.repository>
+    <github.repository>statisticsnorway/pseudo-service</github.repository>
     <exec.mainClass>no.ssb.dlp.pseudo.service.Application</exec.mainClass>
     <dapla-datadoc-model.version>1.2</dapla-datadoc-model.version>
 

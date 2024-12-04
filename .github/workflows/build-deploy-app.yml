@@ -2,8 +2,12 @@ on:
   release:
     types: [ published ]
   pull_request: ## ONLY FOR TESTING, SHOULD BE REMOVED AFTER DEPLOY PR IS MERGED
+<<<<<<< HEAD
     branches: 
       - master
+=======
+    branches: [nais-deploy]
+>>>>>>> master
   push:
     branches:
       - master
