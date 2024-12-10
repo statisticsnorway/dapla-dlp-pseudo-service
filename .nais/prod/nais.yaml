@@ -205,7 +205,6 @@ data:
         - https://keycloak.prod-bip-app.ssb.no/auth/realms/ssb
         - https://auth.ssb.no/realms/ssb
       users: ${PSEUDO_USERS}
-      # admins:
-      #  - isAuthenticated()
+      # admins: ${PSEUDO_ADMINS}
       users-group: pseudo-service-user-p@ssb.no
       admins-group: pseudo-service-admin-p@ssb.no
