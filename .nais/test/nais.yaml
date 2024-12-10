@@ -20,6 +20,7 @@ spec:
 
   ingresses:
     - https://pseudo-service.intern.test.ssb.no
+    - https://pseudo-service.test.ssb.no
 
   accessPolicy:
     outbound:

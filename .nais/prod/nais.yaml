@@ -18,6 +18,9 @@ spec:
     limits:
       memory: 12Gi
 
+  ingresses:
+    - https://pseudo-service.intern.test.ssb.no
+
   accessPolicy:
     outbound:
       external:
