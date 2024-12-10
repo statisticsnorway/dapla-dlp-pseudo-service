@@ -46,6 +46,7 @@ spec:
 
   envFrom:
     - secret: pseudo-key-config
+    - secret: pseudo-elevated-users
 
   filesFrom:
     - configmap: pseudo-application-prod-configmap
@@ -203,9 +204,8 @@ data:
       trusted-issuers:
         - https://keycloak.prod-bip-app.ssb.no/auth/realms/ssb
         - https://auth.ssb.no/realms/ssb
-      users:
-        - isAuthenticated()
-      admins:
-        - isAuthenticated()
+      users: ${PSEUDO_USERS}
+      # admins:
+      #  - isAuthenticated()
       users-group: pseudo-service-user-p@ssb.no
       admins-group: pseudo-service-admin-p@ssb.no
