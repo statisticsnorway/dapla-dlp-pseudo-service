@@ -16,7 +16,7 @@ spec:
       cpu: 100m
       memory: 2Gi
     limits:
-      memory: 12Gi
+      memory: 6Gi
 
   ingresses:
     - https://pseudo-service.intern.test.ssb.no
