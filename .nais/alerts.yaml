@@ -35,9 +35,9 @@ spec:
             namespace: dapla-stat
             severity: warning
 
-        # This alert checks if memory usage exceeds 90% of the 12GB limit, which could cause instability.
+        # This alert checks if memory usage exceeds 90% of the memory limit assigned to the pseudo-service pod.
         - alert: HighMemoryUsage
-          expr: process_resident_memory_bytes{app="pseudo-service"} > (0.9 * 12 * 1024 * 1024 * 1024)
+          expr: process_resident_memory_bytes{app="pseudo-service"} > (0.9 * on(pod, namespace) group_left kube_pod_container_resource_limits_memory_bytes{pod=~"pseudo-service.*"})
           for: 5m
           annotations:
             title: "High memory usage detected"
