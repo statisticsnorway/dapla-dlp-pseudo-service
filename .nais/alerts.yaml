@@ -37,7 +37,7 @@ spec:
 
         # This alert checks if memory usage exceeds 90% of the memory limit assigned to the pseudo-service pod.
         - alert: HighMemoryUsage
-          expr: process_resident_memory_bytes{app="pseudo-service"} > (0.9 * on(pod, namespace) group_left kube_pod_container_resource_limits_memory_bytes{pod=~"pseudo-service.*"})
+          expr: process_resident_memory_bytes{app="pseudo-service"} > (0.9 * on(app) group_left(container_memory_limit_bytes) container_memory_limit_bytes{app="pseudo-service"})
           for: 5m
           annotations:
             title: "High memory usage detected"
