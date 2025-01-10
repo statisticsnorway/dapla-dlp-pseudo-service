@@ -1,0 +1,40 @@
+name: Deploy alerts
+run-name: Deploy alerts for pseudo-service to dev and prod
+
+on:
+  push:
+    branches:
+      - master
+      - nais-deploy
+    paths:
+      - '.nais/alerts.yaml'
+      - '.github/workflows/alert-deploy.yml'
+permissions:
+  id-token: write
+
+jobs:
+  test-deploy:
+    name: Deploy alerts to test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Deploy to test
+        uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: test
+          RESOURCE: .nais/alerts.yaml
+          DEPLOY_SERVER: deploy.ssb.cloud.nais.io:443
+
+  prod-deploy:
+    name: Deploy alerts to prod
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Deploy to prod
+        uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: prod
+          RESOURCE: .nais/alerts.yaml
+          DEPLOY_SERVER: deploy.ssb.cloud.nais.io:443
