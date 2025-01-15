@@ -8,9 +8,6 @@ metadata:
 spec:
   image: "{{ image }}"  # Injected from the GitHub Action
   port: 10210
-  service:
-    port: 10210
-    protocol: http
   replicas:
     max: 5
     min: 1
