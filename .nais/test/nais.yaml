@@ -31,7 +31,7 @@ spec:
         - host: "secretmanager.googleapis.com"
         - host: "www.googleapis.com"
         - host: "cloudidentity.googleapis.com"
-        - host: pseudo-service.dapla-stat.svc.cluster.local
+        - host: reg-freg-t-sid-lookup-service.staging-internal.ssb.no
           ports:
           - port: 443
 
