@@ -105,7 +105,7 @@ data:
 
         services:
           sid-service:
-            url: 'http://reg-freg-t-sid-lookup-service.freg.svc.cluster.local'
+            url: 'http://reg-freg-t-sid-lookup-service.staging-internal.ssb.no'
             path: '/v2'
             read-timeout: 60s
             pool:
