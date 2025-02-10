@@ -1,16 +1,16 @@
 name: Deploy alerts
-run-name: Deploy alerts for Maskinporten Guardian to test and prod
+run-name: Deploy alerts for Pseudo Service to test and prod
 
 on:
   pull_request: ## ONLY FOR TESTING, SHOULD BE REMOVED AFTER DEPLOY PR IS MERGED
-    branches: 
+    branches:
       - master
   push:
     branches:
       - master
     paths:
-      - '.nais/alerts.yaml'
-      - '.github/workflows/alert-deploy.yml'
+      - ".nais/alerts.yaml"
+      - ".github/workflows/alert-deploy.yml"
   workflow_dispatch:
 permissions:
   id-token: write
@@ -37,15 +37,16 @@ jobs:
         env:
           CLUSTER: test
           RESOURCE: .nais/alerts.yaml,ext_alertconfig/alertconfig.yaml
+          VAR: cluster="test"
           DEPLOY_SERVER: deploy.ssb.cloud.nais.io:443
-  
+
   prod-deploy:
     name: Deploy alerts to prod
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - uses: actions/checkout@v4
         name: Retrieve AlertManager configuration
         with:
@@ -54,10 +55,11 @@ jobs:
           sparse-checkout: |
             alertconfig.yaml
           sparse-checkout-cone-mode: false
-      
+
       - name: Deploy to prod
         uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: prod
           RESOURCE: .nais/alerts.yaml,ext_alertconfig/alertconfig.yaml
+          VAR: cluster="prod"
           DEPLOY_SERVER: deploy.ssb.cloud.nais.io:443
