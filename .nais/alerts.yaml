@@ -21,6 +21,8 @@ spec:
             service: pseudo-service
             namespace: dapla-stat
             severity: critical
+            alertmanager_custom_config: dapla-stat
+            alert_type: custom
 
         # This alert detects high CPU usage by calculating the CPU time used over 5 minutes.
         - alert: HighCPUUsage
